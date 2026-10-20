@@ -273,15 +273,27 @@ h2 {
   position: absolute;
   z-index: 2;
   inset: 0 0 auto;
-  padding: clamp(0.55rem, 1.7vw, 1.2rem);
+  width: 100%;
+  padding: 0;
   pointer-events: none;
 }
 
 .hud-topline {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+  padding: 12px 20px;
+  pointer-events: none;
+}
+
+.hud-left {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .hud-card {
@@ -338,6 +350,8 @@ h2 {
 
 .hud-actions {
   display: flex;
+  flex: 0 0 auto;
+  align-items: center;
   gap: 0.4rem;
   pointer-events: auto;
 }
@@ -370,13 +384,16 @@ h2 {
 }
 
 .item-tray {
-  position: absolute;
-  left: clamp(0.5rem, 1.6vw, 1.25rem);
-  bottom: clamp(0.55rem, 1.8vw, 1.25rem);
+  position: static;
   display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  min-width: 0;
   gap: 0.5rem;
   width: max-content;
-  max-width: calc(100% - 1rem);
+  max-width: none;
   padding: 0.45rem;
   pointer-events: auto;
   background: rgb(255 249 228 / 90%);
@@ -390,6 +407,8 @@ h2 {
   align-items: center;
   gap: 0.35rem;
   min-height: 2.6rem;
+  flex: 0 1 auto;
+  white-space: nowrap;
   padding: 0.35rem 0.75rem;
   color: #493b2a;
   cursor: pointer;
@@ -402,6 +421,8 @@ h2 {
   box-shadow: 0 3px 0 #bb955e, inset 0 1px 0 #fff;
   transition: transform 120ms ease, filter 120ms ease;
 }
+
+.item-label { white-space: nowrap; }
 
 .item-button b {
   display: grid;
@@ -663,8 +684,8 @@ h2 {
     font-size: 0.82rem;
   }
 
-  .game-hud { padding: 0.45rem; }
   .hud-topline { gap: 0.3rem; }
+  .hud-left { gap: 0.3rem; }
   .hud-card { min-width: 0; padding: 0.45rem 0.55rem; border-radius: 0.7rem; }
   .chapter-card strong { max-width: 7.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.78rem; }
   .hud-score { font-size: 0.68rem; }
@@ -672,8 +693,8 @@ h2 {
   .ammo-dot { font-size: 0.95rem; }
   .hud-actions { gap: 0.25rem; }
   .icon-button { width: 2.55rem; height: 2.55rem; }
-  .item-tray { left: 0.4rem; right: auto; bottom: 0.45rem; width: calc(100% - 0.8rem); max-width: none; gap: 0.25rem; padding: 0.3rem; }
-  .item-button { position: relative; flex: 1 1 0; min-width: 0; min-height: 2.8rem; justify-content: center; gap: 0.12rem; padding: 0.3rem 0.15rem; font-size: 0.62rem; flex-direction: column; }
+  .item-tray { position: static; flex: 1 1 auto; width: auto; min-width: 0; gap: 0.25rem; padding: 0.3rem; }
+  .item-button { position: relative; flex: 1 1 0; min-width: 0; min-height: 2.8rem; justify-content: center; gap: 0.12rem; padding: 0.3rem 0.15rem; font-size: 0.62rem; flex-direction: row; }
   .item-button span:first-child { font-size: 1.05rem; }
   .item-button b { position: absolute; top: -0.28rem; right: -0.2rem; min-width: 1.1rem; height: 1.1rem; font-size: 0.62rem; }
   .story-panel { grid-template-columns: 1fr; justify-items: center; max-height: 88%; overflow: auto; text-align: center; }
@@ -688,6 +709,27 @@ h2 {
   .leaderboard-pagination .button { min-height: 2.5rem; }
   .leaderboard-pagination span { font-size: 0.72rem; }
   .ending-modal { max-height: 92%; overflow: auto; }
+}
+
+@media (max-width: 560px) {
+  .hud-topline { gap: 3px; padding: 6px 8px; }
+  .hud-left, .item-tray, .hud-actions { gap: 3px; min-width: 0; }
+  .hud-left { flex: 0 1 auto; }
+  .hud-card { padding: 0.28rem 0.32rem; border-width: 1px; }
+  .chapter-card { min-width: 0; }
+  .chapter-card strong { max-width: 4.4rem; font-size: 0.62rem; }
+  .chapter-card .hud-kicker { font-size: 0.48rem; }
+  .hud-score { font-size: 0.52rem; white-space: nowrap; }
+  .ammo-card { min-width: 0; }
+  .ammo-card .hud-kicker { font-size: 0.48rem; }
+  .ammo-dot { font-size: 0.72rem; }
+  .ammo-dots { gap: 0; }
+  .item-tray { padding: 2px; }
+  .item-button { min-height: 30px; padding: 2px; gap: 0; font-size: 0.6rem; }
+  .item-label { display: none; }
+  .item-button span:first-child { font-size: 0.95rem; }
+  .item-button b { position: absolute; top: -4px; right: -3px; min-width: 14px; height: 14px; font-size: 9px; }
+  .icon-button { width: 30px; height: 30px; min-width: 30px; min-height: 30px; padding: 0; font-size: 0.82rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

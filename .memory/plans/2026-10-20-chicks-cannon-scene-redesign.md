@@ -6,7 +6,7 @@ Canvas 게임을 챕터별 정적 테마 장면으로 교체하고, 흐르는 �
 ## Phases
 | Phase | Status | Summary | Blueprint |
 | :--- | :--- | :--- | :--- |
-| P01 | `in_progress` | 챕터 배경, 오브젝트 입체감, 상단 HUD 레이아웃 | [P01](../phases/2026-10-20-chicks-cannon-scene-redesign/P01-static-scenes-and-hud/phase.md) |
+| P01 | `done` | 챕터 배경, 오브젝트 입체감, 상단 HUD 레이아웃 | [P01](../phases/2026-10-20-chicks-cannon-scene-redesign/P01-static-scenes-and-hud/phase.md) |
 
 ## Confirmed Decisions
 - 좌측 상단에 챕터·점수·탄환, 중앙에 아이템 3개, 우측에 소리·일시정지·재시작을 둔다. 좁은 모바일 화면에서는 아이템 이름을 숨기되 접근 가능한 아이콘 이름을 유지한다.

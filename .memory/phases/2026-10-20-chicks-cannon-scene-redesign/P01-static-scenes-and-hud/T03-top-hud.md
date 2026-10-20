@@ -1,6 +1,6 @@
 # Task: T03 단일 상단 Flexbox HUD
 
-## Status: pending
+## Status: done
 
 ## Goal
 분리된 챕터 카드·탄환 카드·하단 아이템 트레이를 하나의 상단 바 안에 정렬한다. 챕터/점수/탄환, 아이템 3개, 사운드/일시정지/재시작이 데스크톱과 모바일에서 겹치지 않도록 한다.
@@ -52,10 +52,10 @@
 - computed style library를 추가하지 않는다. layout CSS는 production stylesheet를 확인하고 `git diff --check`를 실행한다.
 
 ## Acceptance Criteria
-- [ ] 데스크톱의 상단 HUD가 좌측 정보, 중앙 가로 아이템 3개, 우측 버튼 3개의 단일 Bar다.
-- [ ] 챕터/점수/탄환이 좌측 그룹에 있고 텍스트가 겹치지 않는다.
-- [ ] 320px/390px 모바일에서도 모든 조작이 한 줄에 보이고 item label 숨김 후에도 접근 가능한 이름이 남는다.
-- [ ] 기존 아이템 사용/비활성, 소리, pause, restart 동작이 보존된다.
+- [x] 데스크톱의 상단 HUD가 좌측 정보, 중앙 가로 아이템 3개, 우측 버튼 3개의 단일 Bar다.
+- [x] 챕터/점수/탄환이 좌측 그룹에 있고 텍스트가 겹치지 않는다.
+- [x] 320px/390px 모바일에서도 모든 조작이 한 줄에 보이고 item label 숨김 후에도 접근 가능한 이름이 남는다.
+- [x] 기존 아이템 사용/비활성, 소리, pause, restart 동작이 보존된다.
 
 ## Validation
 - `npm.cmd run test --workspace @chicks-cannon/web -- src/components/GameHud.test.tsx` — HUD content, accessibility and action tests pass.
@@ -76,6 +76,6 @@ Task: T03-top-hud
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
+- [x] 구현 완료
+- [x] 검증 통과
 - commit: pending
