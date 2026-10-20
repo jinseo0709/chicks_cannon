@@ -19,6 +19,7 @@ export interface ChickCannonController {
   restartCampaign(): void;
   useItem(kind: ItemKind): void;
   toggleMute(): void;
+  togglePause(): void;
 }
 
 const initialSnapshot: GameSnapshot = {
@@ -77,6 +78,7 @@ export function useChickCannon(): ChickCannonController {
 
     let frameId = 0;
     let previousTime = 0;
+    let sceneTime = 0;
     let lastState = engine.getSnapshot().state;
     let lastScore = engine.getSnapshot().score;
     const animate = (time: number) => {
@@ -84,6 +86,7 @@ export function useChickCannon(): ChickCannonController {
       previousTime = time;
       engine.step(delta);
       const current = engine.getSnapshot();
+      if (current.state !== 'PAUSED') sceneTime = time;
       input.setMode(current.state);
       if (current.state !== lastState) {
         if (current.state === 'FLYING') audioRef.current?.playLaunch();
@@ -93,7 +96,7 @@ export function useChickCannon(): ChickCannonController {
       }
       if (current.score > lastScore) audioRef.current?.playImpact(Math.min(8, current.score - lastScore));
       lastScore = current.score;
-      renderer.render(current, time);
+      renderer.render(current, sceneTime);
       frameId = requestAnimationFrame(animate);
     };
     frameId = requestAnimationFrame(animate);
@@ -163,6 +166,12 @@ export function useChickCannon(): ChickCannonController {
     engineRef.current?.toggleMute();
     audioRef.current?.setMuted(engineRef.current?.getSnapshot().muted ?? false);
   }, []);
+  const togglePause = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    if (engine.getSnapshot().state === 'PAUSED') engine.resume();
+    else engine.pause();
+  }, []);
 
   return {
     snapshot,
@@ -175,5 +184,6 @@ export function useChickCannon(): ChickCannonController {
     restartCampaign,
     useItem,
     toggleMute,
+    togglePause,
   };
 }

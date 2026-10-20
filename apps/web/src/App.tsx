@@ -4,6 +4,7 @@ import { EndingModal } from './components/EndingModal';
 import { GameCanvas } from './components/GameCanvas';
 import { GameHud } from './components/GameHud';
 import { GameModal } from './components/GameModal';
+import { PausePanel } from './components/PausePanel';
 import { HomeScreen } from './components/HomeScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { LeaderboardClient } from './leaderboard/client';
@@ -42,10 +43,14 @@ export function App(): JSX.Element {
                 onRestart={controller.retryStage}
                 onMute={controller.toggleMute}
                 onUseItem={controller.useItem}
+                onTogglePause={controller.togglePause}
               />
             )}
             {controller.snapshot.state === 'DIALOGUE' && (
               <DialoguePanel story={controller.snapshot.story} onContinue={controller.dismissDialogue} />
+            )}
+            {controller.snapshot.state === 'PAUSED' && (
+              <PausePanel onResume={controller.togglePause} onRestart={controller.retryStage} />
             )}
             {controller.snapshot.state === 'ENDING' ? (
               <EndingModal

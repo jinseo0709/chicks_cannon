@@ -57,6 +57,7 @@ export class ChickCannonEngine {
   private readonly bodies = new Map<number, GameBody>();
   private fans: FanField[] = [];
   private state: GameState = 'DIALOGUE';
+  private stateBeforePause: 'AIMING' | 'FLYING' | 'RESOLVING' | null = null;
   private stage: GameStage = 1;
   private score = 0;
   private ammo = STAGES[1].ammo;
@@ -174,6 +175,7 @@ export class ChickCannonEngine {
 
   useItem(kind: ItemKind): void {
     if (!this.alive || this.items[kind] <= 0) return;
+    if (this.state === 'PAUSED') return;
     if (kind === 'booster') {
       if (this.state !== 'FLYING' || !this.activeChick) return;
       Body.setVelocity(this.activeChick, {
@@ -195,6 +197,20 @@ export class ChickCannonEngine {
     this.publish();
   }
 
+  pause(): void {
+    if (this.state !== 'AIMING' && this.state !== 'FLYING' && this.state !== 'RESOLVING') return;
+    this.stateBeforePause = this.state;
+    this.state = 'PAUSED';
+    this.publish();
+  }
+
+  resume(): void {
+    if (this.state !== 'PAUSED' || !this.stateBeforePause) return;
+    this.state = this.stateBeforePause;
+    this.stateBeforePause = null;
+    this.publish();
+  }
+
   continueAfterEvolution(): void {
     if (this.state !== 'EVOLUTION' || this.stage >= 4) return;
     this.stage = (this.stage + 1) as GameStage;
@@ -213,7 +229,7 @@ export class ChickCannonEngine {
   }
 
   step(deltaMs: number): void {
-    if (!this.alive) return;
+    if (!this.alive || this.state === 'PAUSED') return;
     const delta = clamp(Number.isFinite(deltaMs) ? deltaMs : 16.667, 1, 33.333);
     Engine.update(this.engine, delta);
     this.advanceGimmicks();
@@ -252,6 +268,7 @@ export class ChickCannonEngine {
     this.settleFrames = 0;
     this.winFrames = 0;
     this.defeatCause = null;
+    this.stateBeforePause = null;
     this.state = 'DIALOGUE';
 
     const ground = Bodies.rectangle(640, 695, 2560, 50, { isStatic: true, label: 'ground' }) as GameBody;

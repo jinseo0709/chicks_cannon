@@ -75,4 +75,30 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().items.quake).toBe(0);
     engine.dispose();
   });
+
+  it('freezes the simulation and restores the prior active state on resume', () => {
+    const { engine, snapshot, onSnapshot } = createEngine();
+    engine.dismissDialogue();
+    engine.setAim({ x: 80, y: 500 });
+    engine.releaseAim();
+    engine.step(16.667);
+    const before = snapshot();
+    engine.pause();
+    expect(snapshot().state).toBe('PAUSED');
+    const publishCount = onSnapshot.mock.calls.length;
+    engine.useItem('quake');
+    engine.setAim({ x: 30, y: 300 });
+    engine.releaseAim();
+    engine.activateSkill();
+    engine.step(33.333);
+    expect(snapshot().items.quake).toBe(1);
+    expect(snapshot().entities).toEqual(before.entities);
+    expect(onSnapshot).toHaveBeenCalledTimes(publishCount);
+    engine.resume();
+    expect(snapshot().state).toBe('FLYING');
+    engine.pause();
+    engine.retryStage();
+    expect(snapshot().state).toBe('DIALOGUE');
+    engine.dispose();
+  });
 });

@@ -7,6 +7,7 @@ export type GameState =
   | 'AIMING'
   | 'FLYING'
   | 'RESOLVING'
+  | 'PAUSED'
   | 'WON'
   | 'LOST'
   | 'EVOLUTION'

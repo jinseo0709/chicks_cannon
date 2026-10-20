@@ -16,16 +16,26 @@ describe('GameHud', () => {
     const onRestart = vi.fn();
     const onMute = vi.fn();
     const onUseItem = vi.fn();
-    render(<GameHud snapshot={makeSnapshot('FLYING')} onRestart={onRestart} onMute={onMute} onUseItem={onUseItem} />);
+    const onTogglePause = vi.fn();
+    render(<GameHud snapshot={makeSnapshot('FLYING')} onRestart={onRestart} onMute={onMute} onUseItem={onUseItem} onTogglePause={onTogglePause} />);
     expect(screen.getByText('점수 1,200')).toBeTruthy();
     expect(screen.getByLabelText('남은 병아리 2개')).toBeTruthy();
     expect(screen.getByRole('button', { name: /치즈 로켓/ }).hasAttribute('disabled')).toBe(false);
     expect(screen.getByRole('button', { name: /거대화/ }).hasAttribute('disabled')).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: '소리 끄기' }));
+    fireEvent.click(screen.getByRole('button', { name: '일시정지' }));
     fireEvent.click(screen.getByRole('button', { name: /현재 챕터 다시 시작|다시 시작/ }));
     fireEvent.click(screen.getByRole('button', { name: /치즈 로켓/ }));
     expect(onMute).toHaveBeenCalledOnce();
     expect(onRestart).toHaveBeenCalledOnce();
     expect(onUseItem).toHaveBeenCalledWith('booster');
+    expect(onTogglePause).toHaveBeenCalledOnce();
+  });
+
+  it('labels the pause control as resume while paused', () => {
+    const onTogglePause = vi.fn();
+    render(<GameHud snapshot={makeSnapshot('PAUSED')} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={onTogglePause} />);
+    fireEvent.click(screen.getByRole('button', { name: '계속하기' }));
+    expect(onTogglePause).toHaveBeenCalledOnce();
   });
 });

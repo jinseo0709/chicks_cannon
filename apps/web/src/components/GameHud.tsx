@@ -6,11 +6,12 @@ export interface GameHudProps {
   onRestart(): void;
   onMute(): void;
   onUseItem(kind: ItemKind): void;
+  onTogglePause(): void;
 }
 
 const activeStates = new Set(['AIMING', 'FLYING', 'RESOLVING']);
 
-export function GameHud({ snapshot, onRestart, onMute, onUseItem }: GameHudProps): JSX.Element {
+export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause }: GameHudProps): JSX.Element {
   const ammoSlots = snapshot.stage === 1 || snapshot.stage === 2 ? 3 : 4;
   const canUseQuake = activeStates.has(snapshot.state);
   return (
@@ -36,6 +37,11 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem }: GameHudProps
           <button className="icon-button" onClick={onMute} aria-label={snapshot.muted ? '소리 켜기' : '소리 끄기'}>
             {snapshot.muted ? '🔇' : '🔊'}
           </button>
+          {([...activeStates, 'PAUSED'].includes(snapshot.state)) && (
+            <button className="icon-button" onClick={onTogglePause} aria-label={snapshot.state === 'PAUSED' ? '계속하기' : '일시정지'}>
+              {snapshot.state === 'PAUSED' ? '▶' : 'Ⅱ'}
+            </button>
+          )}
           <button className="icon-button" onClick={onRestart} aria-label="현재 챕터 다시 시작">↻</button>
         </div>
       </div>

@@ -471,6 +471,9 @@ h2 {
   margin-top: 0.4rem;
 }
 
+.pause-backdrop { z-index: 5; }
+.pause-panel { width: min(100%, 28rem); }
+
 .modal-actions {
   display: flex;
   justify-content: center;
