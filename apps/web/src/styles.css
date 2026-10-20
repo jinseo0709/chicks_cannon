@@ -1,5 +1,5 @@
 :root {
-  font-family: "Trebuchet MS", "Malgun Gothic", "맑은 고딕", sans-serif;
+  font-family: "Jua", "Malgun Gothic", "맑은 고딕", sans-serif;
   color: #fff8e7;
   background: #101a30;
   font-synthesis: none;
@@ -291,9 +291,9 @@ h2 {
   padding: 0.6rem 0.85rem;
   color: #453723;
   background: rgb(255 249 228 / 91%);
-  border: 1px solid rgb(255 255 255 / 82%);
+  border: 2px solid #fffdf2;
   border-radius: 1rem;
-  box-shadow: 0 0.3rem 1rem rgb(42 53 59 / 14%);
+  box-shadow: 0 3px 0 #bd9860, 0 0.45rem 1rem rgb(42 53 59 / 20%);
 }
 
 .hud-kicker {
@@ -306,6 +306,7 @@ h2 {
 .hud-score {
   font-size: 0.78rem;
   font-weight: 800;
+  text-shadow: 0 1px 0 #fff;
 }
 
 .ammo-card {
@@ -349,14 +350,28 @@ h2 {
   color: #463723;
   cursor: pointer;
   background: rgb(255 249 228 / 94%);
-  border: 1px solid rgb(255 255 255 / 82%);
+  border: 2px solid #fffdf2;
   border-radius: 50%;
   font-size: 1.15rem;
+  box-shadow: 0 3px 0 #9c7449, 0 5px 9px rgb(38 43 42 / 24%);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.icon-button:hover,
+.item-button:not(:disabled):hover {
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+}
+
+.icon-button:active,
+.item-button:not(:disabled):active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #9c7449;
 }
 
 .item-tray {
   position: absolute;
-  right: 50%;
+  left: clamp(0.5rem, 1.6vw, 1.25rem);
   bottom: clamp(0.55rem, 1.8vw, 1.25rem);
   display: flex;
   gap: 0.5rem;
@@ -365,10 +380,9 @@ h2 {
   padding: 0.45rem;
   pointer-events: auto;
   background: rgb(255 249 228 / 90%);
-  border: 1px solid rgb(255 255 255 / 82%);
+  border: 2px solid #fffdf2;
   border-radius: 1rem;
-  box-shadow: 0 0.4rem 1.2rem rgb(42 53 59 / 15%);
-  transform: translateX(50%);
+  box-shadow: 0 4px 0 #a97e50, 0 0.5rem 1.2rem rgb(42 53 59 / 22%);
 }
 
 .item-button {
@@ -380,10 +394,13 @@ h2 {
   color: #493b2a;
   cursor: pointer;
   background: #fff4d6;
-  border: 1px solid #e9d39d;
+  border: 2px solid #fffdf2;
   border-radius: 0.75rem;
   font-size: 0.78rem;
   font-weight: 800;
+  text-shadow: 0 1px 0 #fff;
+  box-shadow: 0 3px 0 #bb955e, inset 0 1px 0 #fff;
+  transition: transform 120ms ease, filter 120ms ease;
 }
 
 .item-button b {
@@ -655,10 +672,10 @@ h2 {
   .ammo-dot { font-size: 0.95rem; }
   .hud-actions { gap: 0.25rem; }
   .icon-button { width: 2.55rem; height: 2.55rem; }
-  .item-tray { gap: 0.25rem; padding: 0.3rem; }
-  .item-button { min-width: 2.8rem; min-height: 2.8rem; justify-content: center; gap: 0.12rem; padding: 0.3rem; font-size: 0.65rem; flex-direction: column; }
+  .item-tray { left: 0.4rem; right: auto; bottom: 0.45rem; width: calc(100% - 0.8rem); max-width: none; gap: 0.25rem; padding: 0.3rem; }
+  .item-button { position: relative; flex: 1 1 0; min-width: 0; min-height: 2.8rem; justify-content: center; gap: 0.12rem; padding: 0.3rem 0.15rem; font-size: 0.62rem; flex-direction: column; }
   .item-button span:first-child { font-size: 1.05rem; }
-  .item-button b { position: absolute; margin: -2.1rem 0 0 2rem; min-width: 1.1rem; height: 1.1rem; font-size: 0.62rem; }
+  .item-button b { position: absolute; top: -0.28rem; right: -0.2rem; min-width: 1.1rem; height: 1.1rem; font-size: 0.62rem; }
   .story-panel { grid-template-columns: 1fr; justify-items: center; max-height: 88%; overflow: auto; text-align: center; }
   .story-avatar { font-size: 3rem; }
   .story-copy h2 { font-size: 1.2rem; }

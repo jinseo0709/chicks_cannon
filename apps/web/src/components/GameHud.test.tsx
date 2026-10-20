@@ -20,6 +20,8 @@ describe('GameHud', () => {
     render(<GameHud snapshot={makeSnapshot('FLYING')} onRestart={onRestart} onMute={onMute} onUseItem={onUseItem} onTogglePause={onTogglePause} />);
     expect(screen.getByText('점수 1,200')).toBeTruthy();
     expect(screen.getByLabelText('남은 병아리 2개')).toBeTruthy();
+    expect(screen.getByLabelText('도움 아이템').className).toBe('item-tray');
+    expect(screen.getByRole('button', { name: /달걀 지진/ }).textContent).toContain('1');
     expect(screen.getByRole('button', { name: /치즈 로켓/ }).hasAttribute('disabled')).toBe(false);
     expect(screen.getByRole('button', { name: /거대화/ }).hasAttribute('disabled')).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: '소리 끄기' }));
