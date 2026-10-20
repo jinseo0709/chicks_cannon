@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SvgAssetCache } from './asset-cache';
 import { GameCanvasRenderer } from './renderer';
-import { CHICK_FORMS, WORLD } from './constants';
+import { BLOCK_CONFIG, CHICK_FORMS, WORLD } from './constants';
 import { STAGES } from './stages';
 import type { GameSnapshot } from './types';
 
@@ -89,6 +89,32 @@ describe('GameCanvasRenderer', () => {
     expect(context.ellipse).toHaveBeenCalled();
     expect(context.bezierCurveTo).toHaveBeenCalled();
     expect(context.createRadialGradient).toHaveBeenCalled();
+    const woodBounds = vi.mocked(context.roundRect).mock.calls[0];
+    expect(woodBounds[2]).toBeGreaterThan(48);
+    expect(woodBounds[3]).toBeGreaterThan(80);
+    expect(BLOCK_CONFIG.wood).toMatchObject({ hp: 32, density: 0.003 });
+    expect(BLOCK_CONFIG.stone).toMatchObject({ hp: 75, density: 0.007 });
+    expect(BLOCK_CONFIG.glass).toMatchObject({ hp: 12, density: 0.0018 });
+    expect(BLOCK_CONFIG.tnt).toMatchObject({ hp: 18, density: 0.0018 });
+    renderer.dispose();
+  });
+
+  it('draws the nest on the far right and connects the moving shutter to a ceiling pulley', () => {
+    const image = document.createElement('img');
+    const assets = new SvgAssetCache();
+    vi.spyOn(assets, 'get').mockImplementation((id) => id === 'nest' ? image : null);
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, assets);
+    renderer.resize(1280, 720, 1);
+    renderer.render({
+      ...snapshot,
+      stage: 2,
+      entities: [{ id: 9, kind: 'shutter', x: 620, y: 435, width: 24, height: 150, angle: 0, alive: true }],
+    }, 100);
+    expect(WORLD.nest).toEqual({ x: 1205, y: 620 });
+    expect(context.drawImage).toHaveBeenCalledWith(image, 1140, 580, 130, 80);
+    expect(context.arc).toHaveBeenCalledWith(620, 200, 9, 0, Math.PI * 2);
+    expect(context.lineTo).toHaveBeenCalledWith(620, 360);
     renderer.dispose();
   });
 

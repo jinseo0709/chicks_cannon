@@ -4,7 +4,7 @@ export const WORLD = {
   width: 1280,
   height: 720,
   cannon: { x: 160, y: 525 } satisfies Point,
-  nest: { x: 360, y: 620 } satisfies Point,
+  nest: { x: 1205, y: 620 } satisfies Point,
   maxDrag: 125,
   gravityY: 1.05,
 } as const;
@@ -55,8 +55,8 @@ export const CHICK_FORMS: Readonly<Record<GameStage, ChickForm>> = {
 export const BLOCK_CONFIG: Readonly<
   Record<BlockKind, { fill: string; stroke: string; hp: number; density: number }>
 > = {
-  wood: { fill: '#b45309', stroke: '#78350f', hp: 32, density: 0.003 },
-  stone: { fill: '#64748b', stroke: '#334155', hp: 75, density: 0.007 },
-  glass: { fill: '#7dd3fc', stroke: '#0284c7', hp: 12, density: 0.0018 },
-  tnt: { fill: '#ef4444', stroke: '#991b1b', hp: 18, density: 0.0018 },
+  wood: { fill: '#ee963d', stroke: '#754226', hp: 32, density: 0.003 },
+  stone: { fill: '#469bb8', stroke: '#164e68', hp: 75, density: 0.007 },
+  glass: { fill: '#68d9e5', stroke: '#117d9b', hp: 12, density: 0.0018 },
+  tnt: { fill: '#f04455', stroke: '#8c2637', hp: 18, density: 0.0018 },
 };

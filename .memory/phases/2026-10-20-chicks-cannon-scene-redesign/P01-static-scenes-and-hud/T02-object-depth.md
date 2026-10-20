@@ -1,6 +1,6 @@
 # Task: T02 오브젝트 배치와 입체감
 
-## Status: pending
+## Status: done
 
 ## Goal
 둥지를 적 요새 뒤쪽 우측 지면으로 옮기고, 셔터를 천장 지지대에 연결하며, 새총과 목재/금속 구조물의 두께·접지감을 강화한다. 화면의 오브젝트 크기만 바꾸고 Matter.js 물리 크기는 유지한다.
@@ -50,10 +50,10 @@
 - renderer tests는 shutter snapshot 한 개에 대해 beam/pulley/wire stroke 호출을 확인한다. wooden block의 `roundRect` 치수가 물리 크기보다 커졌고 `ellipse` shadow가 그려짐을 확인한다. `BLOCK_CONFIG`의 hp/density 값은 변경되지 않았는지 테스트 또는 기존 테스트에서 검증한다.
 
 ## Acceptance Criteria
-- [ ] 둥지가 지정된 우측 좌표와 크기에 있고 월드 밖으로 잘리지 않는다.
-- [ ] 새총이 두꺼운 Y자 나무와 파우치, 바닥 받침/풀로 읽힌다.
-- [ ] 움직이는 셔터마다 고정 빔·도르래와 현재 위치까지 이어진 와이어가 보인다.
-- [ ] 블록은 두꺼워 보이고 채도 높은 재질색·나이테·리벳·그림자가 있지만 collision/body 크기는 동일하다.
+- [x] 둥지가 지정된 우측 좌표와 크기에 있고 월드 밖으로 잘리지 않는다.
+- [x] 새총이 두꺼운 Y자 나무와 파우치, 바닥 받침/풀로 읽힌다.
+- [x] 움직이는 셔터마다 고정 빔·도르래와 현재 위치까지 이어진 와이어가 보인다.
+- [x] 블록은 두꺼워 보이고 채도 높은 재질색·나이테·리벳·그림자가 있지만 collision/body 크기는 동일하다.
 
 ## Validation
 - `npm.cmd run test --workspace @chicks-cannon/web -- src/game/renderer.test.ts` — object rendering tests pass.
@@ -73,6 +73,6 @@ Task: T02-object-depth
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
+- [x] 구현 완료
+- [x] 검증 통과
 - commit: pending
