@@ -1,6 +1,6 @@
-# Task: T02 Azure SQL 순위 저장소
+﻿# Task: T02 Azure SQL 순위 저장소
 
-## Status: pending
+## Status: done
 
 ## Goal
 P02-T01에서 정의한 `LeaderboardStore` 계약을 Azure SQL Database로 구현하고, 배포 API가 프로세스 메모리에 의존하지 않도록 영구 순위 저장·조회 경로를 제공한다.
@@ -77,6 +77,7 @@ Task: T02-azure-sql-store
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
-- commit: pending
+- [x] 구현 완료
+- [x] 검증 통과
+- commit: feat(api): add Azure SQL leaderboard repository
+

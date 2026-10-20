@@ -1,5 +1,4 @@
-import { app, type HttpRequest, type HttpResponseInit } from '@azure/functions';
-import { MemoryLeaderboardStore } from '../leaderboard/memory-store';
+import type { HttpRequest, HttpResponseInit } from '@azure/functions';
 import { LeaderboardService } from '../leaderboard/service';
 import { ApiError } from '../leaderboard/types';
 
@@ -57,23 +56,3 @@ function errorResponse(error: unknown): HttpResponseInit {
   };
 }
 
-const configuredStore = process.env.LEADERBOARD_STORE?.toLowerCase();
-if (configuredStore === 'sql') {
-  throw new Error('SQL leaderboard storage is not initialized. Complete P02-T02 before setting LEADERBOARD_STORE=sql.');
-}
-
-const handlers = createLeaderboardHandlers(new LeaderboardService(new MemoryLeaderboardStore()));
-
-app.http('leaderboard-get', {
-  methods: ['GET'],
-  authLevel: 'anonymous',
-  route: 'leaderboard',
-  handler: handlers.get,
-});
-
-app.http('leaderboard-submit', {
-  methods: ['POST'],
-  authLevel: 'anonymous',
-  route: 'leaderboard',
-  handler: handlers.post,
-});
