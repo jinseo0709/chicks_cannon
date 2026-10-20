@@ -1,6 +1,6 @@
-# Task: T03 동화책풍 SVG 에셋과 Canvas 렌더러
+﻿# Task: T03 동화책풍 SVG 에셋과 Canvas 렌더러
 
-## Status: pending
+## Status: done
 
 ## Goal
 Matter.js snapshot을 반응형 1280×720 장면으로 그리며, 병아리·고양이·둥지·배경은 프로젝트 자체 SVG 원화를 사용하고 구조물·물리 효과는 Canvas로 표현한다.
@@ -87,6 +87,7 @@ Task: T03-canvas-svg-renderer
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
-- commit: pending
+- [x] 구현 완료
+- [x] 검증 통과
+- commit: feat(art): render the game with local storybook SVG assets
+
