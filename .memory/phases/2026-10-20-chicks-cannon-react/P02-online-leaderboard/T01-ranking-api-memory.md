@@ -1,6 +1,6 @@
-# Task: T01 순위 API 계약 및 메모리 저장소
+﻿# Task: T01 순위 API 계약 및 메모리 저장소
 
-## Status: pending
+## Status: done
 
 ## Goal
 익명 브라우저 참가자가 캠페인 완주 점수를 제출하고 전체 점수표를 페이지별로 읽을 수 있는 Azure Functions HTTP API와 개발용 메모리 저장소를 구현한다.
@@ -88,6 +88,7 @@ Task: T01-ranking-api-memory
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
-- commit: pending
+- [x] 구현 완료
+- [x] 검증 통과
+- commit: feat(api): add anonymous leaderboard endpoints
+

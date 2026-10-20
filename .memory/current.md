@@ -7,14 +7,15 @@
 [P02 온라인 순위표](./phases/2026-10-20-chicks-cannon-react/P02-online-leaderboard/phase.md)
 
 ## Active Task
-[T01 Functions 순위 API](./phases/2026-10-20-chicks-cannon-react/P02-online-leaderboard/T01-ranking-api-memory.md)
+[T02 Azure SQL 저장소](./phases/2026-10-20-chicks-cannon-react/P02-online-leaderboard/T02-azure-sql-store.md)
 
 ## Status
-- T01 구현·검증·커밋 완료
-- P01 게임·렌더러·UI 4개 Task 구현·검증·커밋 완료; P02-T01 활성
+- P02-T01 API 구현·검증·커밋 완료
+- P01 4개 Task와 P02-T01 구현·검증·커밋 완료; P02-T02 활성
 
 ## Next Step
-P02-T01 청사진을 읽고 Azure Functions 순위 API 및 로컬 메모리 저장소를 구현한다.
+P02-T02 청사진을 읽고 Azure SQL 스키마·연결 설정·저장소 어댑터를 구현한다.
+
 
 
 

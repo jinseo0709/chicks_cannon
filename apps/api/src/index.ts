@@ -1,2 +1,2 @@
-// Azure Functions Node.js v4 handlers will be registered here in the API task.
-export {};
+// Importing this module registers the API functions for the Azure Functions v4 worker.
+import './functions/leaderboard';
