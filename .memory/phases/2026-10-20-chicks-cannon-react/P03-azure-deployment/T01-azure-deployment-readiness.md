@@ -1,6 +1,6 @@
 # Task: T01 Azure 배포 설정과 안내
 
-## Status: pending
+## Status: done
 
 ## Goal
 React 정적 앱, Azure Functions leaderboard API, Azure SQL Database를 Azure Static Web Apps에 연결해 배포할 수 있는 설정·인프라 템플릿·작업 안내를 저장소에 추가한다. 이 Task는 템플릿과 문서만 만들며 Azure 리소스를 실제 생성하거나 배포하지 않는다.
@@ -83,6 +83,6 @@ Task: T01-azure-deployment-readiness
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
+- [x] 구현 완료
+- [x] 검증 통과 (Bicep build, npm run build, npm test)
 - commit: pending

@@ -1,6 +1,8 @@
 node_modules/
 dist/
 coverage/
+.publish/
+infra/main.json
 .npm-cache/
 .env
 .env.*
