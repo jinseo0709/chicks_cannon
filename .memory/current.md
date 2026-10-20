@@ -4,17 +4,16 @@
 [병아리 대포 React 전환 및 게임 개선](./plans/2026-10-20-chicks-cannon-react.md)
 
 ## Active Phase
-[P03 Azure 배포 준비](./phases/2026-10-20-chicks-cannon-react/P03-azure-deployment/phase.md)
+완료 — [P03 Azure 배포 준비](./phases/2026-10-20-chicks-cannon-react/P03-azure-deployment/phase.md)
 
 ## Active Task
-[T01 Azure 배포 준비](./phases/2026-10-20-chicks-cannon-react/P03-azure-deployment/T01-azure-deployment-readiness.md)
+없음 — 전체 Task 완료
 
 ## Status
-- P02 온라인 순위표 3개 Task 구현·검증·커밋 완료
-- P01 4개 Task와 P02 3개 Task 구현·검증·커밋 완료; P03-T01 활성
+- P01 4개, P02 3개, P03 1개 Task 구현·검증·커밋 완료
 
 ## Next Step
-P03-T01 청사진을 읽고 Azure Static Web Apps·Functions·SQL 배포 설정, 환경 예제와 운영 안내를 준비한다.
+남은 Task 없음. 다음 기능을 시작하려면 새 계획을 만든다.
 
 
 

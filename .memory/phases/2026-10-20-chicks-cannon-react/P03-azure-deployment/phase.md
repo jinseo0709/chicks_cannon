@@ -3,8 +3,8 @@
 ## Tasks
 | Task | Status | Summary | Blueprint |
 | :--- | :--- | :--- | :--- |
-| T01 | `in_progress 🔵` | Azure 인프라 템플릿, 앱 설정, 빌드/배포 안내 작성 | [T01](./T01-azure-deployment-readiness.md) |
+| T01 | `done ✅` | Azure 인프라 템플릿, 앱 설정, 빌드/배포 안내 작성 | [T01](./T01-azure-deployment-readiness.md) |
 
 ## Progress
-- done: 0/1 (active: T01)
+- done: 1/1 (phase complete)
 

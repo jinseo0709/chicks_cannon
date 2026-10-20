@@ -85,4 +85,4 @@ Task: T01-azure-deployment-readiness
 ## Progress
 - [x] 구현 완료
 - [x] 검증 통과 (Bicep build, npm run build, npm test)
-- commit: pending
+- commit: 377ff6c

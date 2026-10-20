@@ -6,9 +6,9 @@
 ## Phases
 | Phase | Status | Summary | Blueprint |
 | :--- | :--- | :--- | :--- |
-| P01 | `in_progress` | React 게임 기반, Matter.js 캠페인 로직, SVG/Canvas 렌더링 및 게임 UI 구현 | [P01](../phases/2026-10-20-chicks-cannon-react/P01-react-game/phase.md) |
-| P02 | `pending` | 순위 API, 메모리/Azure SQL 저장소, 닉네임과 순위표 UI 연결 | [P02](../phases/2026-10-20-chicks-cannon-react/P02-online-leaderboard/phase.md) |
-| P03 | `pending` | Azure Static Web Apps·Functions·SQL 배포 설정 및 운영 안내 준비 | [P03](../phases/2026-10-20-chicks-cannon-react/P03-azure-deployment/phase.md) |
+| P01 | `done` | React 게임 기반, Matter.js 캠페인 로직, SVG/Canvas 렌더링 및 게임 UI 구현 | [P01](../phases/2026-10-20-chicks-cannon-react/P01-react-game/phase.md) |
+| P02 | `done` | 순위 API, 메모리/Azure SQL 저장소, 닉네임과 순위표 UI 연결 | [P02](../phases/2026-10-20-chicks-cannon-react/P02-online-leaderboard/phase.md) |
+| P03 | `done` | Azure Static Web Apps·Functions·SQL 배포 설정 및 운영 안내 준비 | [P03](../phases/2026-10-20-chicks-cannon-react/P03-azure-deployment/phase.md) |
 
 ## Confirmed Decisions
 - React, TypeScript, Vite; 데스크톱 마우스와 모바일 터치; Matter.js 0.19.0 기반 물리.
