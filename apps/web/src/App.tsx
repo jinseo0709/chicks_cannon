@@ -1,43 +1,51 @@
 import { useState, type JSX } from 'react';
+import { DialoguePanel } from './components/DialoguePanel';
+import { GameCanvas } from './components/GameCanvas';
+import { GameHud } from './components/GameHud';
+import { GameModal } from './components/GameModal';
+import { HomeScreen } from './components/HomeScreen';
+import { useChickCannon } from './game/use-chick-cannon';
 
 export function App(): JSX.Element {
   const [screen, setScreen] = useState<'home' | 'game' | 'leaderboard'>('home');
+  const controller = useChickCannon();
+  const openLeaderboard = () => setScreen('leaderboard');
 
   return (
     <main className="app-shell">
       <section className="game-frame" aria-label="병아리 대포 게임">
         {screen === 'home' && (
-          <div className="home-screen">
-            <div className="home-art" aria-hidden="true">
-              <span className="sun">✦</span>
-              <span className="chick">🐥</span>
-              <span className="nest">◡</span>
-            </div>
-            <div className="home-copy">
-              <p className="eyebrow">CHICKS CANNON · JOURNEY HOME</p>
-              <h1>병아리 대포</h1>
-              <p className="tagline">새총을 당겨, 우리 둥지를 되찾자!</p>
-              <div className="home-actions">
-                <button className="button button-primary" onClick={() => setScreen('game')}>
-                  모험 시작
-                </button>
-                <button className="button button-secondary" onClick={() => setScreen('leaderboard')}>
-                  순위표
-                </button>
-              </div>
-              <p className="controls-hint">마우스 또는 손가락으로 병아리를 당긴 뒤 놓으세요</p>
-            </div>
-          </div>
+          <HomeScreen
+            onPlay={() => {
+              controller.startCampaign();
+              setScreen('game');
+            }}
+            onOpenLeaderboard={openLeaderboard}
+          />
         )}
 
         {screen === 'game' && (
-          <div className="placeholder-screen">
-            <p className="eyebrow">CHAPTER 1 · 골목길 쉼터</p>
-            <h2>게임 장면을 준비하고 있어요</h2>
-            <p>물리 엔진과 4개 챕터는 다음 작업에서 연결됩니다.</p>
-            <button className="button button-secondary" onClick={() => setScreen('home')}>
-              홈으로
-            </button>
+          <div className="play-screen">
+            <GameCanvas controller={controller} />
+            <GameHud
+              snapshot={controller.snapshot}
+              onRestart={controller.retryStage}
+              onMute={controller.toggleMute}
+              onUseItem={controller.useItem}
+            />
+            {controller.snapshot.state === 'DIALOGUE' && (
+              <DialoguePanel story={controller.snapshot.story} onContinue={controller.dismissDialogue} />
+            )}
+            <GameModal
+              snapshot={controller.snapshot}
+              onRetry={controller.retryStage}
+              onContinue={controller.continueAfterEvolution}
+              onPlayAgain={() => {
+                controller.restartCampaign();
+                setScreen('game');
+              }}
+              onOpenLeaderboard={openLeaderboard}
+            />
           </div>
         )}
 
@@ -45,10 +53,8 @@ export function App(): JSX.Element {
           <div className="placeholder-screen">
             <p className="eyebrow">COMMUNITY</p>
             <h2>모험가 순위표</h2>
-            <p>순위표 연결은 온라인 기록 작업에서 추가됩니다.</p>
-            <button className="button button-secondary" onClick={() => setScreen('home')}>
-              홈으로
-            </button>
+            <p>온라인 기록 연결은 다음 작업에서 추가됩니다.</p>
+            <button className="button button-secondary" onClick={() => setScreen('home')}>홈으로</button>
           </div>
         )}
       </section>

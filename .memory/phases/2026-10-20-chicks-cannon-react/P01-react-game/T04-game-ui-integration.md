@@ -1,6 +1,6 @@
-# Task: T04 React 게임 UI와 캠페인 흐름 통합
+﻿# Task: T04 React 게임 UI와 캠페인 흐름 통합
 
-## Status: pending
+## Status: done
 
 ## Goal
 React 화면에서 게임 엔진, 렌더러, 입력, 오디오를 연결하고 홈·챕터 대화·플레이 HUD·진화·패배·엔딩 화면을 완성한다.
@@ -96,6 +96,7 @@ Task: T04-game-ui-integration
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
-- commit: pending
+- [x] 구현 완료
+- [x] 검증 통과
+- commit: feat(ui): connect React screens to the chick cannon campaign
+

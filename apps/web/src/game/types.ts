@@ -92,4 +92,8 @@ export interface GameSnapshot {
   muted: boolean;
   entities: readonly GameEntityView[];
   aimPosition: Point | null;
+  defeatCause: 'ammo' | 'hostage' | null;
+  story: StageDefinition['story'];
+  form: ChickForm;
+  evolvedForm: ChickForm | null;
 }

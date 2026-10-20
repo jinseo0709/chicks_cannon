@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SvgAssetCache } from './asset-cache';
 import { GameCanvasRenderer } from './renderer';
+import { CHICK_FORMS } from './constants';
+import { STAGES } from './stages';
 import type { GameSnapshot } from './types';
 
 const gradient = { addColorStop: vi.fn() };
@@ -18,6 +20,7 @@ const snapshot: GameSnapshot = {
   screen: 'game', stage: 1, score: 0, ammo: 3, campaignComplete: false,
   state: 'AIMING', items: { booster: 1, quake: 1, mega: 1 }, muted: false,
   entities: [], aimPosition: null,
+  defeatCause: null, story: STAGES[1].story, form: CHICK_FORMS[1], evolvedForm: null,
 };
 
 beforeEach(() => {

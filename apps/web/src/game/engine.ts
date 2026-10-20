@@ -67,6 +67,8 @@ export class ChickCannonEngine {
   private skillUsed = false;
   private megaNext = false;
   private settleFrames = 0;
+  private winFrames = 0;
+  private defeatCause: 'ammo' | 'hostage' | null = null;
   private alive = true;
   private snapshot: GameSnapshot;
 
@@ -216,7 +218,12 @@ export class ChickCannonEngine {
     Engine.update(this.engine, delta);
     this.advanceGimmicks();
     this.applyFans();
-    this.checkTurnSettlement();
+    if (this.state === 'WON') {
+      this.winFrames += 1;
+      if (this.winFrames >= 42) this.state = this.stage === 4 ? 'ENDING' : 'EVOLUTION';
+    } else {
+      this.checkTurnSettlement();
+    }
     this.publish();
   }
 
@@ -243,6 +250,8 @@ export class ChickCannonEngine {
     this.ammo = STAGES[stage].ammo;
     this.aimPosition = null;
     this.settleFrames = 0;
+    this.winFrames = 0;
+    this.defeatCause = null;
     this.state = 'DIALOGUE';
 
     const ground = Bodies.rectangle(640, 695, 2560, 50, { isStatic: true, label: 'ground' }) as GameBody;
@@ -378,6 +387,7 @@ export class ChickCannonEngine {
           if ((data.hp ?? 0) <= 0 || body.position.y > 685) {
             data.alive = false;
             this.state = 'LOST';
+            this.defeatCause = 'hostage';
           }
         } else if (body.label === 'block' || body.label === 'tnt') {
           if (impact > 5) {
@@ -493,6 +503,7 @@ export class ChickCannonEngine {
     );
     if (eggBroken) {
       this.state = 'LOST';
+      this.defeatCause = 'hostage';
       return;
     }
     const chick = this.activeChick;
@@ -507,9 +518,11 @@ export class ChickCannonEngine {
       (body) => body.label === 'enemy' && body.customData?.alive !== false && body.position.y < WORLD.height + 20,
     );
     if (!catsAlive) {
-      this.state = this.stage === 4 ? 'ENDING' : 'EVOLUTION';
+      this.state = 'WON';
+      this.winFrames = 0;
     } else if (this.ammo <= 0) {
       this.state = 'LOST';
+      this.defeatCause = 'ammo';
     } else {
       if (chick) {
         Composite.remove(this.engine.world, chick);
@@ -577,6 +590,10 @@ export class ChickCannonEngine {
       muted: this.muted,
       entities,
       aimPosition: this.aimPosition ? { ...this.aimPosition } : null,
+      defeatCause: this.defeatCause,
+      story: STAGES[this.stage].story,
+      form: CHICK_FORMS[this.stage],
+      evolvedForm: this.state === 'EVOLUTION' ? CHICK_FORMS[Math.min(this.stage + 1, 4) as GameStage] : null,
     };
   }
 
