@@ -1,1 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -55 180 110"><title>포근한 둥지</title><ellipse cy="24" rx="78" ry="27" fill="#9d6538"/><path d="M-72 12q14 38 72 37t72-37" fill="none" stroke="#d7a25e" stroke-width="8" stroke-linecap="round"/><path d="M-60 8q25 24 58 15t58-15M-48 28q36 17 96 0M-25 40q30 10 56-2" fill="none" stroke="#e5bb78" stroke-width="5" stroke-linecap="round"/><ellipse cy="3" rx="52" ry="25" fill="#f6d899"/><path d="M-30 8q20-27 41 0" fill="none" stroke="#c79656" stroke-width="3"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -55 180 110">
+  <title>겹겹이 엮은 포근한 둥지</title>
+  <defs>
+    <linearGradient id="bowl" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#d19a55"/>
+      <stop offset=".48" stop-color="#a96734"/>
+      <stop offset="1" stop-color="#744325"/>
+    </linearGradient>
+    <linearGradient id="straw" x1="0" y1="0" x2=".15" y2="1">
+      <stop stop-color="#ffe4a0"/>
+      <stop offset=".55" stop-color="#dba45a"/>
+      <stop offset="1" stop-color="#9a5c2f"/>
+    </linearGradient>
+    <radialGradient id="nestLight" cx=".35" cy=".1" r=".9">
+      <stop stop-color="#fff1c5" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#fff1c5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cy="28" rx="81" ry="25" fill="#59351f" opacity=".28"/>
+  <path d="M-78-2Q-72 47 0 49T78-2L65 23Q42 48 0 48T-65 23Z" fill="url(#bowl)" stroke="#714325" stroke-width="3"/>
+  <path d="M-78 4Q-57 31-28 21T20 22Q48 30 78 3" fill="none" stroke="url(#straw)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M-73 15Q-43 42-9 27T42 31Q60 34 75 17M-67 26Q-39 48-12 36T32 38Q52 42 67 28" fill="none" stroke="#f1c778" stroke-width="6" stroke-linecap="round"/>
+  <path d="M-60-6Q-48 22-19 17T26 18Q52 25 63-4" fill="none" stroke="#8f552f" stroke-width="5" stroke-linecap="round"/>
+  <path d="M-70 0Q-52 15-32 8T6 8Q37 15 70-1" fill="none" stroke="#ffe4a0" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cy="1" rx="55" ry="25" fill="#f5d99e" stroke="#a86d3b" stroke-width="3"/>
+  <ellipse cy="-2" rx="49" ry="19" fill="url(#nestLight)"/>
+  <path d="M-34 5Q-17-18 0 4T34 3" fill="none" stroke="#c08a49" stroke-width="3" stroke-linecap="round"/>
+  <path d="M-55 5Q-39 11-29 5M28 7Q43 12 54 4" fill="none" stroke="#ffe8b1" stroke-width="2" opacity=".8"/>
+</svg>

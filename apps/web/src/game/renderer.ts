@@ -45,9 +45,11 @@ export class GameCanvasRenderer {
     const shake = snapshot.state === 'LOST' || snapshot.state === 'WON' ? Math.sin(nowMs / 24) * 2 : 0;
     ctx.translate(shake, 0);
     this.drawGround();
+    snapshot.entities.forEach((entity) => this.drawEntityShadow(entity));
     this.drawProp('nest', WORLD.nest.x, WORLD.nest.y, 180, 110);
     this.drawProp('slingshot', WORLD.cannon.x, WORLD.cannon.y + 20, 78, 136);
     this.drawAimGuide(snapshot);
+    this.drawLoadedChick(snapshot);
     snapshot.entities.forEach((entity) => this.drawEntity(entity, snapshot.stage, nowMs));
     ctx.restore();
     ctx.restore();
@@ -143,6 +145,34 @@ export class GameCanvasRenderer {
     ctx.restore();
   }
 
+  private drawLoadedChick(snapshot: GameSnapshot): void {
+    if (snapshot.state !== 'AIMING' || snapshot.ammo <= 0) return;
+    const position = snapshot.aimPosition ?? WORLD.cannon;
+    this.drawSprite({
+      id: -1,
+      kind: 'chick',
+      x: position.x,
+      y: position.y,
+      radius: snapshot.form.radius,
+      angle: 0,
+      alive: true,
+    }, snapshot.stage);
+  }
+
+  private drawEntityShadow(entity: GameEntityView): void {
+    if (!entity.alive || !['cat', 'block', 'chick', 'egg', 'boulder'].includes(entity.kind)) return;
+    const ctx = this.context;
+    const width = entity.width ?? (entity.radius ?? 24) * 2;
+    const height = entity.height ?? (entity.radius ?? 24) * 2;
+    const shadowY = Math.min(WORLD.height - 8, entity.y + height * 0.5 + 7);
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.beginPath();
+    ctx.ellipse(entity.x + 5, shadowY, Math.max(9, width * 0.45), Math.max(4, Math.min(14, height * 0.12)), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   private drawEntity(entity: GameEntityView, stage: GameSnapshot['stage'], nowMs: number): void {
     if (!entity.alive) return;
     const ctx = this.context;
@@ -203,25 +233,98 @@ export class GameCanvasRenderer {
     const material = entity.material ?? 'wood';
     const config = BLOCK_CONFIG[material];
     const gradient = ctx.createLinearGradient(-width / 2, -height / 2, width / 2, height / 2);
-    gradient.addColorStop(0, config.fill);
-    gradient.addColorStop(1, material === 'wood' ? '#7c3f22' : config.stroke);
+    if (material === 'wood') {
+      gradient.addColorStop(0, '#f3c77a');
+      gradient.addColorStop(0.3, config.fill);
+      gradient.addColorStop(0.76, '#9d4a20');
+      gradient.addColorStop(1, '#67341f');
+    } else if (material === 'stone') {
+      gradient.addColorStop(0, '#35434c');
+      gradient.addColorStop(0.28, '#aab5b5');
+      gradient.addColorStop(0.55, '#71818a');
+      gradient.addColorStop(0.82, '#bdc6c2');
+      gradient.addColorStop(1, config.stroke);
+    } else {
+      gradient.addColorStop(0, config.fill);
+      gradient.addColorStop(1, config.stroke);
+    }
     ctx.fillStyle = gradient;
     ctx.strokeStyle = config.stroke;
     ctx.lineWidth = 4;
     ctx.shadowColor = 'rgba(37, 35, 31, .24)';
     ctx.shadowBlur = 8;
-    ctx.fillRect(-width / 2, -height / 2, width, height);
-    ctx.strokeRect(-width / 2, -height / 2, width, height);
+    ctx.beginPath();
+    ctx.roundRect(-width / 2, -height / 2, width, height, 4);
+    ctx.fill();
+    ctx.stroke();
     ctx.shadowBlur = 0;
     if (material === 'wood') {
-      ctx.strokeStyle = 'rgba(255,220,155,.48)';
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(-width / 2 + 2, -height / 2 + 2, width - 4, height - 4);
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(255, 231, 178, .55)';
+      ctx.lineWidth = Math.max(1, Math.min(2.5, width * 0.06));
+      ctx.beginPath();
+      for (let index = -1; index <= 1; index += 1) {
+        const y = index * height * 0.24;
+        ctx.moveTo(-width / 2 - 3, y);
+        ctx.bezierCurveTo(-width * 0.18, y - 3, width * 0.12, y + 4, width / 2 + 3, y - 1);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(88, 43, 23, .52)';
+      ctx.lineWidth = Math.max(1, Math.min(2.5, width * 0.055));
+      ctx.beginPath();
+      ctx.ellipse(-width * 0.16, height * 0.1, Math.max(2.5, Math.min(6, width * 0.16)), Math.max(4, Math.min(11, height * 0.12)), -0.25, 0, Math.PI * 2);
+      ctx.ellipse(-width * 0.16, height * 0.1, Math.max(1, Math.min(3, width * 0.08)), Math.max(2, Math.min(6, height * 0.06)), -0.25, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255, 239, 196, .9)';
+      ctx.lineWidth = Math.max(1.5, Math.min(3, width * 0.08));
+      ctx.beginPath();
+      ctx.moveTo(-width / 2 + 4, -height / 2 + 2);
+      ctx.lineTo(width / 2 - 4, -height / 2 + 2);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(65, 31, 19, .58)';
+      ctx.lineWidth = Math.max(2, Math.min(4, height * 0.04));
+      ctx.beginPath();
+      ctx.moveTo(-width / 2 + 3, height / 2 - 2);
+      ctx.lineTo(width / 2 - 3, height / 2 - 2);
+      ctx.stroke();
+    } else if (material === 'stone') {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(235, 241, 235, .5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-width / 2 + 4, -height / 2 + 3);
+      ctx.lineTo(width / 2 - 4, -height / 2 + 3);
+      ctx.moveTo(-width / 2 + 3, -height / 2 + 4);
+      ctx.lineTo(-width / 2 + 3, height / 2 - 4);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(25, 34, 40, .55)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(-width / 2 + 5, -height / 4);
-      ctx.lineTo(width / 2 - 5, -height / 4);
-      ctx.moveTo(-width / 2 + 5, height / 4);
-      ctx.lineTo(width / 2 - 5, height / 4);
+      ctx.moveTo(-width / 2 + 3, height / 2 - 3);
+      ctx.lineTo(width / 2 - 3, height / 2 - 3);
+      ctx.moveTo(width / 2 - 3, -height / 2 + 3);
+      ctx.lineTo(width / 2 - 3, height / 2 - 3);
       ctx.stroke();
+      const boltRadius = Math.max(2, Math.min(4, Math.min(width, height) * 0.12));
+      for (const bx of [-1, 1]) {
+        for (const by of [-1, 1]) {
+          const boltX = bx * (width / 2 - boltRadius - 3);
+          const boltY = by * (height / 2 - boltRadius - 3);
+          const bolt = ctx.createRadialGradient(boltX - 1, boltY - 1, 0, boltX, boltY, boltRadius * 1.5);
+          bolt.addColorStop(0, '#f4f2df');
+          bolt.addColorStop(0.4, '#87949a');
+          bolt.addColorStop(1, '#34434c');
+          ctx.fillStyle = bolt;
+          ctx.beginPath();
+          ctx.arc(boltX, boltY, boltRadius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
     } else if (material === 'glass') {
       ctx.fillStyle = 'rgba(255,255,255,.48)';
       ctx.fillRect(-width / 2 + 4, -height / 2 + 4, Math.max(2, width * 0.18), height - 8);
@@ -238,7 +341,12 @@ export class GameCanvasRenderer {
     const ctx = this.context;
     const width = entity.width ?? 24;
     const height = entity.height ?? 140;
-    ctx.fillStyle = '#566675';
+    const metal = ctx.createLinearGradient(-width / 2, 0, width / 2, 0);
+    metal.addColorStop(0, '#26343d');
+    metal.addColorStop(0.32, '#b6c1c1');
+    metal.addColorStop(0.65, '#596b74');
+    metal.addColorStop(1, '#d2d5cd');
+    ctx.fillStyle = metal;
     ctx.strokeStyle = '#d7e1e7';
     ctx.lineWidth = 3;
     ctx.fillRect(-width / 2, -height / 2, width, height);
@@ -249,6 +357,14 @@ export class GameCanvasRenderer {
       ctx.moveTo(-width / 2 + 4, y);
       ctx.lineTo(width / 2 - 4, y);
       ctx.stroke();
+    }
+    for (const y of [-height / 2 + 8, height / 2 - 8]) {
+      for (const x of [-width / 2 + 7, width / 2 - 7]) {
+        ctx.fillStyle = '#d1d2c6';
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 

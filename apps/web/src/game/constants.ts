@@ -4,7 +4,7 @@ export const WORLD = {
   width: 1280,
   height: 720,
   cannon: { x: 160, y: 525 } satisfies Point,
-  nest: { x: 1150, y: 620 } satisfies Point,
+  nest: { x: 360, y: 620 } satisfies Point,
   maxDrag: 125,
   gravityY: 1.05,
 } as const;

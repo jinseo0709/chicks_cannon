@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SvgAssetCache } from './asset-cache';
 import { GameCanvasRenderer } from './renderer';
-import { CHICK_FORMS } from './constants';
+import { CHICK_FORMS, WORLD } from './constants';
 import { STAGES } from './stages';
 import type { GameSnapshot } from './types';
 
@@ -9,8 +9,9 @@ const gradient = { addColorStop: vi.fn() };
 const context = {
   save: vi.fn(), restore: vi.fn(), setTransform: vi.fn(), clearRect: vi.fn(), fillRect: vi.fn(),
   translate: vi.fn(), scale: vi.fn(), drawImage: vi.fn(), createLinearGradient: vi.fn(() => gradient),
+  createRadialGradient: vi.fn(() => gradient),
   beginPath: vi.fn(), ellipse: vi.fn(), fill: vi.fn(), stroke: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
-  quadraticCurveTo: vi.fn(), arc: vi.fn(), setLineDash: vi.fn(), rotate: vi.fn(), strokeRect: vi.fn(),
+  quadraticCurveTo: vi.fn(), bezierCurveTo: vi.fn(), rect: vi.fn(), clip: vi.fn(), arc: vi.fn(), setLineDash: vi.fn(), rotate: vi.fn(), strokeRect: vi.fn(),
   fillText: vi.fn(), roundRect: vi.fn(),
   fillStyle: '', strokeStyle: '', lineWidth: 1, lineCap: 'butt', shadowColor: '', shadowBlur: 0,
   font: '', textAlign: 'start', textBaseline: 'alphabetic',
@@ -52,5 +53,41 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
     renderer.render(snapshot, 520);
     expect(context.clearRect).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws the loaded chick at the cannon while aiming', () => {
+    const image = document.createElement('img');
+    const assets = new SvgAssetCache();
+    vi.spyOn(assets, 'get').mockReturnValue(image);
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, assets);
+    renderer.resize(1280, 720, 1);
+    renderer.render(snapshot, 100);
+    const radius = snapshot.form.radius;
+    expect(context.drawImage).toHaveBeenCalledWith(
+      image,
+      -radius * 1.4,
+      -radius * 1.4,
+      radius * 2.8,
+      radius * 2.8,
+    );
+    renderer.dispose();
+  });
+
+  it('renders material texture and contact shadows for stage objects', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    renderer.render({
+      ...snapshot,
+      entities: [
+        { id: 1, kind: 'block', x: 400, y: 600, width: 48, height: 80, angle: 0, material: 'wood', alive: true },
+        { id: 2, kind: 'block', x: 460, y: 600, width: 48, height: 80, angle: 0, material: 'stone', alive: true },
+      ],
+    }, 100);
+    expect(context.ellipse).toHaveBeenCalled();
+    expect(context.bezierCurveTo).toHaveBeenCalled();
+    expect(context.createRadialGradient).toHaveBeenCalled();
+    renderer.dispose();
   });
 });
