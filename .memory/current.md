@@ -7,11 +7,12 @@
 [P01 React 게임 이전 및 시각화](./phases/2026-10-20-chicks-cannon-react/P01-react-game/phase.md)
 
 ## Active Task
-[T02 Matter.js 게임 엔진](./phases/2026-10-20-chicks-cannon-react/P01-react-game/T02-game-engine.md)
+[T03 Canvas SVG 장면 렌더러](./phases/2026-10-20-chicks-cannon-react/P01-react-game/T03-canvas-svg-renderer.md)
 
 ## Status
 - T01 구현·검증·커밋 완료
-- T02 대기 중이며 이번 요청에서는 진행하지 않음
+- T02 구현·검증·커밋 완료; T03 활성
 
 ## Next Step
-다음 실행에서 T02 청사진을 읽고 Matter.js 기반 게임 엔진을 구현한다.
+T03 청사진을 읽고 SVG 장면을 Canvas에 렌더링하는 어댑터와 포인터 입력을 구현한다.
+

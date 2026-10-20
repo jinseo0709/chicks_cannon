@@ -1,6 +1,6 @@
-# Task: T02 Matter.js 캠페인 엔진 및 규칙 이전
+﻿# Task: T02 Matter.js 캠페인 엔진 및 규칙 이전
 
-## Status: pending
+## Status: done
 
 ## Goal
 첨부 HTML의 물리·스테이지·점수·승패 규칙을 React와 분리된 TypeScript 게임 엔진으로 이전해 4개 챕터가 동일한 핵심 플레이를 제공하도록 한다.
@@ -113,6 +113,7 @@ Task: T02-game-engine
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
-- commit: pending
+- [x] 구현 완료
+- [x] 검증 통과
+- commit: feat(game): port four chapter Matter.js campaign rules
+
