@@ -5,11 +5,9 @@ export interface GameModalProps {
   snapshot: GameSnapshot;
   onRetry(): void;
   onContinue(): void;
-  onPlayAgain(): void;
-  onOpenLeaderboard(): void;
 }
 
-export function GameModal({ snapshot, onRetry, onContinue, onPlayAgain, onOpenLeaderboard }: GameModalProps): JSX.Element | null {
+export function GameModal({ snapshot, onRetry, onContinue }: GameModalProps): JSX.Element | null {
   if (snapshot.state === 'WON') {
     return <div className="win-toast" role="status">둥지 탈환 성공! 다음 모험이 열려요 💛</div>;
   }
@@ -38,22 +36,6 @@ export function GameModal({ snapshot, onRetry, onContinue, onPlayAgain, onOpenLe
           <h2 id="defeat-title">{hostage ? '인질 달걀이 깨졌어요' : '둥지 탈환에 실패했어요'}</h2>
           <p>{hostage ? '아기 달걀을 지키면서 요새를 공략해 주세요.' : '대포 탄환을 모두 소진했어요. 다른 각도로 도전해 보세요.'}</p>
           <button className="button button-primary" onClick={onRetry}>챕터 다시 도전</button>
-        </section>
-      </div>
-    );
-  }
-  if (snapshot.state === 'ENDING') {
-    return (
-      <div className="overlay-backdrop">
-        <section className="modal-card ending-modal" role="dialog" aria-modal="true" aria-labelledby="ending-title">
-          <div className="modal-emoji" aria-hidden="true">🐣💛🏡</div>
-          <p className="eyebrow">THE END · HOME AGAIN</p>
-          <h2 id="ending-title">우리 둥지를 되찾았어요!</h2>
-          <p className="final-score">최종 점수 <strong>{snapshot.score.toLocaleString('ko-KR')}</strong></p>
-          <div className="modal-actions">
-            <button className="button button-primary" onClick={onPlayAgain}>다시 모험하기</button>
-            <button className="button button-secondary" onClick={onOpenLeaderboard}>순위표</button>
-          </div>
         </section>
       </div>
     );

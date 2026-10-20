@@ -499,6 +499,112 @@ h2 {
   transform: translate(50%, -50%);
 }
 
+.leaderboard-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 3vh, 2rem);
+  padding: clamp(1rem, 4vw, 3rem);
+  overflow: auto;
+  color: #493824;
+  background:
+    radial-gradient(ellipse at 88% 12%, rgb(255 255 255 / 70%) 0 6%, transparent 6.5%),
+    linear-gradient(180deg, #c8e9e9, #fff2cf 75%, #bed3a0);
+}
+
+.leaderboard-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+
+.leaderboard-header h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 3.4rem);
+}
+
+.leaderboard-header .eyebrow { margin-bottom: 0.2rem; }
+.leaderboard-back { justify-self: start; }
+
+.leaderboard-table-wrap {
+  width: 100%;
+  overflow: auto;
+  background: rgb(255 252 238 / 84%);
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 1rem;
+  box-shadow: 0 0.8rem 2rem rgb(58 73 69 / 12%);
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #e9ddc4;
+  white-space: nowrap;
+}
+
+.leaderboard-table thead th {
+  color: #806543;
+  background: #f9edce;
+  font-size: 0.8rem;
+}
+
+.leaderboard-table tbody tr:last-child th,
+.leaderboard-table tbody tr:last-child td { border-bottom: 0; }
+.leaderboard-table tbody th { font-weight: 800; }
+.leaderboard-score { color: #a56628; font-weight: 900; }
+.rank-medal { font-size: 1.2rem; }
+.rank-number { display: inline-grid; min-width: 1.5rem; place-items: center; font-weight: 900; }
+
+.leaderboard-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.leaderboard-pagination span { color: #6b5941; font-size: 0.9rem; font-weight: 800; }
+.leaderboard-status,
+.leaderboard-error,
+.leaderboard-empty { margin: auto; text-align: center; }
+.leaderboard-empty > span { font-size: clamp(3rem, 8vw, 5rem); }
+.leaderboard-empty h2 { margin: 0.5rem 0; }
+.leaderboard-empty p { color: #6b5941; }
+.leaderboard-error { max-width: 32rem; padding: 1.5rem; background: rgb(255 250 231 / 84%); border-radius: 1rem; }
+
+.nickname-dialog { display: grid; gap: 0.65rem; text-align: left; }
+.nickname-dialog .eyebrow,
+.nickname-dialog h2 { text-align: center; }
+.nickname-dialog label { font-weight: 900; }
+.nickname-dialog label span,
+.nickname-help { color: #806e55; font-size: 0.78rem; }
+.nickname-dialog input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.65rem 0.85rem;
+  color: #493824;
+  background: #fff;
+  border: 2px solid #d9c495;
+  border-radius: 0.75rem;
+  font: inherit;
+}
+.nickname-dialog input:focus { outline: 3px solid #e9b348; outline-offset: 2px; }
+.nickname-help { margin: 0; }
+.form-error { color: #a63127 !important; font-weight: 800; }
+.button-submit-score { color: #4c321e; background: linear-gradient(180deg, #ffe19a, #edb94f); }
+.score-submission { margin: 0.75rem 0 1rem; }
+.submission-success { margin: 0; color: #42653b !important; font-weight: 900; }
+.text-button { padding: 0.3rem; color: #805425; cursor: pointer; background: none; border: 0; text-decoration: underline; }
+
 @keyframes bob {
   0%,
   100% { transform: translateY(0); }
@@ -512,8 +618,8 @@ h2 {
 
   .game-frame {
     width: 100%;
-    height: min(100%, calc(100dvh - 0.5rem));
-    min-height: 28rem;
+    height: min(calc(100dvh - 0.5rem), 55rem);
+    min-height: min(28rem, calc(100dvh - 0.5rem));
     max-height: 55rem;
     aspect-ratio: auto;
     border-radius: 0.75rem;
@@ -553,6 +659,15 @@ h2 {
   .story-panel { grid-template-columns: 1fr; justify-items: center; max-height: 88%; overflow: auto; text-align: center; }
   .story-avatar { font-size: 3rem; }
   .story-copy h2 { font-size: 1.2rem; }
+  .leaderboard-screen { gap: 0.75rem; padding: 0.7rem; }
+  .leaderboard-header { grid-template-columns: 1fr; justify-items: center; gap: 0.5rem; text-align: center; }
+  .leaderboard-header h1 { font-size: 1.55rem; }
+  .leaderboard-back { min-height: 2.3rem; }
+  .leaderboard-table th, .leaderboard-table td { padding: 0.65rem 0.55rem; font-size: 0.78rem; }
+  .leaderboard-pagination { gap: 0.5rem; }
+  .leaderboard-pagination .button { min-height: 2.5rem; }
+  .leaderboard-pagination span { font-size: 0.72rem; }
+  .ending-modal { max-height: 92%; overflow: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

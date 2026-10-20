@@ -1,6 +1,6 @@
-# Task: T03 React 순위표와 점수 제출 흐름
+﻿# Task: T03 React 순위표와 점수 제출 흐름
 
-## Status: pending
+## Status: done
 
 ## Goal
 캠페인 완주 점수를 API에 등록하고 브라우저의 참가자/닉네임을 기억하며, 홈과 엔딩 화면에서 전 참가자 순위를 페이지 단위로 확인할 수 있게 한다.
@@ -91,6 +91,7 @@ Task: T03-leaderboard-ui
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
-- commit: pending
+- [x] 구현 완료
+- [x] 검증 통과
+- commit: feat(leaderboard): add nickname submission and full rankings UI
+

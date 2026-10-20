@@ -4,17 +4,18 @@
 [병아리 대포 React 전환 및 게임 개선](./plans/2026-10-20-chicks-cannon-react.md)
 
 ## Active Phase
-[P02 온라인 순위표](./phases/2026-10-20-chicks-cannon-react/P02-online-leaderboard/phase.md)
+[P03 Azure 배포 준비](./phases/2026-10-20-chicks-cannon-react/P03-azure-deployment/phase.md)
 
 ## Active Task
-[T03 순위표 UI](./phases/2026-10-20-chicks-cannon-react/P02-online-leaderboard/T03-leaderboard-ui.md)
+[T01 Azure 배포 준비](./phases/2026-10-20-chicks-cannon-react/P03-azure-deployment/T01-azure-deployment-readiness.md)
 
 ## Status
-- P02-T01 API와 P02-T02 Azure SQL 구현·검증·커밋 완료
-- P01 4개 Task와 P02-T01·T02 구현·검증·커밋 완료; P02-T03 활성
+- P02 온라인 순위표 3개 Task 구현·검증·커밋 완료
+- P01 4개 Task와 P02 3개 Task 구현·검증·커밋 완료; P03-T01 활성
 
 ## Next Step
-P02-T03 청사진을 읽고 브라우저 참가자 저장, 점수 제출 및 순위표 UI를 구현한다.
+P03-T01 청사진을 읽고 Azure Static Web Apps·Functions·SQL 배포 설정, 환경 예제와 운영 안내를 준비한다.
+
 
 
 

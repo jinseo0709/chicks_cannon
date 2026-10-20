@@ -6,7 +6,10 @@ vi.mock('./components/GameCanvas', () => ({
   GameCanvas: () => <div aria-label="게임 캔버스 자리표시자" />,
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe('App navigation and campaign entry', () => {
   it('renders the home title and starts a story-led game session', () => {
@@ -20,11 +23,15 @@ describe('App navigation and campaign entry', () => {
     expect(screen.getByRole('button', { name: '현재 챕터 다시 시작' })).toBeTruthy();
   });
 
-  it('keeps a leaderboard entry point and returns home from the placeholder', () => {
+  it('opens the paginated leaderboard and returns home', async () => {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({
+      items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 0,
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: '순위표' }));
-    expect(screen.getByRole('heading', { name: '모험가 순위표' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '홈으로' }));
+    expect(await screen.findByRole('heading', { name: '모험가 순위표' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: '아직 등록된 기록이 없어요' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '← 돌아가기' }));
     expect(screen.getByRole('heading', { name: '병아리 대포' })).toBeTruthy();
   });
 });
