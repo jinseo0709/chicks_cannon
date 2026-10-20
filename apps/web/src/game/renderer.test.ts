@@ -11,7 +11,7 @@ const context = {
   translate: vi.fn(), scale: vi.fn(), drawImage: vi.fn(), createLinearGradient: vi.fn(() => gradient),
   createRadialGradient: vi.fn(() => gradient),
   beginPath: vi.fn(), ellipse: vi.fn(), fill: vi.fn(), stroke: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
-  quadraticCurveTo: vi.fn(), bezierCurveTo: vi.fn(), rect: vi.fn(), clip: vi.fn(), arc: vi.fn(), setLineDash: vi.fn(), rotate: vi.fn(), strokeRect: vi.fn(),
+  quadraticCurveTo: vi.fn(), bezierCurveTo: vi.fn(), rect: vi.fn(), clip: vi.fn(), closePath: vi.fn(), arc: vi.fn(), setLineDash: vi.fn(), rotate: vi.fn(), strokeRect: vi.fn(),
   fillText: vi.fn(), roundRect: vi.fn(),
   fillStyle: '', strokeStyle: '', lineWidth: 1, lineCap: 'butt', shadowColor: '', shadowBlur: 0,
   globalAlpha: 1,
@@ -92,19 +92,35 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
   });
 
-  it('renders repeatable animated background coordinates for a fixed scene time', () => {
+  it('keeps chapters 1 to 3 static while chapter 4 particles are deterministic', () => {
     const canvas = document.createElement('canvas');
     const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
     renderer.resize(1280, 720, 1);
-    const pausedSnapshot = { ...snapshot, state: 'PAUSED' as const, ammo: 0 };
-    renderer.render(pausedSnapshot, 750);
-    const firstFrameArcs = [...vi.mocked(context.arc).mock.calls];
+    const emptySnapshot = { ...snapshot, state: 'PAUSED' as const, ammo: 0 };
+    const firstStops = { 1: '#a0d8ef', 2: '#ff7e5f', 3: '#2b1055' } as const;
+    for (const stage of [1, 2, 3] as const) {
+      vi.clearAllMocks();
+      renderer.render({ ...emptySnapshot, stage }, 200);
+      expect(vi.mocked(gradient.addColorStop).mock.calls.flat().join(' ')).toContain(firstStops[stage]);
+      const fixedArcs = [...vi.mocked(context.arc).mock.calls];
+      const fixedTransforms = [...vi.mocked(context.translate).mock.calls];
+      vi.clearAllMocks();
+      renderer.render({ ...emptySnapshot, stage }, 6200);
+      expect(vi.mocked(context.arc).mock.calls).toEqual(fixedArcs);
+      expect(vi.mocked(context.translate).mock.calls).toEqual(fixedTransforms);
+    }
+
     vi.clearAllMocks();
-    renderer.render(pausedSnapshot, 750);
-    expect(vi.mocked(context.arc).mock.calls).toEqual(firstFrameArcs);
+    renderer.render({ ...emptySnapshot, stage: 4 }, 200);
+    const festivalAtStart = [...vi.mocked(context.translate).mock.calls];
     vi.clearAllMocks();
-    renderer.render(pausedSnapshot, 1750);
-    expect(vi.mocked(context.arc).mock.calls).not.toEqual(firstFrameArcs);
+    renderer.render({ ...emptySnapshot, stage: 4 }, 200);
+    expect(vi.mocked(context.translate).mock.calls).toEqual(festivalAtStart);
+    vi.clearAllMocks();
+    renderer.render({ ...emptySnapshot, stage: 4 }, 6200);
+    expect(vi.mocked(context.translate).mock.calls).not.toEqual(festivalAtStart);
+
+    expect(vi.mocked(gradient.addColorStop).mock.calls.flat().join(' ')).toContain('#f6d365');
     renderer.dispose();
   });
 });

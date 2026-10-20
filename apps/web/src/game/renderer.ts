@@ -44,7 +44,7 @@ export class GameCanvasRenderer {
     ctx.save();
     const shake = snapshot.state === 'LOST' || snapshot.state === 'WON' ? Math.sin(sceneTime / 24) * 2 : 0;
     ctx.translate(shake, 0);
-    this.drawGround();
+    this.drawGround(snapshot.stage);
     snapshot.entities.forEach((entity) => this.drawEntityShadow(entity));
     this.drawProp('nest', WORLD.nest.x, WORLD.nest.y, 180, 110);
     this.drawProp('slingshot', WORLD.cannon.x, WORLD.cannon.y + 20, 78, 136);
@@ -61,212 +61,297 @@ export class GameCanvasRenderer {
 
   private drawBackground(stage: GameSnapshot['stage'], sceneTime: number): void {
     const ctx = this.context;
-    const palettes = {
-      1: ['#76b8df', '#f4c590'],
-      2: ['#647f9c', '#d5a995'],
-      3: ['#e98a68', '#f4c28b'],
-      4: ['#645c91', '#e8a778'],
-    } satisfies Record<GameSnapshot['stage'], [string, string]>;
     ctx.save();
-    const sky = ctx.createLinearGradient(0, 0, 0, WORLD.height);
-    sky.addColorStop(0, palettes[stage][0]);
-    sky.addColorStop(0.72, palettes[stage][1]);
-    sky.addColorStop(1, '#dfb28a');
+    switch (stage) {
+      case 1: this.drawChapterOneBackground(); break;
+      case 2: this.drawChapterTwoBackground(); break;
+      case 3: this.drawChapterThreeBackground(); break;
+      case 4: this.drawChapterFourBackground(sceneTime); break;
+    }
+    ctx.restore();
+  }
+
+  private drawChapterOneBackground(): void {
+    const ctx = this.context;
+    const sky = ctx.createLinearGradient(0, 0, 0, 470);
+    sky.addColorStop(0, '#a0d8ef');
+    sky.addColorStop(1, '#e0f4ff');
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, WORLD.width, WORLD.height);
-    this.drawSunGlow(sceneTime);
-    this.drawFarLayer(stage, sceneTime);
-    this.drawMidLayer(stage, sceneTime);
-    this.drawNearLayer(sceneTime);
-    this.drawAnimatedParticles(stage, sceneTime);
-    ctx.restore();
+    this.drawCloud(160, 150, 1.1);
+    this.drawCloud(545, 105, 0.78);
+    this.drawCloud(1010, 180, 1.25);
+
+    ctx.fillStyle = '#be5144';
+    ctx.fillRect(0, 430, WORLD.width, 235);
+    ctx.fillStyle = '#d36a55';
+    for (let row = 0; row < 6; row += 1) {
+      const offset = row % 2 === 0 ? 0 : 34;
+      for (let x = -34 + offset; x < WORLD.width; x += 68) {
+        ctx.fillRect(x + 3, 438 + row * 37, 58, 27);
+        ctx.fillStyle = 'rgba(255, 202, 142, .2)';
+        ctx.fillRect(x + 5, 440 + row * 37, 54, 3);
+        ctx.fillStyle = '#d36a55';
+      }
+    }
+    ctx.fillStyle = '#8e3e3b';
+    for (const x of [95, 1180]) {
+      ctx.fillRect(x - 8, 215, 16, 290);
+      ctx.fillRect(x - 24, 215, 48, 14);
+      ctx.fillStyle = '#e18a62';
+      ctx.fillRect(x - 5, 226, 4, 260);
+      ctx.fillStyle = '#8e3e3b';
+    }
+    ctx.strokeStyle = '#465567';
+    ctx.lineWidth = 4;
+    for (const y of [247, 265, 283]) {
+      ctx.beginPath();
+      ctx.moveTo(95, y);
+      ctx.quadraticCurveTo(640, y + 22, 1180, y);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#f7df9b';
+    ctx.beginPath();
+    ctx.arc(1070, 125, 50, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  private drawSunGlow(sceneTime: number): void {
+  private drawChapterTwoBackground(): void {
     const ctx = this.context;
-    const x = 1000 + Math.sin(sceneTime / 18000) * 12;
-    const y = 168;
-    ctx.save();
-    ctx.shadowColor = 'rgba(255, 220, 151, .72)';
-    ctx.shadowBlur = 34;
-    const glow = ctx.createRadialGradient(x, y, 10, x, y, 150);
-    glow.addColorStop(0, 'rgba(255, 241, 191, .92)');
-    glow.addColorStop(0.48, 'rgba(255, 205, 139, .5)');
-    glow.addColorStop(1, 'rgba(255, 191, 135, 0)');
-    ctx.fillStyle = glow;
+    const sky = ctx.createLinearGradient(0, 0, 0, 670);
+    sky.addColorStop(0, '#ff7e5f');
+    sky.addColorStop(0.58, '#feb47b');
+    sky.addColorStop(1, '#ffeccc');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+    ctx.fillStyle = 'rgba(255, 235, 189, .82)';
     ctx.beginPath();
-    ctx.arc(x, y, 150, 0, Math.PI * 2);
+    ctx.arc(1010, 170, 64, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(255, 225, 166, .92)';
-    ctx.beginPath();
-    ctx.arc(x, y, 68, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
 
-  private drawFarLayer(stage: GameSnapshot['stage'], sceneTime: number): void {
-    const ctx = this.context;
-    const drift = (sceneTime * 0.08) % WORLD.width;
-    ctx.save();
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = stage === 4 ? '#4b526d' : '#657984';
     const buildings = [
-      { x: 24, w: 118, h: 112 }, { x: 168, w: 164, h: 176 }, { x: 365, w: 122, h: 136 },
-      { x: 520, w: 194, h: 204 }, { x: 748, w: 126, h: 147 }, { x: 905, w: 176, h: 188 },
-      { x: 1110, w: 142, h: 126 },
+      { x: 15, y: 298, w: 172, h: 265 }, { x: 205, y: 365, w: 142, h: 198 },
+      { x: 366, y: 250, w: 195, h: 313 }, { x: 585, y: 335, w: 164, h: 228 },
+      { x: 772, y: 276, w: 184, h: 287 }, { x: 976, y: 345, w: 128, h: 218 },
+      { x: 1124, y: 230, w: 146, h: 333 },
     ];
-    for (const building of buildings) {
-      const x = ((building.x - drift + WORLD.width * 2) % WORLD.width) - 25;
-      const top = 470 - building.h;
-      ctx.fillRect(x, top, building.w, building.h);
-      ctx.fillStyle = 'rgba(255, 221, 163, .38)';
-      for (let row = 0; row < Math.floor(building.h / 34); row += 1) {
-        for (let col = 0; col < Math.floor(building.w / 30); col += 1) {
-          ctx.fillRect(x + 12 + col * 30, top + 18 + row * 34, 7, 10);
+    ctx.fillStyle = '#70516c';
+    for (const [index, building] of buildings.entries()) {
+      ctx.fillRect(building.x, building.y, building.w, building.h);
+      ctx.fillStyle = '#9a6780';
+      ctx.fillRect(building.x - 4, building.y, building.w + 8, 8);
+      for (let row = 0; row < 5; row += 1) {
+        for (let col = 0; col < Math.floor(building.w / 34); col += 1) {
+          ctx.fillStyle = (row + col + index) % 3 === 0 ? '#ffe7a3' : '#f1b876';
+          ctx.fillRect(building.x + 14 + col * 34, building.y + 22 + row * 42, 11, 16);
         }
       }
-      ctx.fillStyle = stage === 4 ? '#4b526d' : '#657984';
+      ctx.fillStyle = '#70516c';
     }
-    const haze = ctx.createLinearGradient(0, 370, 0, 535);
-    haze.addColorStop(0, 'rgba(255, 230, 193, 0)');
-    haze.addColorStop(1, 'rgba(255, 226, 187, .52)');
-    ctx.fillStyle = haze;
-    ctx.fillRect(0, 370, WORLD.width, 165);
-    ctx.restore();
-  }
-
-  private drawMidLayer(stage: GameSnapshot['stage'], sceneTime: number): void {
-    const ctx = this.context;
-    const drift = (sceneTime * 0.22) % 180;
-    ctx.save();
-    ctx.fillStyle = stage === 4 ? '#545568' : '#77766f';
-    ctx.fillRect(-drift, 520, WORLD.width + 180, 118);
-    ctx.fillStyle = stage === 4 ? '#444858' : '#646860';
-    for (let x = -drift; x < WORLD.width + 140; x += 220) {
-      ctx.fillRect(x + 34, 430, 58, 90);
-      ctx.fillRect(x + 26, 420, 74, 12);
-    }
-    // Chimneys and fixed-seed smoke puffs.
-    for (const [chimneyIndex, x] of [280, 862].entries()) {
-      ctx.fillStyle = '#705648';
-      ctx.fillRect(x, 378, 22, 72);
-      ctx.fillStyle = '#4b4140';
-      ctx.fillRect(x - 4, 375, 30, 8);
-      for (let puff = 0; puff < 3; puff += 1) {
-        const phase = ((sceneTime / 1250 + puff * 0.34 + chimneyIndex * 0.27) % 1);
-        const px = x + 10 + Math.sin(phase * Math.PI * 2 + puff) * (5 + phase * 8);
-        const py = 366 - phase * 58 - puff * 7;
-        ctx.globalAlpha = 0.23 * (1 - phase);
-        ctx.fillStyle = '#f7eee1';
-        ctx.beginPath();
-        ctx.arc(px, py, 7 + phase * 9, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    ctx.globalAlpha = 1;
-    // Rooftop water tank.
-    ctx.fillStyle = '#687981';
-    ctx.fillRect(700, 386, 76, 48);
+    // Fixed rooftop water tank and laundry line.
+    ctx.fillStyle = '#416e7c';
+    ctx.fillRect(690, 320, 82, 51);
     ctx.beginPath();
-    ctx.ellipse(738, 386, 38, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(731, 320, 41, 12, 0, Math.PI, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#899a99';
-    ctx.fillRect(707, 433, 7, 44);
-    ctx.fillRect(762, 433, 7, 44);
-    // Laundry line and cloth.
-    ctx.strokeStyle = 'rgba(55, 58, 58, .72)';
-    ctx.lineWidth = 2;
+    ctx.fillRect(700, 370, 8, 53);
+    ctx.fillRect(754, 370, 8, 53);
+    ctx.strokeStyle = '#584761';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(930, 410);
-    ctx.quadraticCurveTo(1010, 426, 1090, 407);
+    ctx.moveTo(835, 318);
+    ctx.quadraticCurveTo(960, 350, 1090, 316);
     ctx.stroke();
-    for (const [index, color] of ['#d98b69', '#e9d4a2', '#8eb7b0'].entries()) {
-      const x = 953 + index * 42;
+    for (const [index, color] of ['#f06d67', '#ffe3a1', '#8bd0c0'].entries()) {
+      const x = 858 + index * 48;
       ctx.fillStyle = color;
-      ctx.fillRect(x, 414 + index * 3, 25, 32);
-      ctx.fillStyle = 'rgba(255,255,255,.42)';
-      ctx.fillRect(x + 4, 417 + index * 3, 4, 25);
+      ctx.fillRect(x, 328 + index * 2, 29, 43);
+      ctx.fillStyle = 'rgba(255,255,255,.48)';
+      ctx.fillRect(x + 4, 331 + index * 2, 4, 35);
     }
-    ctx.restore();
   }
 
-  private drawNearLayer(sceneTime: number): void {
+  private drawChapterThreeBackground(): void {
     const ctx = this.context;
-    const drift = (sceneTime * 0.45) % 54;
-    ctx.save();
-    const rust = ctx.createLinearGradient(0, 536, 0, 594);
-    rust.addColorStop(0, '#a85d3a');
-    rust.addColorStop(0.42, '#46534f');
-    rust.addColorStop(1, '#303d3d');
-    ctx.fillStyle = rust;
-    for (const y of [542, 582, 622]) ctx.fillRect(0, y, WORLD.width, 9);
-    ctx.fillRect(0, 542, 8, 96);
-    for (let x = -drift; x < WORLD.width; x += 54) {
-      ctx.fillStyle = '#46534f';
-      ctx.fillRect(x, 542, 7, 96);
-      ctx.fillStyle = '#c17b52';
-      ctx.beginPath();
-      ctx.arc(x + 3.5, 546.5, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x + 3.5, 586.5, 2.2, 0, Math.PI * 2);
-      ctx.fill();
+    const sky = ctx.createLinearGradient(0, 0, 0, WORLD.height);
+    sky.addColorStop(0, '#2b1055');
+    sky.addColorStop(1, '#7597de');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+    const moonGlow = ctx.createRadialGradient(1000, 170, 22, 1000, 170, 140);
+    moonGlow.addColorStop(0, 'rgba(221, 235, 255, .9)');
+    moonGlow.addColorStop(0.45, 'rgba(170, 194, 255, .38)');
+    moonGlow.addColorStop(1, 'rgba(154, 174, 255, 0)');
+    ctx.fillStyle = moonGlow;
+    ctx.beginPath();
+    ctx.arc(1000, 170, 140, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#e0e9ff';
+    ctx.beginPath();
+    ctx.arc(1000, 170, 58, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#45356f';
+    ctx.fillRect(0, 455, WORLD.width, 225);
+    ctx.fillStyle = '#64458a';
+    for (let x = 0; x < WORLD.width; x += 190) {
+      ctx.fillRect(x + 24, 356 + (x % 3) * 16, 98, 110);
+      ctx.fillRect(x + 14, 346 + (x % 3) * 16, 118, 14);
     }
-    ctx.restore();
+    ctx.fillStyle = '#392d5f';
+    ctx.fillRect(265, 290, 43, 166);
+    ctx.fillRect(260, 280, 53, 14);
+    ctx.fillRect(845, 330, 38, 126);
+    ctx.fillRect(840, 320, 48, 14);
+    this.drawGear(435, 365, 62, 12);
+    this.drawGear(1090, 395, 46, 10);
+    ctx.strokeStyle = '#47c3d0';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(0, 456);
+    ctx.lineTo(WORLD.width, 456);
+    ctx.stroke();
   }
 
-  private drawAnimatedParticles(stage: GameSnapshot['stage'], sceneTime: number): void {
+  private drawChapterFourBackground(sceneTime: number): void {
     const ctx = this.context;
-    ctx.save();
-    // Three distant birds glide on deterministic, looping paths.
-    ctx.strokeStyle = stage === 4 ? 'rgba(61, 53, 75, .62)' : 'rgba(67, 75, 73, .58)';
-    ctx.lineWidth = 2.5;
-    for (let index = 0; index < 3; index += 1) {
-      const x = ((150 + index * 360 + sceneTime * (0.018 + index * 0.003)) % (WORLD.width + 90)) - 45;
-      const y = 210 + index * 38 + Math.sin(sceneTime / 900 + index * 2) * 9;
+    const sky = ctx.createLinearGradient(0, 0, 0, WORLD.height);
+    sky.addColorStop(0, '#f6d365');
+    sky.addColorStop(0.62, '#fda085');
+    sky.addColorStop(1, '#d8f0b0');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+    ctx.fillStyle = '#fff0af';
+    ctx.beginPath();
+    ctx.arc(1055, 142, 58, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.lineWidth = 22;
+    for (const [index, color] of ['#ed6e62', '#f6c85f', '#72bf9b', '#7198d5'].entries()) {
+      ctx.strokeStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x - 10, y);
-      ctx.quadraticCurveTo(x - 4, y - 7, x, y);
-      ctx.quadraticCurveTo(x + 5, y - 7, x + 11, y - 1);
+      ctx.arc(650, 470, 182 - index * 21, Math.PI, Math.PI * 2);
       ctx.stroke();
     }
-    // Dust and rooftop glints use fixed index-based seeds, never frame randomness.
-    for (let index = 0; index < 8; index += 1) {
-      const phase = (sceneTime / (3200 + index * 170) + index * 0.137) % 1;
-      const x = (index * 173 + Math.sin(phase * Math.PI * 2 + index) * 24 + WORLD.width) % WORLD.width;
-      const y = 345 + ((index * 47 + phase * 125) % 145);
-      ctx.globalAlpha = 0.12 + 0.22 * (0.5 + 0.5 * Math.sin(phase * Math.PI * 2));
-      ctx.fillStyle = '#fff4d4';
-      ctx.beginPath();
-      ctx.arc(x, y, 1.5 + (index % 3) * 0.45, 0, Math.PI * 2);
-      ctx.fill();
+    ctx.fillStyle = '#92cf8b';
+    ctx.beginPath();
+    ctx.ellipse(330, 670, 530, 155, 0, Math.PI, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#69b982';
+    ctx.beginPath();
+    ctx.ellipse(1000, 682, 490, 142, 0, Math.PI, Math.PI * 2);
+    ctx.fill();
+    this.drawFestivalParticles(sceneTime);
+  }
+
+  private drawCloud(x: number, y: number, scale: number): void {
+    const ctx = this.context;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,.88)';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 53 * scale, 22 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x - 27 * scale, y - 8 * scale, 26 * scale, 24 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 4 * scale, y - 17 * scale, 31 * scale, 30 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 34 * scale, y - 7 * scale, 24 * scale, 22 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  private drawGear(x: number, y: number, radius: number, teeth: number): void {
+    const ctx = this.context;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = '#db7b58';
+    ctx.strokeStyle = '#f5b474';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    for (let tooth = 0; tooth < teeth * 2; tooth += 1) {
+      const angle = (tooth * Math.PI) / teeth;
+      const r = tooth % 2 === 0 ? radius : radius * 0.76;
+      const px = Math.cos(angle) * r;
+      const py = Math.sin(angle) * r;
+      if (tooth === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
     }
-    for (let index = 0; index < 6; index += 1) {
-      const x = 80 + index * 212;
-      const y = 318 + Math.sin(sceneTime / 460 + index * 1.8) * 17;
-      const alpha = 0.24 + 0.45 * (0.5 + 0.5 * Math.sin(sceneTime / 330 + index * 2));
-      ctx.globalAlpha = alpha;
-      ctx.strokeStyle = '#fff1c5';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(x - 4, y);
-      ctx.lineTo(x + 4, y);
-      ctx.moveTo(x, y - 4);
-      ctx.lineTo(x, y + 4);
-      ctx.stroke();
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#48336f';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.32, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  private drawFestivalParticles(sceneTime: number): void {
+    const ctx = this.context;
+    ctx.save();
+    for (let index = 0; index < 14; index += 1) {
+      const cycle = (sceneTime / (4200 + index * 170) + index * 0.137) % 1;
+      const x = (82 + index * 89 + Math.sin(sceneTime / 1150 + index * 1.7) * 18) % WORLD.width;
+      const y = 285 + ((index * 41 + cycle * 215) % 300);
+      ctx.globalAlpha = 0.55 + Math.sin(cycle * Math.PI) * 0.35;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.sin(cycle * Math.PI * 2 + index) * 0.65);
+      if (index < 8) {
+        ctx.fillStyle = ['#fff4a6', '#fff9d6', '#fbd1a5'][index % 3];
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 4 + (index % 3), 2.5 + (index % 2), 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = index % 2 === 0 ? '#fff4d6' : '#e9b96b';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(-3, -8);
+        ctx.quadraticCurveTo(6, 0, 0, 9);
+        ctx.moveTo(0, 8);
+        ctx.lineTo(0, -7);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
     ctx.restore();
   }
 
-  private drawGround(): void {
+  private drawGround(stage: GameSnapshot['stage']): void {
     const ctx = this.context;
-    ctx.fillStyle = '#8d6848';
-    ctx.fillRect(0, 692, WORLD.width, 28);
-    ctx.fillStyle = '#6e995c';
-    ctx.fillRect(0, 682, WORLD.width, 12);
-    ctx.fillStyle = 'rgba(56, 70, 66, .16)';
-    ctx.fillRect(0, 692, WORLD.width, 4);
+    ctx.save();
+    if (stage === 1) {
+      ctx.fillStyle = '#444b55';
+      ctx.fillRect(0, 682, WORLD.width, 38);
+      ctx.fillStyle = '#8b9297';
+      ctx.fillRect(0, 682, WORLD.width, 5);
+      ctx.fillStyle = '#f6d16b';
+      for (let x = 36; x < WORLD.width; x += 180) ctx.fillRect(x, 703, 78, 5);
+    } else if (stage === 2) {
+      ctx.fillStyle = '#47a9a2';
+      ctx.fillRect(0, 682, WORLD.width, 38);
+      ctx.fillStyle = '#f58b72';
+      ctx.fillRect(0, 682, WORLD.width, 6);
+      ctx.fillStyle = 'rgba(255,235,195,.72)';
+      for (let x = 35; x < WORLD.width; x += 220) ctx.fillRect(x, 695, 95, 4);
+    } else if (stage === 3) {
+      ctx.fillStyle = '#47356f';
+      ctx.fillRect(0, 682, WORLD.width, 38);
+      ctx.fillStyle = '#38b6c8';
+      ctx.fillRect(0, 682, WORLD.width, 5);
+      ctx.strokeStyle = 'rgba(192,170,255,.72)';
+      ctx.lineWidth = 2;
+      for (let x = 40; x < WORLD.width; x += 145) {
+        ctx.beginPath();
+        ctx.arc(x, 695, 3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle = '#6cb879';
+      ctx.fillRect(0, 682, WORLD.width, 38);
+      ctx.fillStyle = '#b8df89';
+      ctx.fillRect(0, 682, WORLD.width, 7);
+      ctx.fillStyle = '#b77a54';
+      ctx.fillRect(0, 708, WORLD.width, 12);
+    }
+    ctx.restore();
   }
 
   private drawProp(id: 'nest' | 'slingshot', x: number, y: number, width: number, height: number): void {
