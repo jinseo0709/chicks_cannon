@@ -7,15 +7,16 @@
 [P01 카툰 그래픽 및 게임 화면 개선](./phases/2026-10-20-chicks-cannon-graphics-overhaul/P01-visual-rework/phase.md)
 
 ## Active Task
-[T03 패럴랙스 장면 및 파티클](./phases/2026-10-20-chicks-cannon-graphics-overhaul/P01-visual-rework/T03-parallax-scene.md)
+[T04 HUD와 폰트 스타일](./phases/2026-10-20-chicks-cannon-graphics-overhaul/P01-visual-rework/T04-hud-polish.md)
 
 ## Status
 - P01-T01 완료 및 커밋: `3ffe426`
 - P01-T02 완료 및 검증 통과
-- P01-T03 진행 중
+- P01-T03 완료 및 검증 통과
+- P01-T04 진행 중
 
 ## Next Step (IMPORTANT)
-T03 청사진에 따라 3단 패럴랙스 배경, 노을 글로우, 결정적 파티클 애니메이션을 구현하고 지정 검증을 실행한다.
+T04 청사진에 따라 Jua 폰트, 왼쪽 아래 아이템 트레이, 입체 팝 아트 HUD를 구현하고 지정 검증을 실행한다.
 
 
 

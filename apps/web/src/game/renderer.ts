@@ -29,7 +29,7 @@ export class GameCanvasRenderer {
     this.canvas.height = Math.round(this.cssHeight * this.dpr);
   }
 
-  render(snapshot: GameSnapshot, nowMs: number): void {
+  render(snapshot: GameSnapshot, sceneTime: number): void {
     if (this.disposed) return;
     const ctx = this.context;
     ctx.save();
@@ -39,10 +39,10 @@ export class GameCanvasRenderer {
     ctx.fillRect(0, 0, this.cssWidth, this.cssHeight);
     ctx.translate(this.offsetX, this.offsetY);
     ctx.scale(this.scale, this.scale);
-    this.drawBackground(snapshot.stage);
+    this.drawBackground(snapshot.stage, sceneTime);
 
     ctx.save();
-    const shake = snapshot.state === 'LOST' || snapshot.state === 'WON' ? Math.sin(nowMs / 24) * 2 : 0;
+    const shake = snapshot.state === 'LOST' || snapshot.state === 'WON' ? Math.sin(sceneTime / 24) * 2 : 0;
     ctx.translate(shake, 0);
     this.drawGround();
     snapshot.entities.forEach((entity) => this.drawEntityShadow(entity));
@@ -50,7 +50,7 @@ export class GameCanvasRenderer {
     this.drawProp('slingshot', WORLD.cannon.x, WORLD.cannon.y + 20, 78, 136);
     this.drawAimGuide(snapshot);
     this.drawLoadedChick(snapshot);
-    snapshot.entities.forEach((entity) => this.drawEntity(entity, snapshot.stage, nowMs));
+    snapshot.entities.forEach((entity) => this.drawEntity(entity, snapshot.stage, sceneTime));
     ctx.restore();
     ctx.restore();
   }
@@ -59,21 +59,204 @@ export class GameCanvasRenderer {
     this.disposed = true;
   }
 
-  private drawBackground(stage: GameSnapshot['stage']): void {
-    const image = this.assets.get(`background-${stage}`);
-    if (image) {
-      this.context.drawImage(image, 0, 0, WORLD.width, WORLD.height);
-      return;
+  private drawBackground(stage: GameSnapshot['stage'], sceneTime: number): void {
+    const ctx = this.context;
+    const palettes = {
+      1: ['#76b8df', '#f4c590'],
+      2: ['#647f9c', '#d5a995'],
+      3: ['#e98a68', '#f4c28b'],
+      4: ['#645c91', '#e8a778'],
+    } satisfies Record<GameSnapshot['stage'], [string, string]>;
+    ctx.save();
+    const sky = ctx.createLinearGradient(0, 0, 0, WORLD.height);
+    sky.addColorStop(0, palettes[stage][0]);
+    sky.addColorStop(0.72, palettes[stage][1]);
+    sky.addColorStop(1, '#dfb28a');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+    this.drawSunGlow(sceneTime);
+    this.drawFarLayer(stage, sceneTime);
+    this.drawMidLayer(stage, sceneTime);
+    this.drawNearLayer(sceneTime);
+    this.drawAnimatedParticles(stage, sceneTime);
+    ctx.restore();
+  }
+
+  private drawSunGlow(sceneTime: number): void {
+    const ctx = this.context;
+    const x = 1000 + Math.sin(sceneTime / 18000) * 12;
+    const y = 168;
+    ctx.save();
+    ctx.shadowColor = 'rgba(255, 220, 151, .72)';
+    ctx.shadowBlur = 34;
+    const glow = ctx.createRadialGradient(x, y, 10, x, y, 150);
+    glow.addColorStop(0, 'rgba(255, 241, 191, .92)');
+    glow.addColorStop(0.48, 'rgba(255, 205, 139, .5)');
+    glow.addColorStop(1, 'rgba(255, 191, 135, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, 150, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255, 225, 166, .92)';
+    ctx.beginPath();
+    ctx.arc(x, y, 68, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  private drawFarLayer(stage: GameSnapshot['stage'], sceneTime: number): void {
+    const ctx = this.context;
+    const drift = (sceneTime * 0.08) % WORLD.width;
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = stage === 4 ? '#4b526d' : '#657984';
+    const buildings = [
+      { x: 24, w: 118, h: 112 }, { x: 168, w: 164, h: 176 }, { x: 365, w: 122, h: 136 },
+      { x: 520, w: 194, h: 204 }, { x: 748, w: 126, h: 147 }, { x: 905, w: 176, h: 188 },
+      { x: 1110, w: 142, h: 126 },
+    ];
+    for (const building of buildings) {
+      const x = ((building.x - drift + WORLD.width * 2) % WORLD.width) - 25;
+      const top = 470 - building.h;
+      ctx.fillRect(x, top, building.w, building.h);
+      ctx.fillStyle = 'rgba(255, 221, 163, .38)';
+      for (let row = 0; row < Math.floor(building.h / 34); row += 1) {
+        for (let col = 0; col < Math.floor(building.w / 30); col += 1) {
+          ctx.fillRect(x + 12 + col * 30, top + 18 + row * 34, 7, 10);
+        }
+      }
+      ctx.fillStyle = stage === 4 ? '#4b526d' : '#657984';
     }
-    const gradient = this.context.createLinearGradient(0, 0, 0, WORLD.height);
-    gradient.addColorStop(0, '#91c9ed');
-    gradient.addColorStop(1, '#f7d8a4');
-    this.context.fillStyle = gradient;
-    this.context.fillRect(0, 0, WORLD.width, WORLD.height);
-    this.context.fillStyle = '#9ec58e';
-    this.context.beginPath();
-    this.context.ellipse(630, 700, 850, 250, 0, Math.PI, Math.PI * 2);
-    this.context.fill();
+    const haze = ctx.createLinearGradient(0, 370, 0, 535);
+    haze.addColorStop(0, 'rgba(255, 230, 193, 0)');
+    haze.addColorStop(1, 'rgba(255, 226, 187, .52)');
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, 370, WORLD.width, 165);
+    ctx.restore();
+  }
+
+  private drawMidLayer(stage: GameSnapshot['stage'], sceneTime: number): void {
+    const ctx = this.context;
+    const drift = (sceneTime * 0.22) % 180;
+    ctx.save();
+    ctx.fillStyle = stage === 4 ? '#545568' : '#77766f';
+    ctx.fillRect(-drift, 520, WORLD.width + 180, 118);
+    ctx.fillStyle = stage === 4 ? '#444858' : '#646860';
+    for (let x = -drift; x < WORLD.width + 140; x += 220) {
+      ctx.fillRect(x + 34, 430, 58, 90);
+      ctx.fillRect(x + 26, 420, 74, 12);
+    }
+    // Chimneys and fixed-seed smoke puffs.
+    for (const [chimneyIndex, x] of [280, 862].entries()) {
+      ctx.fillStyle = '#705648';
+      ctx.fillRect(x, 378, 22, 72);
+      ctx.fillStyle = '#4b4140';
+      ctx.fillRect(x - 4, 375, 30, 8);
+      for (let puff = 0; puff < 3; puff += 1) {
+        const phase = ((sceneTime / 1250 + puff * 0.34 + chimneyIndex * 0.27) % 1);
+        const px = x + 10 + Math.sin(phase * Math.PI * 2 + puff) * (5 + phase * 8);
+        const py = 366 - phase * 58 - puff * 7;
+        ctx.globalAlpha = 0.23 * (1 - phase);
+        ctx.fillStyle = '#f7eee1';
+        ctx.beginPath();
+        ctx.arc(px, py, 7 + phase * 9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+    // Rooftop water tank.
+    ctx.fillStyle = '#687981';
+    ctx.fillRect(700, 386, 76, 48);
+    ctx.beginPath();
+    ctx.ellipse(738, 386, 38, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#899a99';
+    ctx.fillRect(707, 433, 7, 44);
+    ctx.fillRect(762, 433, 7, 44);
+    // Laundry line and cloth.
+    ctx.strokeStyle = 'rgba(55, 58, 58, .72)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(930, 410);
+    ctx.quadraticCurveTo(1010, 426, 1090, 407);
+    ctx.stroke();
+    for (const [index, color] of ['#d98b69', '#e9d4a2', '#8eb7b0'].entries()) {
+      const x = 953 + index * 42;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, 414 + index * 3, 25, 32);
+      ctx.fillStyle = 'rgba(255,255,255,.42)';
+      ctx.fillRect(x + 4, 417 + index * 3, 4, 25);
+    }
+    ctx.restore();
+  }
+
+  private drawNearLayer(sceneTime: number): void {
+    const ctx = this.context;
+    const drift = (sceneTime * 0.45) % 54;
+    ctx.save();
+    const rust = ctx.createLinearGradient(0, 536, 0, 594);
+    rust.addColorStop(0, '#a85d3a');
+    rust.addColorStop(0.42, '#46534f');
+    rust.addColorStop(1, '#303d3d');
+    ctx.fillStyle = rust;
+    for (const y of [542, 582, 622]) ctx.fillRect(0, y, WORLD.width, 9);
+    ctx.fillRect(0, 542, 8, 96);
+    for (let x = -drift; x < WORLD.width; x += 54) {
+      ctx.fillStyle = '#46534f';
+      ctx.fillRect(x, 542, 7, 96);
+      ctx.fillStyle = '#c17b52';
+      ctx.beginPath();
+      ctx.arc(x + 3.5, 546.5, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + 3.5, 586.5, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  private drawAnimatedParticles(stage: GameSnapshot['stage'], sceneTime: number): void {
+    const ctx = this.context;
+    ctx.save();
+    // Three distant birds glide on deterministic, looping paths.
+    ctx.strokeStyle = stage === 4 ? 'rgba(61, 53, 75, .62)' : 'rgba(67, 75, 73, .58)';
+    ctx.lineWidth = 2.5;
+    for (let index = 0; index < 3; index += 1) {
+      const x = ((150 + index * 360 + sceneTime * (0.018 + index * 0.003)) % (WORLD.width + 90)) - 45;
+      const y = 210 + index * 38 + Math.sin(sceneTime / 900 + index * 2) * 9;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y);
+      ctx.quadraticCurveTo(x - 4, y - 7, x, y);
+      ctx.quadraticCurveTo(x + 5, y - 7, x + 11, y - 1);
+      ctx.stroke();
+    }
+    // Dust and rooftop glints use fixed index-based seeds, never frame randomness.
+    for (let index = 0; index < 8; index += 1) {
+      const phase = (sceneTime / (3200 + index * 170) + index * 0.137) % 1;
+      const x = (index * 173 + Math.sin(phase * Math.PI * 2 + index) * 24 + WORLD.width) % WORLD.width;
+      const y = 345 + ((index * 47 + phase * 125) % 145);
+      ctx.globalAlpha = 0.12 + 0.22 * (0.5 + 0.5 * Math.sin(phase * Math.PI * 2));
+      ctx.fillStyle = '#fff4d4';
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5 + (index % 3) * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    for (let index = 0; index < 6; index += 1) {
+      const x = 80 + index * 212;
+      const y = 318 + Math.sin(sceneTime / 460 + index * 1.8) * 17;
+      const alpha = 0.24 + 0.45 * (0.5 + 0.5 * Math.sin(sceneTime / 330 + index * 2));
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#fff1c5';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 4, y);
+      ctx.lineTo(x + 4, y);
+      ctx.moveTo(x, y - 4);
+      ctx.lineTo(x, y + 4);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   private drawGround(): void {

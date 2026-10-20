@@ -14,6 +14,7 @@ const context = {
   quadraticCurveTo: vi.fn(), bezierCurveTo: vi.fn(), rect: vi.fn(), clip: vi.fn(), arc: vi.fn(), setLineDash: vi.fn(), rotate: vi.fn(), strokeRect: vi.fn(),
   fillText: vi.fn(), roundRect: vi.fn(),
   fillStyle: '', strokeStyle: '', lineWidth: 1, lineCap: 'butt', shadowColor: '', shadowBlur: 0,
+  globalAlpha: 1,
   font: '', textAlign: 'start', textBaseline: 'alphabetic',
 } as unknown as CanvasRenderingContext2D;
 
@@ -88,6 +89,22 @@ describe('GameCanvasRenderer', () => {
     expect(context.ellipse).toHaveBeenCalled();
     expect(context.bezierCurveTo).toHaveBeenCalled();
     expect(context.createRadialGradient).toHaveBeenCalled();
+    renderer.dispose();
+  });
+
+  it('renders repeatable animated background coordinates for a fixed scene time', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    const pausedSnapshot = { ...snapshot, state: 'PAUSED' as const, ammo: 0 };
+    renderer.render(pausedSnapshot, 750);
+    const firstFrameArcs = [...vi.mocked(context.arc).mock.calls];
+    vi.clearAllMocks();
+    renderer.render(pausedSnapshot, 750);
+    expect(vi.mocked(context.arc).mock.calls).toEqual(firstFrameArcs);
+    vi.clearAllMocks();
+    renderer.render(pausedSnapshot, 1750);
+    expect(vi.mocked(context.arc).mock.calls).not.toEqual(firstFrameArcs);
     renderer.dispose();
   });
 });
