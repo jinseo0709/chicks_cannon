@@ -2,6 +2,7 @@ import {
   Body,
   Bodies,
   Composite,
+  Constraint,
   Engine,
   Events,
   type IEventCollision,
@@ -31,6 +32,11 @@ type GameBody = Matter.Body & {
     height?: number;
     boss?: boolean;
     shield?: boolean;
+    shieldLayers?: number;
+    anchor?: Point;
+    attached?: boolean;
+    angularSpeed?: number;
+    breakImpact?: number;
     minY?: number;
     maxY?: number;
     speed?: number;
@@ -48,13 +54,35 @@ interface FanField {
   forceY: number;
 }
 
+type DamageSource = 'chick' | 'block' | 'chandelier' | 'explosion' | 'fall' | 'other';
+interface DamageContext {
+  source: DamageSource;
+  point: Point;
+  direction: Point;
+  frontal: boolean;
+}
+interface Explosion { x: number; y: number; radius: number; forceMagnitude: number; }
+
 const initialItems = (): Record<ItemKind, number> => ({ booster: 1, quake: 1, mega: 1 });
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const positive = (value: number | undefined, fallback: number): number =>
+  value !== undefined && Number.isFinite(value) && value > 0 ? value : fallback;
+const limitedVelocity = (velocity: Point, max: number): Point => {
+  const speed = Math.hypot(velocity.x, velocity.y);
+  const scale = speed > max ? max / speed : 1;
+  return { x: velocity.x * scale, y: velocity.y * scale };
+};
 
 export class ChickCannonEngine {
   private readonly engine = Engine.create();
   private readonly collisionListener: (event: IEventCollision<Matter.Engine>) => void;
+  private readonly activeCollisionListener: (event: IEventCollision<Matter.Engine>) => void;
   private readonly bodies = new Map<number, GameBody>();
+  private readonly chandelierConstraints = new Map<number, Matter.Constraint>();
+  private readonly pendingVelocities = new Map<number, { body: GameBody; velocity: Point }>();
+  private readonly gearContactTimes = new Map<number, number>();
+  private explosionQueue: Explosion[] = [];
+  private processingExplosions = false;
   private fans: FanField[] = [];
   private state: GameState = 'DIALOGUE';
   private stateBeforePause: 'AIMING' | 'FLYING' | 'RESOLVING' | null = null;
@@ -77,7 +105,9 @@ export class ChickCannonEngine {
     this.engine.gravity.y = WORLD.gravityY;
     this.engine.gravity.x = 0;
     this.collisionListener = (event) => this.handleCollisions(event);
+    this.activeCollisionListener = (event) => this.handleGearContacts(event);
     Events.on(this.engine, 'collisionStart', this.collisionListener);
+    Events.on(this.engine, 'collisionActive', this.activeCollisionListener);
     this.loadStage(1);
     this.snapshot = this.createSnapshot();
     this.publish();
@@ -232,8 +262,17 @@ export class ChickCannonEngine {
     if (!this.alive || this.state === 'PAUSED') return;
     const delta = clamp(Number.isFinite(deltaMs) ? deltaMs : 16.667, 1, 33.333);
     Engine.update(this.engine, delta);
-    this.advanceGimmicks();
+    for (const { body, velocity } of this.pendingVelocities.values()) {
+      if (body.customData?.alive !== false) Body.setVelocity(body, velocity);
+    }
+    this.pendingVelocities.clear();
+    this.advanceGimmicks(delta);
     this.applyFans();
+    for (const body of this.bodies.values()) {
+      if (body.label === 'enemy' && (body.position.y > WORLD.height + 60 || body.position.x > WORLD.width + 150)) {
+        this.defeatCat(body, { source: 'fall', point: { ...body.position }, direction: { x: 1, y: 0 }, frontal: false });
+      }
+    }
     if (this.state === 'WON') {
       this.winFrames += 1;
       if (this.winFrames >= 42) this.state = this.stage === 4 ? 'ENDING' : 'EVOLUTION';
@@ -250,8 +289,10 @@ export class ChickCannonEngine {
   dispose(): void {
     if (!this.alive) return;
     Events.off(this.engine, 'collisionStart', this.collisionListener);
+    Events.off(this.engine, 'collisionActive', this.activeCollisionListener);
     Composite.clear(this.engine.world, false, true);
     this.bodies.clear();
+    this.clearGimmickState();
     this.fans = [];
     this.alive = false;
   }
@@ -259,6 +300,7 @@ export class ChickCannonEngine {
   private loadStage(stage: GameStage): void {
     Composite.clear(this.engine.world, false, true);
     this.bodies.clear();
+    this.clearGimmickState();
     this.fans = [];
     this.activeChick = null;
     this.skillUsed = false;
@@ -278,6 +320,7 @@ export class ChickCannonEngine {
   }
 
   private spawn(spec: SpawnSpec): void {
+    if (!Number.isFinite(spec.x) || !Number.isFinite(spec.y)) return;
     if (spec.kind === 'fan') {
       this.fans.push({
         x: spec.x,
@@ -295,15 +338,17 @@ export class ChickCannonEngine {
     if (spec.kind === 'block') {
       const material = spec.material ?? 'wood';
       const config = BLOCK_CONFIG[material];
-      body = Bodies.rectangle(spec.x, spec.y, spec.w ?? 20, spec.h ?? 20, {
+      const width = positive(spec.w, 20);
+      const height = positive(spec.h, 20);
+      body = Bodies.rectangle(spec.x, spec.y, width, height, {
         density: config.density,
         friction: 0.6,
         restitution: 0.1,
         label: material === 'tnt' ? 'tnt' : 'block',
       }) as GameBody;
       customData = {
-        width: spec.w ?? 20,
-        height: spec.h ?? 20,
+        width,
+        height,
         material,
         hp: config.hp,
         maxHp: config.hp,
@@ -311,10 +356,12 @@ export class ChickCannonEngine {
         destroyed: false,
       };
     } else if (spec.kind === 'cat') {
-      const radius = spec.radius ?? 24;
-      const hp = spec.boss ? 60 : spec.shield ? 28 : 18;
+      const radius = positive(spec.radius, 24);
+      const shieldLayers = clamp(Math.trunc(Number.isFinite(spec.shieldLayers) ? spec.shieldLayers! : spec.shield ? 1 : 0), 0, 2);
+      const shield = Boolean(spec.shield || shieldLayers > 0);
+      const hp = positive(spec.hp, spec.boss ? 60 : shield ? 28 : 18);
       body = Bodies.circle(spec.x, spec.y, radius, {
-        density: spec.boss ? 0.006 : spec.shield ? 0.004 : 0.0025,
+        density: spec.boss ? 0.006 : shield ? 0.004 : 0.0025,
         friction: 0.6,
         restitution: 0.2,
         label: 'enemy',
@@ -325,7 +372,8 @@ export class ChickCannonEngine {
         maxHp: hp,
         alive: true,
         boss: spec.boss,
-        shield: spec.shield,
+        shield,
+        shieldLayers,
       };
     } else if (spec.kind === 'egg') {
       body = Bodies.circle(spec.x, spec.y, 14, {
@@ -358,8 +406,38 @@ export class ChickCannonEngine {
         label: 'bouncePad',
       }) as GameBody;
       customData = { width: spec.w ?? 110, height: spec.h ?? 25, alive: true };
+    } else if (spec.kind === 'tire' || spec.kind === 'gear') {
+      const radius = positive(spec.radius, spec.kind === 'tire' ? 40 : 44);
+      body = Bodies.circle(spec.x, spec.y, radius, {
+        isStatic: true,
+        restitution: spec.kind === 'tire' ? 0 : 0.15,
+        friction: spec.kind === 'tire' ? 0.8 : 0.3,
+        label: spec.kind,
+      }) as GameBody;
+      customData = {
+        radius,
+        alive: true,
+        angularSpeed: spec.kind === 'gear' ? (Number.isFinite(spec.angularSpeed) ? spec.angularSpeed : 0.025) : undefined,
+      };
+    } else if (spec.kind === 'chandelier') {
+      const width = positive(spec.w, 100);
+      const height = positive(spec.h, 36);
+      const anchor = spec.anchor && Number.isFinite(spec.anchor.x) && Number.isFinite(spec.anchor.y)
+        ? { ...spec.anchor } : { x: spec.x, y: spec.y - 140 };
+      body = Bodies.rectangle(spec.x, spec.y, width, height, {
+        density: 0.012, friction: 0.5, restitution: 0.1, label: 'chandelier',
+      }) as GameBody;
+      const constraint = Constraint.create({
+        pointA: anchor, bodyB: body, pointB: { x: 0, y: 0 },
+        length: Math.hypot(spec.x - anchor.x, spec.y - anchor.y), stiffness: 0.95, damping: 0.04,
+      });
+      this.chandelierConstraints.set(body.id, constraint);
+      Composite.add(this.engine.world, constraint);
+      Body.setVelocity(body, { x: 0.6, y: 0 });
+      Body.setAngularVelocity(body, 0.008);
+      customData = { width, height, anchor, attached: true, alive: true, breakImpact: positive(spec.breakImpact, 18) };
     } else {
-      const radius = spec.radius ?? 30;
+      const radius = positive(spec.radius, 30);
       body = Bodies.circle(spec.x, spec.y, radius, {
         density: 0.015,
         friction: 0.05,
@@ -377,10 +455,76 @@ export class ChickCannonEngine {
     this.bodies.set(body.id, body);
   }
 
-  private handleCollisions(event: IEventCollision<Matter.Engine>): void {
+  private clearGimmickState(): void {
+    this.chandelierConstraints.clear();
+    this.pendingVelocities.clear();
+    this.gearContactTimes.clear();
+    this.explosionQueue = [];
+    this.processingExplosions = false;
+  }
+
+  private detachChandelier(body: GameBody): void {
+    const constraint = this.chandelierConstraints.get(body.id);
+    if (!constraint) return;
+    Composite.remove(this.engine.world, constraint);
+    this.chandelierConstraints.delete(body.id);
+    if (body.customData) body.customData.attached = false;
+  }
+
+  private removeBody(body: GameBody): void {
+    this.detachChandelier(body);
+    Composite.remove(this.engine.world, body);
+    this.bodies.delete(body.id);
+    this.pendingVelocities.delete(body.id);
+    this.gearContactTimes.delete(body.id);
+  }
+
+  private handleGearContacts(event: IEventCollision<Matter.Engine>): void {
     for (const { bodyA, bodyB } of event.pairs) {
+      const gear = (bodyA.label === 'gear' ? bodyA : bodyB.label === 'gear' ? bodyB : null) as GameBody | null;
+      if (!gear) continue;
+      const dynamic = (gear === bodyA ? bodyB : bodyA) as GameBody;
+      if (dynamic.isStatic || dynamic.customData?.alive === false) continue;
+      const now = this.engine.timing.timestamp;
+      if (now - (this.gearContactTimes.get(dynamic.id) ?? -Infinity) < 100) continue;
+      this.gearContactTimes.set(dynamic.id, now);
+      const dx = dynamic.position.x - gear.position.x;
+      const dy = dynamic.position.y - gear.position.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const sign = Math.sign(gear.customData?.angularSpeed ?? 0.025);
+      const velocity = this.pendingVelocities.get(dynamic.id)?.velocity ?? dynamic.velocity;
+      this.pendingVelocities.set(dynamic.id, {
+        body: dynamic,
+        velocity: limitedVelocity({ x: velocity.x - dy / distance * sign * 2.5, y: velocity.y + dx / distance * sign * 2.5 }, 45),
+      });
+    }
+  }
+
+  private handleCollisions(event: IEventCollision<Matter.Engine>): void {
+    this.handleGearContacts(event);
+    for (const { bodyA, bodyB, collision } of event.pairs) {
       const a = bodyA as GameBody;
       const b = bodyB as GameBody;
+      if (a.customData?.alive === false || b.customData?.alive === false) continue;
+      if (a.label === 'tire' || b.label === 'tire') {
+        const tire = a.label === 'tire' ? a : b;
+        const dynamic = tire === a ? b : a;
+        if (!dynamic.isStatic && !this.pendingVelocities.has(dynamic.id)) {
+          const dx = dynamic.position.x - tire.position.x;
+          const dy = dynamic.position.y - tire.position.y;
+          const distance = Math.hypot(dx, dy) || 1;
+          const nx = dx / distance;
+          const ny = dy / distance;
+          const dot = dynamic.velocity.x * nx + dynamic.velocity.y * ny;
+          if (dot < 0) {
+            this.pendingVelocities.set(dynamic.id, { body: dynamic, velocity: limitedVelocity({
+              x: (dynamic.velocity.x - 2 * dot * nx) * 1.8,
+              y: (dynamic.velocity.y - 2 * dot * ny) * 1.8,
+            }, 55) });
+          }
+        }
+        continue;
+      }
       if (a.label === 'bouncePad' || b.label === 'bouncePad') {
         const dynamic = a.label === 'bouncePad' ? b : a;
         if (!dynamic.isStatic) {
@@ -396,78 +540,103 @@ export class ChickCannonEngine {
       const involvesChick = a.label === 'chick' || b.label === 'chick';
       const multiplier = involvesChick ? [1, 1.8, 2.8, 4.5][this.stage - 1] : 1;
       const impact = relativeSpeed * 3.5 * multiplier;
+      const contact = collision?.supports?.[0];
+      const point = contact && Number.isFinite(contact.x) && Number.isFinite(contact.y)
+        ? { x: contact.x, y: contact.y }
+        : { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 };
       for (const body of [a, b]) {
         const data = body.customData;
         if (!data || data.alive === false) continue;
-        if (body.label === 'hostageEgg') {
-          if (impact > 3.2) data.hp = (data.hp ?? 0) - impact;
-          if ((data.hp ?? 0) <= 0 || body.position.y > 685) {
-            data.alive = false;
-            this.state = 'LOST';
-            this.defeatCause = 'hostage';
-          }
-        } else if (body.label === 'block' || body.label === 'tnt') {
-          if (impact > 5) {
-            data.hp = (data.hp ?? 0) - impact;
-            if ((data.hp ?? 0) <= 0 && !data.destroyed) {
-              data.destroyed = true;
-              data.alive = false;
-              if (body.label === 'tnt') this.explode(body.position.x, body.position.y, 230, 0.14);
-              else this.score += 180;
-              Composite.remove(this.engine.world, body);
-            }
-          }
-        } else if (body.label === 'enemy') {
-          const other = body === a ? b : a;
-          const frontalChickHit = data.shield && other.label === 'chick' &&
-            other.position.x < body.position.x - 5 &&
-            !(other.position.y < body.position.y - 15 && Math.abs(other.velocity.y) > 3);
-          if (frontalChickHit) {
-            if (this.activeChick) {
-              Body.setVelocity(this.activeChick, {
-                x: -Math.abs(this.activeChick.velocity.x) * 0.7,
-                y: -4,
-              });
-            }
-          } else if (impact > 4.5) {
-            data.hp = (data.hp ?? 0) - impact;
-            if ((data.hp ?? 0) <= 0) {
-              data.alive = false;
-              this.score += data.boss ? 3000 : data.shield ? 2000 : 1200;
-              Composite.remove(this.engine.world, body);
-            }
-          }
+        const other = body === a ? b : a;
+        if (body.label === 'chandelier' && relativeSpeed * 3.5 >= (data.breakImpact ?? 18)) this.detachChandelier(body);
+        const dx = body.position.x - other.position.x;
+        const dy = body.position.y - other.position.y;
+        const distance = Math.hypot(dx, dy);
+        const source: DamageSource = other.label === 'chick' ? 'chick'
+          : other.label === 'block' || other.label === 'tnt' || other.label === 'boulder' ? 'block'
+            : other.label === 'chandelier' ? 'chandelier' : 'other';
+        const context: DamageContext = {
+          source, point,
+          direction: distance > 0 ? { x: dx / distance, y: dy / distance } : { x: 1, y: 0 },
+          frontal: other.label === 'chick' && other.position.x < body.position.x - 5 &&
+            !(other.position.y < body.position.y - 15 && Math.abs(other.velocity.y) > 3),
+        };
+        if (body.label === 'enemy' && impact > 4.5 && context.frontal && (data.shieldLayers ?? 0) > 0) {
+          data.shieldLayers! -= 1;
+          Body.setVelocity(other, { x: -Math.abs(other.velocity.x) * 0.7, y: -4 });
+        } else if (body.label === 'hostageEgg') {
+          this.damageBody(body, impact > 3.2 ? impact : 0, context);
+        } else if ((body.label === 'enemy' && impact > 4.5) ||
+          ((body.label === 'block' || body.label === 'tnt') && impact > 5)) {
+          this.damageBody(body, impact, context);
         }
       }
     }
   }
 
+  private damageBody(body: GameBody, amount: number, context: DamageContext): void {
+    const data = body.customData;
+    if (!data || data.alive === false || data.hp === undefined) return;
+    data.hp -= Math.max(0, amount);
+    if (body.label === 'hostageEgg') {
+      if (data.hp <= 0 || body.position.y > 685) {
+        data.alive = false;
+        this.state = 'LOST';
+        this.defeatCause = 'hostage';
+        this.removeBody(body);
+      }
+    } else if (data.hp <= 0 && body.label === 'enemy') {
+      this.defeatCat(body, context);
+    } else if (data.hp <= 0 && (body.label === 'block' || body.label === 'tnt')) {
+      this.breakBlock(body, context);
+    }
+  }
+
+  private defeatCat(body: GameBody, _context: DamageContext): void {
+    const data = body.customData;
+    if (!data || data.alive === false) return;
+    data.alive = false;
+    this.score += data.boss ? 3000 : data.shield ? 2000 : 1200;
+    this.removeBody(body);
+  }
+
+  private breakBlock(body: GameBody, _context: DamageContext): void {
+    const data = body.customData;
+    if (!data || data.alive === false || data.destroyed) return;
+    data.destroyed = true;
+    data.alive = false;
+    this.removeBody(body);
+    if (body.label === 'tnt') this.explode(body.position.x, body.position.y, 230, 0.14);
+    else this.score += 180;
+  }
+
   private explode(x: number, y: number, radius: number, forceMagnitude: number): void {
-    this.score += 600;
-    for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
-      if (body.isStatic) continue;
-      const dx = body.position.x - x;
-      const dy = body.position.y - y;
-      const distance = Math.hypot(dx, dy);
-      if (distance <= 1 || distance >= radius) continue;
-      const power = 1 - distance / radius;
-      Body.applyForce(body, body.position, {
-        x: (dx / distance) * forceMagnitude * power,
-        y: (dy / distance) * forceMagnitude * power - 0.06,
-      });
-      const data = body.customData;
-      if (data?.hp !== undefined) {
-        data.hp -= power * 50;
-        if (data.hp <= 0 && body.label === 'enemy' && data.alive !== false) {
-          data.alive = false;
-          this.score += data.boss ? 3000 : data.shield ? 2000 : 1200;
-          Composite.remove(this.engine.world, body);
-        } else if (data.hp <= 0 && (body.label === 'block' || body.label === 'tnt')) {
-          data.alive = false;
-          data.destroyed = true;
-          Composite.remove(this.engine.world, body);
+    this.explosionQueue.push({ x, y, radius, forceMagnitude });
+    if (this.processingExplosions) return;
+    this.processingExplosions = true;
+    try {
+      while (this.explosionQueue.length > 0) {
+        const explosion = this.explosionQueue.shift()!;
+        this.score += 600;
+        for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
+          if (body.isStatic || body.customData?.alive === false) continue;
+          const dx = body.position.x - explosion.x;
+          const dy = body.position.y - explosion.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance >= explosion.radius) continue;
+          const power = 1 - distance / explosion.radius;
+          const direction = distance > 0 ? { x: dx / distance, y: dy / distance } : { x: 1, y: 0 };
+          Body.applyForce(body, body.position, {
+            x: direction.x * explosion.forceMagnitude * power,
+            y: direction.y * explosion.forceMagnitude * power - 0.06,
+          });
+          this.damageBody(body, power * 50, {
+            source: 'explosion', point: { ...body.position }, direction, frontal: false,
+          });
         }
       }
+    } finally {
+      this.processingExplosions = false;
     }
   }
 
@@ -481,11 +650,15 @@ export class ChickCannonEngine {
     }
   }
 
-  private advanceGimmicks(): void {
+  private advanceGimmicks(deltaMs: number): void {
     for (const body of this.bodies.values()) {
       const data = body.customData;
+      if (body.label === 'gear' && data) {
+        Body.setAngle(body, body.angle + (data.angularSpeed ?? 0.025) * deltaMs / 16.667);
+        continue;
+      }
       if (body.label !== 'shutter' || !data) continue;
-      let y = body.position.y + (data.speed ?? 0) * (data.direction ?? 1);
+      let y = body.position.y + (data.speed ?? 0) * (data.direction ?? 1) * deltaMs / 16.667;
       if (y >= (data.maxY ?? y)) {
         y = data.maxY ?? y;
         data.direction = -1;
@@ -542,8 +715,7 @@ export class ChickCannonEngine {
       this.defeatCause = 'ammo';
     } else {
       if (chick) {
-        Composite.remove(this.engine.world, chick);
-        this.bodies.delete(chick.id);
+        this.removeBody(chick);
       }
       this.activeChick = null;
       this.skillUsed = false;
@@ -557,7 +729,7 @@ export class ChickCannonEngine {
     const entities: GameEntityView[] = [];
     for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
       const data = body.customData;
-      if (!['block', 'tnt', 'enemy', 'hostageEgg', 'shutter', 'bouncePad', 'boulder', 'chick'].includes(body.label)) continue;
+      if (!['block', 'tnt', 'enemy', 'hostageEgg', 'shutter', 'bouncePad', 'boulder', 'chick', 'tire', 'gear', 'chandelier'].includes(body.label)) continue;
       const kind: GameEntityView['kind'] = body.label === 'enemy'
         ? 'cat'
         : body.label === 'hostageEgg'
@@ -581,6 +753,10 @@ export class ChickCannonEngine {
         material: data?.material,
         boss: data?.boss,
         shield: data?.shield,
+        shieldLayers: data?.shieldLayers,
+        anchor: data?.anchor ? { ...data.anchor } : undefined,
+        attached: data?.attached,
+        angularSpeed: data?.angularSpeed,
         alive: data?.alive !== false,
       });
     }

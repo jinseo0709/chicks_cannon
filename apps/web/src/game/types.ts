@@ -14,7 +14,7 @@ export type GameState =
   | 'ENDING';
 
 export type BlockKind = 'wood' | 'stone' | 'glass' | 'tnt';
-export type GimmickKind = 'fan' | 'trampoline' | 'boulder' | 'shutter';
+export type GimmickKind = 'fan' | 'trampoline' | 'boulder' | 'shutter' | 'tire' | 'gear' | 'chandelier';
 export type ItemKind = 'booster' | 'quake' | 'mega';
 
 export interface Point {
@@ -34,7 +34,7 @@ export interface ChickForm {
 }
 
 export interface SpawnSpec {
-  kind: 'block' | 'cat' | 'egg' | 'shutter' | 'fan' | 'trampoline' | 'boulder';
+  kind: 'block' | 'cat' | 'egg' | GimmickKind;
   x: number;
   y: number;
   w?: number;
@@ -43,6 +43,11 @@ export interface SpawnSpec {
   material?: BlockKind;
   boss?: boolean;
   shield?: boolean;
+  hp?: number;
+  shieldLayers?: number;
+  anchor?: Point;
+  angularSpeed?: number;
+  breakImpact?: number;
   minY?: number;
   maxY?: number;
   speed?: number;
@@ -77,6 +82,10 @@ export interface GameEntityView {
   material?: BlockKind;
   boss?: boolean;
   shield?: boolean;
+  shieldLayers?: number;
+  anchor?: Point;
+  attached?: boolean;
+  angularSpeed?: number;
   alive: boolean;
 }
 
