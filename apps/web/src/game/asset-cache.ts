@@ -1,3 +1,6 @@
+import { CHICK_FORMS } from './constants';
+import type { GameStage } from './types';
+
 export type AssetId =
   | `background-${1 | 2 | 3 | 4}`
   | `chick-${1 | 2 | 3 | 4}`
@@ -80,9 +83,9 @@ export class SvgAssetCache {
   }
 }
 
-export const stageAssetIds = (stage: 1 | 2 | 3 | 4): readonly AssetId[] => [
-  `background-${stage}`,
-  `chick-${stage}`,
+export const stageAssetIds = (stage: GameStage): readonly AssetId[] => [
+  `background-${CHICK_FORMS[stage].assetVariant}`,
+  `chick-${CHICK_FORMS[stage].assetVariant}`,
   'cat-normal',
   'cat-shield',
   'cat-boss',

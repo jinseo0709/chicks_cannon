@@ -118,13 +118,13 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
   });
 
-  it('keeps chapters 1 to 3 static while chapter 4 particles are deterministic', () => {
+  it('keeps chapters 1 to 5 static while chapter 6 particles are deterministic', () => {
     const canvas = document.createElement('canvas');
     const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
     renderer.resize(1280, 720, 1);
     const emptySnapshot = { ...snapshot, state: 'PAUSED' as const, ammo: 0 };
-    const firstStops = { 1: '#a0d8ef', 2: '#ff7e5f', 3: '#2b1055' } as const;
-    for (const stage of [1, 2, 3] as const) {
+    const firstStops = { 1: '#a0d8ef', 2: '#a0d8ef', 3: '#ff7e5f', 4: '#2b1055', 5: '#2b1055' } as const;
+    for (const stage of [1, 2, 3, 4, 5] as const) {
       vi.clearAllMocks();
       renderer.render({ ...emptySnapshot, stage }, 200);
       expect(vi.mocked(gradient.addColorStop).mock.calls.flat().join(' ')).toContain(firstStops[stage]);
@@ -137,13 +137,13 @@ describe('GameCanvasRenderer', () => {
     }
 
     vi.clearAllMocks();
-    renderer.render({ ...emptySnapshot, stage: 4 }, 200);
+    renderer.render({ ...emptySnapshot, stage: 6 }, 200);
     const festivalAtStart = [...vi.mocked(context.translate).mock.calls];
     vi.clearAllMocks();
-    renderer.render({ ...emptySnapshot, stage: 4 }, 200);
+    renderer.render({ ...emptySnapshot, stage: 6 }, 200);
     expect(vi.mocked(context.translate).mock.calls).toEqual(festivalAtStart);
     vi.clearAllMocks();
-    renderer.render({ ...emptySnapshot, stage: 4 }, 6200);
+    renderer.render({ ...emptySnapshot, stage: 6 }, 6200);
     expect(vi.mocked(context.translate).mock.calls).not.toEqual(festivalAtStart);
 
     expect(vi.mocked(gradient.addColorStop).mock.calls.flat().join(' ')).toContain('#f6d365');

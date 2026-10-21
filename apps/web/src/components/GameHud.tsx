@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import type { GameSnapshot, ItemKind } from '../game/types';
+import { STAGES } from '../game/stages';
 
 export interface GameHudProps {
   snapshot: GameSnapshot;
@@ -12,7 +13,7 @@ export interface GameHudProps {
 const activeStates = new Set(['AIMING', 'FLYING', 'RESOLVING']);
 
 export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause }: GameHudProps): JSX.Element {
-  const ammoSlots = snapshot.stage === 1 || snapshot.stage === 2 ? 3 : 4;
+  const ammoSlots = STAGES[snapshot.stage].ammo;
   const canUseQuake = activeStates.has(snapshot.state);
   return (
     <div className="game-hud" role="region" aria-label="게임 정보">

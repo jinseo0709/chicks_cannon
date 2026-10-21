@@ -1,4 +1,5 @@
-import { BLOCK_CONFIG, WORLD } from './constants';
+import { BLOCK_CONFIG, CHICK_FORMS, WORLD } from './constants';
+import { STAGES } from './stages';
 import { SvgAssetCache } from './asset-cache';
 import type { GameEntityView, GameSnapshot, Point } from './types';
 
@@ -63,11 +64,13 @@ export class GameCanvasRenderer {
   private drawBackground(stage: GameSnapshot['stage'], sceneTime: number): void {
     const ctx = this.context;
     ctx.save();
-    switch (stage) {
-      case 1: this.drawChapterOneBackground(); break;
-      case 2: this.drawChapterTwoBackground(); break;
-      case 3: this.drawChapterThreeBackground(); break;
-      case 4: this.drawChapterFourBackground(sceneTime); break;
+    switch (STAGES[stage].theme) {
+      case 'alley-day':
+      case 'wall-afternoon': this.drawChapterOneBackground(); break;
+      case 'rooftop-sunset': this.drawChapterTwoBackground(); break;
+      case 'clock-twilight':
+      case 'factory-night': this.drawChapterThreeBackground(); break;
+      case 'meadow-gold': this.drawChapterFourBackground(sceneTime); break;
     }
     ctx.restore();
   }
@@ -318,21 +321,22 @@ export class GameCanvasRenderer {
   private drawGround(stage: GameSnapshot['stage']): void {
     const ctx = this.context;
     ctx.save();
-    if (stage === 1) {
+    const theme = STAGES[stage].theme;
+    if (theme === 'alley-day' || theme === 'wall-afternoon') {
       ctx.fillStyle = '#444b55';
       ctx.fillRect(0, 682, WORLD.width, 38);
       ctx.fillStyle = '#8b9297';
       ctx.fillRect(0, 682, WORLD.width, 5);
       ctx.fillStyle = '#f6d16b';
       for (let x = 36; x < WORLD.width; x += 180) ctx.fillRect(x, 703, 78, 5);
-    } else if (stage === 2) {
+    } else if (theme === 'rooftop-sunset') {
       ctx.fillStyle = '#47a9a2';
       ctx.fillRect(0, 682, WORLD.width, 38);
       ctx.fillStyle = '#f58b72';
       ctx.fillRect(0, 682, WORLD.width, 6);
       ctx.fillStyle = 'rgba(255,235,195,.72)';
       for (let x = 35; x < WORLD.width; x += 220) ctx.fillRect(x, 695, 95, 4);
-    } else if (stage === 3) {
+    } else if (theme === 'clock-twilight' || theme === 'factory-night') {
       ctx.fillStyle = '#47356f';
       ctx.fillRect(0, 682, WORLD.width, 38);
       ctx.fillStyle = '#38b6c8';
@@ -408,8 +412,7 @@ export class GameCanvasRenderer {
     const dy = WORLD.cannon.y - snapshot.aimPosition.y;
     const distance = Math.hypot(dx, dy);
     if (distance < 15) return;
-    const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) *
-      (snapshot.stage === 4 ? 31 : snapshot.stage === 3 ? 28 : 26);
+    const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * snapshot.form.launchPower;
     const angle = Math.atan2(dy, dx);
     const vx = Math.cos(angle) * power;
     const vy = Math.sin(angle) * power;
@@ -533,7 +536,7 @@ export class GameCanvasRenderer {
     const width = radius * 2.8;
     const height = radius * 2.8;
     let id: Parameters<SvgAssetCache['get']>[0];
-    if (entity.kind === 'chick') id = `chick-${stage}`;
+    if (entity.kind === 'chick') id = `chick-${CHICK_FORMS[stage].assetVariant}`;
     else if (entity.kind === 'egg') id = 'egg';
     else id = entity.boss ? 'cat-boss' : entity.shield ? 'cat-shield' : 'cat-normal';
     const image = this.assets.get(id);

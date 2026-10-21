@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SvgAssetCache, stageAssetIds } from './asset-cache';
+import { CHICK_FORMS, STAGE_ORDER } from './constants';
 
 class MockImage {
   static instances: MockImage[] = [];
@@ -36,7 +37,14 @@ describe('SvgAssetCache', () => {
 
   it('preloads the chapter scene and all character/prop artwork', () => {
     expect(stageAssetIds(4)).toEqual([
-      'background-4', 'chick-4', 'cat-normal', 'cat-shield', 'cat-boss', 'nest', 'slingshot', 'egg',
+      'background-2', 'chick-2', 'cat-normal', 'cat-shield', 'cat-boss', 'nest', 'slingshot', 'egg',
     ]);
+  });
+
+  it.each(STAGE_ORDER)('maps level %s to an existing character and background variant', (stage) => {
+    const variant = CHICK_FORMS[stage].assetVariant;
+    expect(stageAssetIds(stage).slice(0, 2)).toEqual([`background-${variant}`, `chick-${variant}`]);
+    expect(variant).toBeGreaterThanOrEqual(1);
+    expect(variant).toBeLessThanOrEqual(4);
   });
 });

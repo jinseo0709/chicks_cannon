@@ -7,15 +7,15 @@
 [P01 6단계 캠페인 및 게임 손맛](./phases/2026-10-21-chicks-cannon-six-levels-and-feedback/P01-campaign-and-game-feel/phase.md)
 
 ## Active Task
-[T02 6단계 캠페인과 형태·스킬 데이터 분리](./phases/2026-10-21-chicks-cannon-six-levels-and-feedback/P01-campaign-and-game-feel/T02-six-level-campaign.md)
+[T03 상·하단 HUD 분리와 버터 스프레이](./phases/2026-10-21-chicks-cannon-six-levels-and-feedback/P01-campaign-and-game-feel/T03-hud-and-butter.md)
 
 ## Status
-- 진행률 1/8 — T01 완료 및 지정 테스트 16개·웹 빌드·diff check 통과
-- T02 진행 중 — 6단계 배치와 형태별 스킬·파워·엔딩 조건 확장
+- 진행률 2/8 — T01(c0ce56b), T02 지정 검증 통과
+- T03 진행 중 — 상·하단 HUD 분리와 버터 대상 지정·마찰 효과
 - 연속 실행 중이며 검증 실패 시 현재 Task에서 멈춰 보고
 
 ## Next Step (IMPORTANT)
-활성 T02 청사진을 읽고 레벨/형태 타입, 6단계 배치, 공통 발사·스킬·종료 조건, 기존 에셋 매핑을 구현한다. 각 Task의 지정 검증 통과 후 지정 메시지로 커밋하고 Phase/Plan 진행률과 이 포인터를 갱신한다. 실패하면 해당 Task에서 멈추고 보고한다.
+활성 T03 청사진을 읽고 네번째 아이템 모델, 버터 대상 지정·취소·국소 마찰, 상·하단 바와 모달 계층을 구현한다. 각 Task의 지정 검증 통과 후 지정 메시지로 커밋하고 포인터를 전진한다. 실패하면 해당 Task에서 멈추고 보고한다.
 
 ## Decisions
 [확정 결정 문서](./decisions/2026-10-21-chicks-cannon-six-levels-and-feedback.md)

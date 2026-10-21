@@ -1,4 +1,7 @@
-export type GameStage = 1 | 2 | 3 | 4;
+export type GameStage = 1 | 2 | 3 | 4 | 5 | 6;
+export type ChickFormId = 'baby' | 'breeze' | 'fighter' | 'golden';
+export type SkillKind = 'shell' | 'boost' | 'meteor' | 'feathers';
+export type SceneTheme = 'alley-day' | 'wall-afternoon' | 'rooftop-sunset' | 'clock-twilight' | 'factory-night' | 'meadow-gold';
 
 export type GameScreen = 'home' | 'game' | 'leaderboard';
 
@@ -24,6 +27,11 @@ export interface Point {
 
 export interface ChickForm {
   stage: GameStage;
+  formId: ChickFormId;
+  skillKind: SkillKind;
+  launchPower: number;
+  damageMultiplier: number;
+  assetVariant: 1 | 2 | 3 | 4;
   name: string;
   avatar: string;
   radius: number;
@@ -57,6 +65,7 @@ export interface SpawnSpec {
 
 export interface StageDefinition {
   stage: GameStage;
+  theme: SceneTheme;
   title: string;
   ammo: number;
   story: {
@@ -86,6 +95,8 @@ export interface GameEntityView {
   anchor?: Point;
   attached?: boolean;
   angularSpeed?: number;
+  projectile?: 'shell' | 'feather';
+  expiresAtMs?: number;
   alive: boolean;
 }
 

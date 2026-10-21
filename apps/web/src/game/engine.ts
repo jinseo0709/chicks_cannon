@@ -7,7 +7,7 @@ import {
   Events,
   type IEventCollision,
 } from 'matter-js';
-import { BLOCK_CONFIG, CHICK_FORMS, WORLD } from './constants';
+import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, WORLD } from './constants';
 import { STAGES } from './stages';
 import type {
   BlockKind,
@@ -42,6 +42,8 @@ type GameBody = Matter.Body & {
     speed?: number;
     direction?: number;
     radius?: number;
+    projectile?: 'shell' | 'feather';
+    expiresAtMs?: number;
   };
 };
 
@@ -157,10 +159,10 @@ export class ChickCannonEngine {
       restitution: 0.35,
       friction: 0.5,
       label: 'chick',
+      collisionFilter: { group: Body.nextGroup(true) },
     }) as GameBody;
     this.track(chick, { radius, hp: 1, maxHp: 1, alive: true });
-    const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) *
-      (this.stage === 4 ? 31 : this.stage === 3 ? 28 : 26);
+    const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * form.launchPower;
     const angle = Math.atan2(dy, dx);
     Body.setVelocity(chick, { x: Math.cos(angle) * power, y: Math.sin(angle) * power });
     Composite.add(this.engine.world, chick);
@@ -179,26 +181,38 @@ export class ChickCannonEngine {
     if (!chick || this.state !== 'FLYING' || this.skillUsed) return;
     this.skillUsed = true;
     const { x, y } = chick.position;
-    if (this.stage === 1) {
+    const skillKind = CHICK_FORMS[this.stage].skillKind;
+    if (skillKind === 'shell') {
       for (let index = -1; index <= 1; index += 1) {
         const shell = Bodies.circle(x + 25, y + index * 15, 8, {
           density: 0.005,
           friction: 0.3,
           label: 'chick',
+          collisionFilter: { group: chick.collisionFilter.group },
         }) as GameBody;
-        this.track(shell, { radius: 8, hp: 1, maxHp: 1, alive: true });
+        this.track(shell, { radius: 8, hp: 1, maxHp: 1, alive: true, projectile: 'shell', expiresAtMs: this.engine.timing.timestamp + 3000 });
         Body.setVelocity(shell, { x: chick.velocity.x + 18, y: chick.velocity.y + index * 4 });
         Composite.add(this.engine.world, shell);
       }
-    } else if (this.stage === 2) {
+    } else if (skillKind === 'boost') {
       Body.setVelocity(chick, {
         x: Math.max(chick.velocity.x * 1.6, 26),
         y: chick.velocity.y * 0.4,
       });
-    } else if (this.stage === 3) {
+    } else if (skillKind === 'meteor') {
       Body.setVelocity(chick, { x: chick.velocity.x * 0.8, y: 28 });
     } else {
-      this.explode(x, y, 300, 0.22);
+      const angle = Math.atan2(chick.velocity.y, chick.velocity.x);
+      const offset = (chick.customData?.radius ?? CHICK_FORMS[this.stage].radius) + 10;
+      for (const spread of [-0.45, -0.30, -0.15, 0, 0.15, 0.30, 0.45]) {
+        const feather = Bodies.circle(x + Math.cos(angle) * offset, y + Math.sin(angle) * offset, 6, {
+          density: 0.004, restitution: 0.1, label: 'chick',
+          collisionFilter: { group: chick.collisionFilter.group },
+        }) as GameBody;
+        this.track(feather, { radius: 6, hp: 1, maxHp: 1, alive: true, projectile: 'feather', expiresAtMs: this.engine.timing.timestamp + 2000 });
+        Body.setVelocity(feather, { x: Math.cos(angle + spread) * 32, y: Math.sin(angle + spread) * 32 });
+        Composite.add(this.engine.world, feather);
+      }
     }
     this.publish();
   }
@@ -242,8 +256,9 @@ export class ChickCannonEngine {
   }
 
   continueAfterEvolution(): void {
-    if (this.state !== 'EVOLUTION' || this.stage >= 4) return;
-    this.stage = (this.stage + 1) as GameStage;
+    const next = STAGE_ORDER[STAGE_ORDER.indexOf(this.stage) + 1];
+    if (this.state !== 'EVOLUTION' || !next) return;
+    this.stage = next;
     this.loadStage(this.stage);
     this.publish();
   }
@@ -269,13 +284,17 @@ export class ChickCannonEngine {
     this.advanceGimmicks(delta);
     this.applyFans();
     for (const body of this.bodies.values()) {
+      if (body.customData?.expiresAtMs !== undefined && body.customData.expiresAtMs <= this.engine.timing.timestamp) {
+        this.removeBody(body);
+        continue;
+      }
       if (body.label === 'enemy' && (body.position.y > WORLD.height + 60 || body.position.x > WORLD.width + 150)) {
         this.defeatCat(body, { source: 'fall', point: { ...body.position }, direction: { x: 1, y: 0 }, frontal: false });
       }
     }
     if (this.state === 'WON') {
       this.winFrames += 1;
-      if (this.winFrames >= 42) this.state = this.stage === 4 ? 'ENDING' : 'EVOLUTION';
+      if (this.winFrames >= 42) this.state = this.stage === LAST_STAGE ? 'ENDING' : 'EVOLUTION';
     } else {
       this.checkTurnSettlement();
     }
@@ -538,7 +557,7 @@ export class ChickCannonEngine {
 
       const relativeSpeed = Math.hypot(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
       const involvesChick = a.label === 'chick' || b.label === 'chick';
-      const multiplier = involvesChick ? [1, 1.8, 2.8, 4.5][this.stage - 1] : 1;
+      const multiplier = involvesChick ? CHICK_FORMS[this.stage].damageMultiplier : 1;
       const impact = relativeSpeed * 3.5 * multiplier;
       const contact = collision?.supports?.[0];
       const point = contact && Number.isFinite(contact.x) && Number.isFinite(contact.y)
@@ -757,6 +776,8 @@ export class ChickCannonEngine {
         anchor: data?.anchor ? { ...data.anchor } : undefined,
         attached: data?.attached,
         angularSpeed: data?.angularSpeed,
+        projectile: data?.projectile,
+        expiresAtMs: data?.expiresAtMs,
         alive: data?.alive !== false,
       });
     }
@@ -786,7 +807,8 @@ export class ChickCannonEngine {
       defeatCause: this.defeatCause,
       story: STAGES[this.stage].story,
       form: CHICK_FORMS[this.stage],
-      evolvedForm: this.state === 'EVOLUTION' ? CHICK_FORMS[Math.min(this.stage + 1, 4) as GameStage] : null,
+      evolvedForm: this.state === 'EVOLUTION' && this.stage !== LAST_STAGE
+        ? CHICK_FORMS[STAGE_ORDER[STAGE_ORDER.indexOf(this.stage) + 1]] : null,
     };
   }
 
