@@ -101,6 +101,27 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
   });
 
+  it.each(['wood', 'glass', 'stone'] as const)('draws deterministic progressive damage for %s blocks only below full health', (material) => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    const lineCount = (hp: number) => {
+      vi.clearAllMocks();
+      renderer.render({
+        ...snapshot,
+        entities: [{ id: 37, kind: 'block', x: 500, y: 400, width: 80, height: 60, angle: 0.2, material, hp, maxHp: 100, alive: true }],
+      }, 100);
+      return vi.mocked(context.lineTo).mock.calls.length;
+    };
+    const pristine = lineCount(100);
+    const damaged = lineCount(60);
+    const heavilyDamaged = lineCount(20);
+    expect(damaged).toBeGreaterThan(pristine);
+    expect(heavilyDamaged).toBeGreaterThan(damaged);
+    expect(vi.mocked(context.clip)).toHaveBeenCalled();
+    renderer.dispose();
+  });
+
   it('draws the nest on the far right and connects the moving shutter to a ceiling pulley', () => {
     const image = document.createElement('img');
     const assets = new SvgAssetCache();

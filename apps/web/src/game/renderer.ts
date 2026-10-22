@@ -689,6 +689,7 @@ export class GameCanvasRenderer {
       ctx.shadowBlur = 8;
       ctx.drawImage(sprite, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
       ctx.restore();
+      this.drawBlockDamage(entity, width, height);
       return;
     }
     const config = BLOCK_CONFIG[material];
@@ -795,6 +796,97 @@ export class GameCanvasRenderer {
       ctx.textBaseline = 'middle';
       ctx.fillText('TNT', 0, 0);
     }
+    this.drawBlockDamage(entity, width, height);
+  }
+
+  private drawBlockDamage(entity: GameEntityView, width: number, height: number): void {
+    const hp = entity.hp;
+    const maxHp = entity.maxHp;
+    if (entity.material === 'tnt' || hp === undefined || maxHp === undefined || maxHp <= 0) return;
+    const damageRatio = 1 - Math.max(0, Math.min(1, hp / maxHp));
+    const tier = damageRatio >= 0.72 ? 3 : damageRatio >= 0.48 ? 2 : damageRatio >= 0.24 ? 1 : 0;
+    if (tier === 0) return;
+
+    const ctx = this.context;
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-halfWidth + 2, -halfHeight + 2, width - 4, height - 4);
+    ctx.clip();
+
+    if (entity.material === 'wood') {
+      const seed = Math.abs(entity.id) % 7;
+      const originX = (seed / 14 - 0.22) * width;
+      const originY = (seed % 3 - 1) * height * 0.08;
+      ctx.strokeStyle = 'rgba(70, 30, 19, .9)';
+      ctx.lineWidth = Math.max(1.5, Math.min(3, Math.min(width, height) * 0.045));
+      ctx.beginPath();
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(originX - width * 0.08, originY - height * 0.16);
+      ctx.lineTo(originX - width * 0.2, originY - height * 0.25);
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(originX + width * 0.09, originY + height * 0.12);
+      if (tier >= 2) {
+        ctx.lineTo(originX + width * 0.21, originY + height * 0.18);
+        ctx.moveTo(originX - width * 0.08, originY - height * 0.16);
+        ctx.lineTo(originX - width * 0.04, originY - height * 0.3);
+      }
+      if (tier >= 3) {
+        ctx.moveTo(originX + width * 0.09, originY + height * 0.12);
+        ctx.lineTo(originX + width * 0.04, originY + height * 0.28);
+      }
+      ctx.stroke();
+    } else if (entity.material === 'glass') {
+      const rays = tier === 1 ? 4 : tier === 2 ? 7 : 10;
+      const reach = Math.min(halfWidth, halfHeight) * (tier === 1 ? 0.55 : tier === 2 ? 0.78 : 0.94);
+      ctx.strokeStyle = 'rgba(235, 255, 255, .95)';
+      ctx.lineWidth = Math.max(1, Math.min(2, Math.min(width, height) * 0.035));
+      ctx.beginPath();
+      for (let ray = 0; ray < rays; ray += 1) {
+        const angle = (Math.PI * 2 * ray) / rays + (Math.abs(entity.id) % 5) * 0.11;
+        const endX = Math.max(-halfWidth + 4, Math.min(halfWidth - 4, Math.cos(angle) * reach));
+        const endY = Math.max(-halfHeight + 4, Math.min(halfHeight - 4, Math.sin(angle) * reach));
+        ctx.moveTo(0, 0);
+        ctx.lineTo(endX, endY);
+        if (tier >= 2) {
+          const branchX = endX * 0.72 - Math.sin(angle) * Math.min(halfWidth, halfHeight) * 0.18;
+          const branchY = endY * 0.72 + Math.cos(angle) * Math.min(halfWidth, halfHeight) * 0.18;
+          ctx.moveTo(endX * 0.72, endY * 0.72);
+          ctx.lineTo(Math.max(-halfWidth + 4, Math.min(halfWidth - 4, branchX)), Math.max(-halfHeight + 4, Math.min(halfHeight - 4, branchY)));
+        }
+      }
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(235, 255, 255, .9)';
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(2, Math.min(4, Math.min(width, height) * 0.07)), 0, Math.PI * 2);
+      ctx.fill();
+    } else if (entity.material === 'stone') {
+      const corners = tier === 1 ? [0] : tier === 2 ? [0, 2] : [0, 1, 2, 3];
+      const chip = Math.min(width, height) * (tier === 1 ? 0.12 : tier === 2 ? 0.18 : 0.23);
+      ctx.fillStyle = 'rgba(25, 42, 49, .72)';
+      for (const corner of corners) {
+        const left = corner === 0 || corner === 3;
+        const top = corner === 0 || corner === 1;
+        const x = left ? -halfWidth + 2 : halfWidth - 2;
+        const y = top ? -halfHeight + 2 : halfHeight - 2;
+        const dx = left ? chip : -chip;
+        const dy = top ? chip : -chip;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + dx, y);
+        ctx.lineTo(x, y + dy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(222, 241, 238, .88)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x + dx, y);
+        ctx.lineTo(x, y + dy);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
 
   private drawShutter(entity: GameEntityView): void {
