@@ -76,6 +76,7 @@ export interface StageDefinition {
     avatar: string;
     text: string;
     chickReply: string;
+    instruction: string;
   };
   spawns: readonly SpawnSpec[];
 }

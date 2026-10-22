@@ -19,6 +19,7 @@ export function DialoguePanel({ story, stage = 1, onContinue }: DialoguePanelPro
           <p className="eyebrow">CHAPTER {stage} · 도전장</p>
           <h2 id="story-speaker">{story.speaker}</h2>
           <p>{story.text}</p>
+          <p className="stage-instruction">{story.instruction}</p>
           <p className="chick-reply">{story.chickReply}</p>
           <button className="button button-primary" onClick={onContinue}>도전 시작</button>
         </div>

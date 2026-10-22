@@ -7,7 +7,7 @@ import type { GameStage } from './types';
 describe('campaign stage data', () => {
   it('contains six distinct destinations with their ammunition and shared chick forms', () => {
     expect(Object.keys(STAGES)).toHaveLength(6);
-    expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([4, 4, 5, 5, 6, 7]);
+    expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([6, 6, 5, 5, 4, 5]);
     expect(new Set(Object.values(STAGES).map((stage) => stage.theme)).size).toBe(6);
     expect(STAGE_ORDER.map((stage) => CHICK_FORMS[stage].formId)).toEqual(['baby', 'baby', 'breeze', 'breeze', 'fighter', 'golden']);
   });
@@ -49,11 +49,33 @@ describe('campaign stage data', () => {
       expect(stage.story.speaker.length).toBeGreaterThan(0);
       expect(stage.story.text.length).toBeGreaterThan(0);
       expect(stage.story.chickReply.length).toBeGreaterThan(0);
+      expect(stage.story.instruction.length).toBeGreaterThan(0);
       expect(stage.spawns.length).toBeGreaterThan(0);
       for (const spawn of stage.spawns) {
         expect(Number.isFinite(spawn.x)).toBe(true);
         expect(Number.isFinite(spawn.y)).toBe(true);
       }
     }
+  });
+
+  it.each([
+    [1, 'block'], [2, 'cat'], [3, 'fan'], [4, 'shutter'], [5, 'tnt'], [6, 'boss'],
+  ] as const)('teaches the primary mechanic in stage %s', (stageNumber, mechanic) => {
+    const spawns = STAGES[stageNumber].spawns;
+    expect(spawns.some((spawn) => {
+      if (mechanic === 'block') return spawn.kind === 'block';
+      if (mechanic === 'cat') return spawn.kind === 'cat' && (spawn.shieldLayers ?? 0) > 0;
+      if (mechanic === 'tnt') return spawn.kind === 'block' && spawn.material === 'tnt';
+      if (mechanic === 'boss') return spawn.kind === 'cat' && spawn.boss;
+      return spawn.kind === mechanic;
+    })).toBe(true);
+  });
+
+  it('keeps the fan and shutter as separate lessons and reserves secondary hazards for later stages', () => {
+    expect(STAGES[3].spawns.some((spawn) => spawn.kind === 'fan')).toBe(true);
+    expect(STAGES[3].spawns.some((spawn) => spawn.kind === 'shutter')).toBe(false);
+    expect(STAGES[4].spawns.some((spawn) => spawn.kind === 'shutter')).toBe(true);
+    expect(STAGES[4].spawns.some((spawn) => spawn.kind === 'tire')).toBe(true);
+    expect(STAGES[2].spawns.some((spawn) => spawn.kind === 'tire')).toBe(false);
   });
 });

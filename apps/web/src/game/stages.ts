@@ -7,10 +7,11 @@ const cat = (x: number, y: number, radius: number, shieldLayers = 0, boss = fals
 
 export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   1: {
-    stage: 1, title: '골목길 입구', theme: 'alley-day', ammo: 4,
+    stage: 1, title: '골목길 입구', theme: 'alley-day', ammo: 6,
     story: {
       speaker: '골목대장 길고양이', avatar: '🐱',
       text: '이 둥지는 이제 내 낮잠 자리다냥!', chickReply: '둥지를 돌려줘 삐약!',
+      instruction: '\uB098\uBB34 \uC9C0\uC9C0\uB300\uB97C \uBB34\uB108\uB728\uB9AC\uBA74 \uC694\uC0C8\uB3C4 \uD754\uB4E4\uB824\uC694.',
     },
     spawns: [
       block(785, 620, 26, 100, 'wood'), block(925, 620, 26, 100, 'wood'),
@@ -23,13 +24,13 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     ],
   },
   2: {
-    stage: 2, title: '도둑고양이 담장', theme: 'wall-afternoon', ammo: 4,
+    stage: 2, title: '도둑고양이 담장', theme: 'wall-afternoon', ammo: 6,
     story: {
       speaker: '담장 경비 고양이', avatar: '😼',
-      text: '냄비 방패와 타이어를 넘어와 보라냥!', chickReply: '튕겨서 뒤쪽을 노릴 거야!',
+      text: '방패 고양이를 정면에서 뚫어 보라냥!', chickReply: '튕겨서 뒤쪽을 노릴 거야!',
+      instruction: '\uBC29\uD328\uB294 \uC815\uBA74 \uCDA9\uB3CC\uB85C \uD55C \uACB9\uC529 \uBCA7\uACA8 \uBCF4\uC138\uC694.',
     },
     spawns: [
-      { kind: 'tire', x: 650, y: 630, radius: 40 },
       block(760, 620, 28, 100, 'stone'), block(890, 620, 26, 100, 'wood'),
       block(825, 558, 174, 22, 'wood'), cat(790, 523, 24), cat(860, 523, 25, 1),
       block(790, 510, 24, 74, 'wood'), block(860, 510, 24, 74, 'stone'),
@@ -43,11 +44,11 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     stage: 3, title: '바람 부는 고층 옥상', theme: 'rooftop-sunset', ammo: 5,
     story: {
       speaker: '옥상 바람잡이', avatar: '😺',
-      text: '셔터와 상승 바람을 읽을 수 있겠냥?', chickReply: '질풍 부스터로 바람을 타겠어!',
+      text: '상승 바람을 읽을 수 있겠냥?', chickReply: '질풍 부스터로 바람을 타겠어!',
+      instruction: '\uC120\uD48D\uAE30 \uBC14\uB78C\uC744 \uD0C0\uBA74 \uBCD1\uC544\uB9AC\uC758 \uAD34\uC801\uC774 \uBC14\uB00C\uC5B4\uC694.',
     },
     spawns: [
       { kind: 'fan', x: 470, y: 420, w: 140, h: 420, forceX: 0, forceY: -0.0015 },
-      { kind: 'shutter', x: 650, y: 390, w: 24, h: 150, minY: 300, maxY: 480, speed: 2 },
       block(780, 620, 28, 100, 'stone'), block(920, 620, 28, 100, 'wood'),
       block(850, 558, 190, 22, 'stone'), cat(805, 522, 24), cat(890, 522, 24, 1),
       block(805, 505, 24, 84, 'glass'), block(890, 505, 24, 84, 'wood'),
@@ -62,10 +63,13 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     stage: 4, title: '위험천만 시계탑', theme: 'clock-twilight', ammo: 5,
     story: {
       speaker: '시계탑 집사냥', avatar: '🕰️😼',
-      text: '아기 달걀까지 지킬 수 있겠냥?', chickReply: '달걀을 지키며 쇠사슬을 끊겠어!',
+      text: '셔터가 움직이는 틈을 노려 보라냥!', chickReply: '달걀을 지키며 쇠사슬을 끊겠어!',
+      instruction: '\uC154\uD130\uAC00 \uC5F4\uB9B0 \uC21C\uAC04\uC744 \uB178\uB824 \uC548\uCABD\uC744 \uB9DE\uD600 \uBCF4\uC138\uC694.',
     },
     spawns: [
+      { kind: 'tire', x: 690, y: 630, radius: 40 },
       { kind: 'gear', x: 620, y: 450, radius: 50, angularSpeed: 0.025 },
+      { kind: 'shutter', x: 750, y: 390, w: 24, h: 150, minY: 300, maxY: 480, speed: 2 },
       { kind: 'chandelier', x: 780, y: 330, w: 100, h: 36, anchor: { x: 780, y: 190 } },
       block(850, 620, 30, 100, 'stone'), block(990, 620, 28, 100, 'wood'),
       block(920, 558, 190, 22, 'stone'), cat(875, 522, 24, 1),
@@ -78,10 +82,11 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     ],
   },
   5: {
-    stage: 5, title: '보스의 폐공장 벙커', theme: 'factory-night', ammo: 6,
+    stage: 5, title: '보스의 폐공장 벙커', theme: 'factory-night', ammo: 4,
     story: {
       speaker: '벙커 방패대장', avatar: '🛡️😾',
       text: '두 겹 방패와 TNT 벙커다냥!', chickReply: '메테오 급강하로 빈틈을 열겠어!',
+      instruction: 'TNT \uD558\uB098\uB97C \uD130\uB728\uB824 \uC8FC\uBCC0 \uD3ED\uBC1C\uC744 \uC5F0\uC1C4\uC2DC\uD0A4\uC138\uC694.',
     },
     spawns: [
       block(690, 646, 44, 48, 'tnt'), block(742, 646, 44, 48, 'tnt'),
@@ -96,10 +101,11 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     ],
   },
   6: {
-    stage: 6, title: '둥지 탈환 대축제', theme: 'meadow-gold', ammo: 7,
+    stage: 6, title: '둥지 탈환 대축제', theme: 'meadow-gold', ammo: 5,
     story: {
       speaker: '보스 고양이 킹냥이', avatar: '👑🐱',
       text: '세 겹 요새를 지키는 내가 마지막 상대다냥!', chickReply: '황금 깃털로 우리 둥지를 되찾겠어!',
+      instruction: '\uC120\uD48D\uAE30\uC640 TNT\uB97C \uD65C\uC6A9\uD574 \uBCF4\uC2A4 \uC694\uC0C8\uB97C \uBB34\uB108\uB728\uB9AC\uC138\uC694.',
     },
     spawns: [
       { kind: 'fan', x: 430, y: 425, w: 120, h: 410, forceX: 0, forceY: -0.0012 },
