@@ -1,4 +1,5 @@
 import type { CSSProperties, JSX } from 'react';
+import { assetUrl } from '../asset-url';
 import { CHICK_FORMS, STAGE_ORDER } from '../game/constants';
 import { STAGES } from '../game/stages';
 import type { GameStage } from '../game/types';
@@ -33,7 +34,7 @@ export function WorldMapScreen({
 
   return (
     <section className="world-map-screen" aria-labelledby="world-map-title">
-      <img className="world-map-background" src="/assets/map/world-map.png" alt="여섯 지역이 길로 이어진 병아리 대포 월드맵" />
+      <img className="world-map-background" src={assetUrl('assets/map/world-map.png')} alt="여섯 지역이 길로 이어진 병아리 대포 월드맵" />
       <div className="world-map-shade" aria-hidden="true" />
 
       <header className="map-topbar">
@@ -72,7 +73,7 @@ export function WorldMapScreen({
 
         <img
           className="map-traveler"
-          src={`/assets/chicks/stage-${currentForm.assetVariant}.png`}
+          src={assetUrl(`assets/chicks/stage-${currentForm.assetVariant}.png`)}
           alt=""
           style={{ '--traveler-left': `${NODE_POSITIONS[currentStage].left}%`, '--traveler-top': `${NODE_POSITIONS[currentStage].top}%` } as CSSProperties}
         />
@@ -81,7 +82,7 @@ export function WorldMapScreen({
       </div>
 
       <aside className="map-current-card">
-        <img src={`/assets/backgrounds/stage-${currentStage}.png`} alt="" />
+        <img src={assetUrl(`assets/backgrounds/stage-${currentStage}.png`)} alt="" />
         <div>
           <p>다음 목적지 · CHAPTER {currentStage}</p>
           <h2 id="world-map-title">{STAGES[currentStage].title}</h2>

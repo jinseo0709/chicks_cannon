@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { assetUrl } from '../asset-url';
 import type { GameSnapshot, ItemKind } from '../game/types';
 import { STAGES } from '../game/stages';
 
@@ -35,7 +36,7 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
             {Array.from({ length: stage.ammo }, (_, index) => (
               <span key={index} className={index < snapshot.ammo ? 'ammo-dot' : 'ammo-dot spent'}>
                 {index < snapshot.ammo
-                  ? <img src={`/assets/chicks/stage-${snapshot.form.assetVariant}.png`} alt="" />
+                  ? <img src={assetUrl(`assets/chicks/stage-${snapshot.form.assetVariant}.png`)} alt="" />
                   : '·'}
               </span>
             ))}

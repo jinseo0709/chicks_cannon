@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { assetUrl } from '../asset-url';
 
 export interface OpeningScreenProps {
   onContinue(): void;
@@ -9,7 +10,7 @@ export function OpeningScreen({ onContinue }: OpeningScreenProps): JSX.Element {
     <section className="opening-screen" aria-labelledby="opening-title">
       <img
         className="opening-illustration"
-        src="/assets/story/opening-nest-stolen.png"
+        src={assetUrl('assets/story/opening-nest-stolen.png')}
         alt="고양이 무리가 병아리의 둥지를 빼앗아 달아나는 모습"
       />
       <div className="opening-vignette" aria-hidden="true" />

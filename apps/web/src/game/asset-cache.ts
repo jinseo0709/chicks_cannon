@@ -1,4 +1,5 @@
 import { CHICK_FORMS } from './constants';
+import { assetUrl } from '../asset-url';
 import type { GameStage } from './types';
 
 export type AssetId =
@@ -97,7 +98,7 @@ export class SvgAssetCache {
         this.failed.add(id);
         resolve();
       };
-      image.src = assetPaths[id];
+      image.src = assetUrl(assetPaths[id]);
       if (image.complete && image.naturalWidth > 0) resolve();
     }).finally(() => this.pending.delete(id));
     this.pending.set(id, promise);

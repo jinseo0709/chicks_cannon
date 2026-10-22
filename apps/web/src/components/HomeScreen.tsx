@@ -1,4 +1,5 @@
 import type { JSX, PointerEvent } from 'react';
+import { assetUrl } from '../asset-url';
 import { STAGES } from '../game/stages';
 import type { GameStage } from '../game/types';
 
@@ -46,11 +47,11 @@ export function HomeScreen({ currentStage, onPlay, onOpenLeaderboard }: HomeScre
         <span className="home-character-shadow home-nest-shadow" />
         <span className="home-character-shadow home-cat-shadow" />
         <div className="home-hero-chick">
-          <img src="/assets/home/hero-chick.png" alt="" />
-          <img className="home-hero-chick-blink" src="/assets/home/hero-chick-blink.png" alt="" />
+          <img src={assetUrl('assets/home/hero-chick.png')} alt="" />
+          <img className="home-hero-chick-blink" src={assetUrl('assets/home/hero-chick-blink.png')} alt="" />
         </div>
-        <img className="home-hero-nest" src="/assets/props/nest.png" alt="" />
-        <img className="home-peek-cat" src="/assets/home/peek-cat.png" alt="" />
+        <img className="home-hero-nest" src={assetUrl('assets/props/nest.png')} alt="" />
+        <img className="home-peek-cat" src={assetUrl('assets/home/peek-cat.png')} alt="" />
         <span className="home-story-line">둥지를 노리는 수상한 기척…</span>
       </div>
 

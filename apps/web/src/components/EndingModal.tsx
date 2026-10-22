@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { assetUrl } from '../asset-url';
 import type { LeaderboardClient } from '../leaderboard/client';
 import { ScoreSubmissionPanel } from './ScoreSubmissionPanel';
 
@@ -15,7 +16,7 @@ export function EndingModal({ score, client, storage, onPlayAgain, onOpenLeaderb
   return (
     <div className="overlay-backdrop">
       <section className="modal-card ending-modal" role="dialog" aria-modal="true" aria-labelledby="ending-title">
-        <img className="ending-hero" src="/assets/chicks/stage-4.png" alt="황금 깃털로 진화한 병아리" />
+        <img className="ending-hero" src={assetUrl('assets/chicks/stage-4.png')} alt="황금 깃털로 진화한 병아리" />
         <p className="eyebrow">THE END · HOME AGAIN</p>
         <h2 id="ending-title">우리 둥지를 되찾았어요!</h2>
         <p className="final-score">최종 점수 <strong>{score.toLocaleString('ko-KR')}</strong></p>
