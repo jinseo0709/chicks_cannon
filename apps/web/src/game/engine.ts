@@ -5,6 +5,7 @@ import {
   Constraint,
   Engine,
   Events,
+  Query,
   type IEventCollision,
 } from 'matter-js';
 import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, WORLD } from './constants';
@@ -19,6 +20,7 @@ import type {
   ItemKind,
   Point,
   SpawnSpec,
+  SlickZone,
 } from './types';
 
 type GameBody = Matter.Body & {
@@ -44,6 +46,7 @@ type GameBody = Matter.Body & {
     radius?: number;
     projectile?: 'shell' | 'feather';
     expiresAtMs?: number;
+    slick?: boolean;
   };
 };
 
@@ -65,7 +68,8 @@ interface DamageContext {
 }
 interface Explosion { x: number; y: number; radius: number; forceMagnitude: number; }
 
-const initialItems = (): Record<ItemKind, number> => ({ booster: 1, quake: 1, mega: 1 });
+const initialItems = (): Record<ItemKind, number> => ({ booster: 1, quake: 1, mega: 1, butter: 1 });
+const activeStates = new Set<GameState>(['AIMING', 'FLYING', 'RESOLVING']);
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 const positive = (value: number | undefined, fallback: number): number =>
   value !== undefined && Number.isFinite(value) && value > 0 ? value : fallback;
@@ -92,6 +96,11 @@ export class ChickCannonEngine {
   private score = 0;
   private ammo = STAGES[1].ammo;
   private items = initialItems();
+  private targetingItem: 'butter' | null = null;
+  private slickZones: SlickZone[] = [];
+  private scorePopups: Array<{ id: number; x: number; y: number; value: number; label?: string; expiresAtMs: number }> = [];
+  private nextScorePopupId = 0;
+  private nextSlickId = 0;
   private muted = false;
   private aimPosition: Point | null = null;
   private activeChick: GameBody | null = null;
@@ -124,6 +133,13 @@ export class ChickCannonEngine {
     this.publish();
   }
 
+  selectStage(stage: GameStage): void {
+    if (!this.alive || !STAGE_ORDER.includes(stage)) return;
+    this.stage = stage;
+    this.loadStage(stage);
+    this.publish();
+  }
+
   dismissDialogue(): void {
     if (this.state !== 'DIALOGUE') return;
     this.state = 'AIMING';
@@ -131,7 +147,7 @@ export class ChickCannonEngine {
   }
 
   setAim(position: Point): void {
-    if (!this.alive || this.state !== 'AIMING') return;
+    if (!this.alive || this.state !== 'AIMING' || this.targetingItem || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
     const dx = position.x - WORLD.cannon.x;
     const dy = position.y - WORLD.cannon.y;
     const distance = Math.hypot(dx, dy);
@@ -141,7 +157,7 @@ export class ChickCannonEngine {
   }
 
   releaseAim(): void {
-    if (!this.alive || this.state !== 'AIMING' || this.ammo <= 0 || !this.aimPosition) return;
+    if (!this.alive || this.state !== 'AIMING' || this.targetingItem || this.ammo <= 0 || !this.aimPosition) return;
     const dx = WORLD.cannon.x - this.aimPosition.x;
     const dy = WORLD.cannon.y - this.aimPosition.y;
     const distance = Math.hypot(dx, dy);
@@ -178,7 +194,7 @@ export class ChickCannonEngine {
 
   activateSkill(): void {
     const chick = this.activeChick;
-    if (!chick || this.state !== 'FLYING' || this.skillUsed) return;
+    if (!chick || this.state !== 'FLYING' || this.targetingItem || this.skillUsed) return;
     this.skillUsed = true;
     const { x, y } = chick.position;
     const skillKind = CHICK_FORMS[this.stage].skillKind;
@@ -217,23 +233,87 @@ export class ChickCannonEngine {
     this.publish();
   }
 
-  useItem(kind: ItemKind): void {
-    if (!this.alive || this.items[kind] <= 0) return;
-    if (this.state === 'PAUSED') return;
+  useItem(kind: ItemKind): boolean {
+    if (!this.alive || !activeStates.has(this.state) || !this.items[kind]) return false;
+    if (kind === 'butter') {
+      this.targetingItem = this.targetingItem === 'butter' ? null : 'butter';
+      this.aimPosition = null;
+      this.publish();
+      return true;
+    }
     if (kind === 'booster') {
-      if (this.state !== 'FLYING' || !this.activeChick) return;
+      if (this.state !== 'FLYING' || !this.activeChick) return false;
       Body.setVelocity(this.activeChick, {
         x: Math.max(this.activeChick.velocity.x * 1.8, 30),
         y: this.activeChick.velocity.y * 0.2,
       });
     } else if (kind === 'mega') {
-      if (this.state !== 'AIMING') return;
+      if (this.state !== 'AIMING') return false;
       this.megaNext = true;
     } else {
       this.applyQuake();
     }
+    this.targetingItem = null;
     this.items = { ...this.items, [kind]: this.items[kind] - 1 };
     this.publish();
+    return true;
+  }
+
+  applyTargetedItem(point: Point): boolean {
+    if (!this.alive || !activeStates.has(this.state) || this.targetingItem !== 'butter' || !this.items.butter ||
+      !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.x > WORLD.width || point.y < 0 || point.y > WORLD.height) return false;
+    const candidates = [...this.bodies.values()].filter((body) =>
+      !body.isStatic && body.customData?.alive !== false && (body.label === 'block' || body.label === 'tnt'));
+    const target = (Query.point(candidates, point) as GameBody[]).sort((a, b) =>
+      Math.hypot(a.position.x - point.x, a.position.y - point.y) - Math.hypot(b.position.x - point.x, b.position.y - point.y))[0];
+    if (target) {
+      target.friction = 0;
+      target.frictionStatic = 0;
+      target.customData!.slick = true;
+      this.nudgeButterTarget(target);
+    } else if (point.y >= 660) {
+      const grounds = Composite.allBodies(this.engine.world).filter((body) => body.label === 'ground');
+      if (!grounds.length) return false;
+      const center = clamp(point.x, 90, WORLD.width - 90);
+      const start = center - 90;
+      const end = center + 90;
+      const { friction, frictionStatic } = grounds[0];
+      grounds.forEach((ground) => Composite.remove(this.engine.world, ground));
+      const ranges = [{ left: -640, right: start, slick: false }, { left: start, right: end, slick: true }, { left: end, right: 1920, slick: false }];
+      for (const range of ranges) {
+        Composite.add(this.engine.world, Bodies.rectangle((range.left + range.right) / 2, 695, range.right - range.left, 50, {
+          isStatic: true, label: 'ground', friction: range.slick ? 0 : friction, frictionStatic: range.slick ? 0 : frictionStatic,
+        }));
+      }
+      this.slickZones = [{ id: ++this.nextSlickId, x: center, width: 180 }];
+      for (const body of this.bodies.values()) {
+        if (!body.isStatic && body.customData?.alive !== false && ['block', 'tnt', 'enemy'].includes(body.label) &&
+          body.position.x >= start && body.position.x <= end && body.bounds.max.y >= 668 && body.bounds.max.y <= 690) this.nudgeButterTarget(body);
+      }
+    } else return false;
+    this.items = { ...this.items, butter: this.items.butter - 1 };
+    this.targetingItem = null;
+    this.aimPosition = null;
+    this.publish();
+    return true;
+  }
+
+  cancelTargetedItem(): void {
+    if (!this.targetingItem) return;
+    this.targetingItem = null;
+    this.aimPosition = null;
+    this.publish();
+  }
+
+  cancelAim(): void {
+    if (!this.aimPosition) return;
+    this.aimPosition = null;
+    this.publish();
+  }
+
+  private nudgeButterTarget(body: GameBody): void {
+    const height = body.customData?.height ?? (body.customData?.radius ?? 24) * 2;
+    Body.applyForce(body, { x: body.position.x, y: body.position.y + height * 0.3 }, { x: body.mass * 0.0008, y: 0 });
   }
 
   toggleMute(): void {
@@ -244,6 +324,8 @@ export class ChickCannonEngine {
   pause(): void {
     if (this.state !== 'AIMING' && this.state !== 'FLYING' && this.state !== 'RESOLVING') return;
     this.stateBeforePause = this.state;
+    this.targetingItem = null;
+    this.aimPosition = null;
     this.state = 'PAUSED';
     this.publish();
   }
@@ -281,6 +363,7 @@ export class ChickCannonEngine {
       if (body.customData?.alive !== false) Body.setVelocity(body, velocity);
     }
     this.pendingVelocities.clear();
+    this.scorePopups = this.scorePopups.filter((popup) => popup.expiresAtMs > this.engine.timing.timestamp);
     this.advanceGimmicks(delta);
     this.applyFans();
     for (const body of this.bodies.values()) {
@@ -325,6 +408,9 @@ export class ChickCannonEngine {
     this.skillUsed = false;
     this.megaNext = false;
     this.ammo = STAGES[stage].ammo;
+    this.targetingItem = null;
+    this.slickZones = [];
+    this.scorePopups = [];
     this.aimPosition = null;
     this.settleFrames = 0;
     this.winFrames = 0;
@@ -582,6 +668,7 @@ export class ChickCannonEngine {
         };
         if (body.label === 'enemy' && impact > 4.5 && context.frontal && (data.shieldLayers ?? 0) > 0) {
           data.shieldLayers! -= 1;
+          this.awardScore(500, body.position.x, body.position.y - 30, '방패 파괴');
           Body.setVelocity(other, { x: -Math.abs(other.velocity.x) * 0.7, y: -4 });
         } else if (body.label === 'hostageEgg') {
           this.damageBody(body, impact > 3.2 ? impact : 0, context);
@@ -615,7 +702,8 @@ export class ChickCannonEngine {
     const data = body.customData;
     if (!data || data.alive === false) return;
     data.alive = false;
-    this.score += data.boss ? 3000 : data.shield ? 2000 : 1200;
+    const reward = data.boss ? 3000 : data.shield ? 2000 : 1200;
+    this.awardScore(reward, body.position.x, body.position.y - 24, data.boss ? '보스 격파' : '고양이 격파');
     this.removeBody(body);
   }
 
@@ -626,7 +714,7 @@ export class ChickCannonEngine {
     data.alive = false;
     this.removeBody(body);
     if (body.label === 'tnt') this.explode(body.position.x, body.position.y, 230, 0.14);
-    else this.score += 180;
+    else this.awardScore(180, body.position.x, body.position.y, '파괴');
   }
 
   private explode(x: number, y: number, radius: number, forceMagnitude: number): void {
@@ -636,7 +724,7 @@ export class ChickCannonEngine {
     try {
       while (this.explosionQueue.length > 0) {
         const explosion = this.explosionQueue.shift()!;
-        this.score += 600;
+        this.awardScore(600, explosion.x, explosion.y - 18, '폭발');
         for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
           if (body.isStatic || body.customData?.alive === false) continue;
           const dx = body.position.x - explosion.x;
@@ -667,6 +755,18 @@ export class ChickCannonEngine {
         y: -0.06 - Math.random() * 0.04,
       });
     }
+  }
+
+  private awardScore(value: number, x: number, y: number, label?: string): void {
+    this.score += value;
+    this.scorePopups.push({
+      id: ++this.nextScorePopupId,
+      x,
+      y,
+      value,
+      label,
+      expiresAtMs: this.engine.timing.timestamp + 1100,
+    });
   }
 
   private advanceGimmicks(deltaMs: number): void {
@@ -778,6 +878,7 @@ export class ChickCannonEngine {
         angularSpeed: data?.angularSpeed,
         projectile: data?.projectile,
         expiresAtMs: data?.expiresAtMs,
+        slick: data?.slick,
         alive: data?.alive !== false,
       });
     }
@@ -801,6 +902,16 @@ export class ChickCannonEngine {
       campaignComplete: this.state === 'ENDING',
       state: this.state,
       items: { ...this.items } satisfies ItemCounts,
+      targetingItem: this.targetingItem,
+      slickZones: this.slickZones.map((zone) => ({ ...zone })),
+      scorePopups: this.scorePopups.map((popup) => ({
+        id: popup.id,
+        x: popup.x,
+        y: popup.y,
+        value: popup.value,
+        label: popup.label,
+        remainingMs: Math.max(0, popup.expiresAtMs - this.engine.timing.timestamp),
+      })),
       muted: this.muted,
       entities,
       aimPosition: this.aimPosition ? { ...this.aimPosition } : null,
@@ -813,6 +924,10 @@ export class ChickCannonEngine {
   }
 
   private publish(): void {
+    if (!activeStates.has(this.state)) {
+      this.targetingItem = null;
+      this.aimPosition = null;
+    }
     this.snapshot = this.createSnapshot();
     this.onSnapshot(this.snapshot);
   }

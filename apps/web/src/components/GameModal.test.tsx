@@ -10,7 +10,8 @@ afterEach(cleanup);
 function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['defeatCause'] = null): GameSnapshot {
   return {
     screen: 'game', stage: 3, score: 4200, ammo: 0, campaignComplete: state === 'ENDING', state,
-    items: { booster: 0, quake: 1, mega: 0 }, muted: false, entities: [], aimPosition: null,
+    items: { booster: 0, quake: 1, mega: 0, butter: 1 }, muted: false, entities: [], aimPosition: null,
+    targetingItem: null, slickZones: [],
     defeatCause, story: STAGES[3].story, form: CHICK_FORMS[3],
     evolvedForm: state === 'EVOLUTION' ? CHICK_FORMS[4] : null,
   };
@@ -32,8 +33,8 @@ describe('GameModal', () => {
     const onContinue = vi.fn();
     const props = { onRetry: vi.fn(), onContinue };
     const { rerender } = render(<GameModal snapshot={makeSnapshot('EVOLUTION')} {...props} />);
-    expect(screen.getByRole('heading', { name: '새로운 모습으로 진화!' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '다음 챕터로' }));
+    expect(screen.getByRole('heading', { name: '다음 길이 열렸어요!' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '월드맵에서 확인' }));
     rerender(<GameModal snapshot={makeSnapshot('ENDING')} {...props} />);
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(onContinue).toHaveBeenCalledOnce();

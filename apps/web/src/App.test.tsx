@@ -14,8 +14,11 @@ afterEach(() => {
 describe('App navigation and campaign entry', () => {
   it('renders the home title and starts a story-led game session', () => {
     render(<App />);
+    expect(screen.getByRole('heading', { name: '우리 둥지를 빼앗겼다!' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '이야기 시작' }));
     expect(screen.getByRole('heading', { name: '병아리 대포' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '모험 시작' }));
+    fireEvent.click(screen.getByRole('button', { name: '모험 계속하기' }));
+    fireEvent.click(screen.getByRole('button', { name: '출발하기' }));
     expect(screen.getByRole('dialog', { name: '골목대장 길고양이' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '도전 시작' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '도전 시작' }));
@@ -28,7 +31,8 @@ describe('App navigation and campaign entry', () => {
       items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 0,
     }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: '순위표' }));
+    fireEvent.click(screen.getByRole('button', { name: '이야기 시작' }));
+    fireEvent.click(screen.getByRole('button', { name: '순위표 열기' }));
     expect(await screen.findByRole('heading', { name: '모험가 순위표' })).toBeTruthy();
     expect(await screen.findByRole('heading', { name: '아직 등록된 기록이 없어요' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '← 돌아가기' }));

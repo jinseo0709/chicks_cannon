@@ -1,18 +1,21 @@
 import type { JSX } from 'react';
 import type { StageDefinition } from '../game/types';
+import type { GameStage } from '../game/types';
 
 export interface DialoguePanelProps {
   story: StageDefinition['story'];
+  stage?: GameStage;
   onContinue(): void;
 }
 
-export function DialoguePanel({ story, onContinue }: DialoguePanelProps): JSX.Element {
+export function DialoguePanel({ story, stage = 1, onContinue }: DialoguePanelProps): JSX.Element {
+  const catAsset = stage === 6 ? 'boss' : stage >= 2 ? 'shield' : 'normal';
   return (
     <div className="overlay-backdrop dialogue-backdrop">
       <section className="story-panel" role="dialog" aria-modal="true" aria-labelledby="story-speaker">
-        <div className="story-avatar" aria-hidden="true">{story.avatar}</div>
+        <img className="story-avatar-image" src={`/assets/cats/${catAsset}.png`} alt="" />
         <div className="story-copy">
-          <p className="eyebrow">골목의 도전장</p>
+          <p className="eyebrow">CHAPTER {stage} · 도전장</p>
           <h2 id="story-speaker">{story.speaker}</h2>
           <p>{story.text}</p>
           <p className="chick-reply">{story.chickReply}</p>

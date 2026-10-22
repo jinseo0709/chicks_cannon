@@ -37,13 +37,14 @@ describe('SvgAssetCache', () => {
 
   it('preloads the chapter scene and all character/prop artwork', () => {
     expect(stageAssetIds(4)).toEqual([
-      'background-2', 'chick-2', 'cat-normal', 'cat-shield', 'cat-boss', 'nest', 'slingshot', 'egg',
+      'background-4', 'chick-2', 'chick-1-blink', 'cat-normal', 'cat-shield', 'cat-boss', 'nest', 'slingshot', 'egg',
+      'block-wood', 'block-stone', 'block-glass', 'block-tnt', 'tire', 'gear', 'fan', 'shutter', 'chandelier',
     ]);
   });
 
   it.each(STAGE_ORDER)('maps level %s to an existing character and background variant', (stage) => {
     const variant = CHICK_FORMS[stage].assetVariant;
-    expect(stageAssetIds(stage).slice(0, 2)).toEqual([`background-${variant}`, `chick-${variant}`]);
+    expect(stageAssetIds(stage).slice(0, 2)).toEqual([`background-${stage}`, `chick-${variant}`]);
     expect(variant).toBeGreaterThanOrEqual(1);
     expect(variant).toBeLessThanOrEqual(4);
   });

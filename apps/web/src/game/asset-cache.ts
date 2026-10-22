@@ -2,30 +2,52 @@ import { CHICK_FORMS } from './constants';
 import type { GameStage } from './types';
 
 export type AssetId =
-  | `background-${1 | 2 | 3 | 4}`
+  | `background-${1 | 2 | 3 | 4 | 5 | 6}`
   | `chick-${1 | 2 | 3 | 4}`
+  | 'chick-1-blink'
   | 'cat-normal'
   | 'cat-shield'
   | 'cat-boss'
   | 'nest'
   | 'slingshot'
-  | 'egg';
+  | 'egg'
+  | 'block-wood'
+  | 'block-stone'
+  | 'block-glass'
+  | 'block-tnt'
+  | 'tire'
+  | 'gear'
+  | 'fan'
+  | 'shutter'
+  | 'chandelier';
 
 const assetPaths: Record<AssetId, string> = {
-  'background-1': '/assets/backgrounds/chapter-1.svg',
-  'background-2': '/assets/backgrounds/chapter-2.svg',
-  'background-3': '/assets/backgrounds/chapter-3.svg',
-  'background-4': '/assets/backgrounds/chapter-4.svg',
-  'chick-1': '/assets/chicks/stage-1.svg',
-  'chick-2': '/assets/chicks/stage-2.svg',
-  'chick-3': '/assets/chicks/stage-3.svg',
-  'chick-4': '/assets/chicks/stage-4.svg',
-  'cat-normal': '/assets/cats/normal.svg',
-  'cat-shield': '/assets/cats/shield.svg',
-  'cat-boss': '/assets/cats/boss.svg',
-  nest: '/assets/props/nest.svg',
-  slingshot: '/assets/props/slingshot.svg',
-  egg: '/assets/props/egg.svg',
+  'background-1': '/assets/backgrounds/stage-1.png',
+  'background-2': '/assets/backgrounds/stage-2.png',
+  'background-3': '/assets/backgrounds/stage-3.png',
+  'background-4': '/assets/backgrounds/stage-4.png',
+  'background-5': '/assets/backgrounds/stage-5.png',
+  'background-6': '/assets/backgrounds/stage-6.png',
+  'chick-1': '/assets/chicks/stage-1.png',
+  'chick-2': '/assets/chicks/stage-2.png',
+  'chick-3': '/assets/chicks/stage-3.png',
+  'chick-4': '/assets/chicks/stage-4.png',
+  'chick-1-blink': '/assets/chicks/stage-1-blink.png',
+  'cat-normal': '/assets/cats/normal.png',
+  'cat-shield': '/assets/cats/shield.png',
+  'cat-boss': '/assets/cats/boss.png',
+  nest: '/assets/props/nest.png',
+  slingshot: '/assets/props/slingshot.png',
+  egg: '/assets/props/egg.png',
+  'block-wood': '/assets/props/wood.png',
+  'block-stone': '/assets/props/stone.png',
+  'block-glass': '/assets/props/glass.png',
+  'block-tnt': '/assets/props/tnt.png',
+  tire: '/assets/props/tire.png',
+  gear: '/assets/props/gear.png',
+  fan: '/assets/props/fan.png',
+  shutter: '/assets/props/shutter.png',
+  chandelier: '/assets/props/chandelier.png',
 };
 
 export class SvgAssetCache {
@@ -84,12 +106,22 @@ export class SvgAssetCache {
 }
 
 export const stageAssetIds = (stage: GameStage): readonly AssetId[] => [
-  `background-${CHICK_FORMS[stage].assetVariant}`,
+  `background-${stage}`,
   `chick-${CHICK_FORMS[stage].assetVariant}`,
+  'chick-1-blink',
   'cat-normal',
   'cat-shield',
   'cat-boss',
   'nest',
   'slingshot',
   'egg',
+  'block-wood',
+  'block-stone',
+  'block-glass',
+  'block-tnt',
+  'tire',
+  'gear',
+  'fan',
+  'shutter',
+  'chandelier',
 ];

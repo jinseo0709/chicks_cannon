@@ -3,9 +3,10 @@ import type { JSX } from 'react';
 export interface PausePanelProps {
   onResume(): void;
   onRestart(): void;
+  onExitToMap?(): void;
 }
 
-export function PausePanel({ onResume, onRestart }: PausePanelProps): JSX.Element {
+export function PausePanel({ onResume, onRestart, onExitToMap }: PausePanelProps): JSX.Element {
   return (
     <div className="overlay-backdrop pause-backdrop">
       <section className="modal-card pause-panel" role="dialog" aria-modal="true" aria-labelledby="pause-title">
@@ -15,6 +16,7 @@ export function PausePanel({ onResume, onRestart }: PausePanelProps): JSX.Elemen
         <div className="modal-actions">
           <button className="button button-primary" onClick={onResume}>계속하기</button>
           <button className="button button-secondary" onClick={onRestart}>현재 챕터 다시 시작</button>
+          {onExitToMap && <button className="button button-secondary" onClick={onExitToMap}>월드맵으로</button>}
         </div>
       </section>
     </div>

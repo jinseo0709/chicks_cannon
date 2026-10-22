@@ -142,7 +142,7 @@ describe('interactive obstacle physics', () => {
     collide(cat, projectile);
     collide(cat, projectile);
     expect(cat.customData?.alive).toBe(false);
-    expect(game.getSnapshot().score).toBe(2000);
+    expect(game.getSnapshot().score).toBe(3000);
     expect(harness.bodies.has(cat.id)).toBe(false);
     expect(Composite.allBodies(harness.engine.world)).not.toContain(cat);
   });

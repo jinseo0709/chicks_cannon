@@ -133,7 +133,7 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().aimPosition).toEqual({ x: 35, y: 525 });
     engine.releaseAim();
     expect(snapshot().state).toBe('FLYING');
-    expect(snapshot().ammo).toBe(2);
+    expect(snapshot().ammo).toBe(3);
     expect(snapshot().entities.some((entity) => entity.kind === 'chick')).toBe(true);
     engine.dispose();
   });
@@ -144,7 +144,7 @@ describe('ChickCannonEngine', () => {
     engine.setAim({ x: 150, y: 525 });
     engine.releaseAim();
     expect(snapshot().state).toBe('AIMING');
-    expect(snapshot().ammo).toBe(3);
+    expect(snapshot().ammo).toBe(4);
 
     engine.setAim({ x: 80, y: 500 });
     engine.releaseAim();
@@ -161,7 +161,7 @@ describe('ChickCannonEngine', () => {
     const { engine, snapshot } = createEngine();
     engine.useItem('booster');
     engine.useItem('mega');
-    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1 });
+    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1 });
     engine.dismissDialogue();
     engine.useItem('mega');
     expect(snapshot().items.mega).toBe(0);
@@ -171,16 +171,17 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().stage).toBe(1);
     expect(snapshot().state).toBe('DIALOGUE');
     expect(snapshot().score).toBe(0);
-    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1 });
+    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1 });
     engine.dispose();
   });
 
   it('retains spent items and campaign score across a stage retry', () => {
     const { engine, snapshot } = createEngine();
+    engine.dismissDialogue();
     engine.useItem('quake');
     engine.retryStage();
     expect(snapshot().stage).toBe(1);
-    expect(snapshot().ammo).toBe(3);
+    expect(snapshot().ammo).toBe(4);
     expect(snapshot().items.quake).toBe(0);
     engine.dispose();
   });

@@ -22,6 +22,9 @@ function setup() {
     onAimMove: vi.fn(),
     onAimEnd: vi.fn(),
     onSkill: vi.fn(),
+    onTarget: vi.fn(),
+    onTargetCancel: vi.fn(),
+    onAimCancel: vi.fn(),
   };
   return { canvas, handlers, controller: new PointerInputController(canvas, handlers) };
 }
@@ -50,7 +53,8 @@ describe('PointerInputController', () => {
     controller.setMode('AIMING');
     canvas.dispatchEvent(pointerEvent('pointerdown', 3, 80, 272));
     canvas.dispatchEvent(pointerEvent('pointercancel', 3, 80, 272));
-    expect(handlers.onAimEnd).toHaveBeenCalledTimes(1);
+    expect(handlers.onAimEnd).not.toHaveBeenCalled();
+    expect(handlers.onAimCancel).toHaveBeenCalledOnce();
     controller.dispose();
   });
 
@@ -62,11 +66,49 @@ describe('PointerInputController', () => {
       onAimMove: vi.fn(),
       onAimEnd: vi.fn(),
       onSkill: vi.fn(),
+      onTarget: vi.fn(),
+      onTargetCancel: vi.fn(),
+      onAimCancel: vi.fn(),
     };
     const controller = new PointerInputController(canvas, handlers);
     controller.dispose();
     expect(canvas.style.touchAction).toBe('pan-y');
     canvas.dispatchEvent(pointerEvent('pointerdown', 1, 80, 272));
     expect(handlers.onAimStart).not.toHaveBeenCalled();
+  });
+
+  it('prioritizes butter targets over flying skills and cancels a drag without firing', () => {
+    const { canvas, handlers, controller } = setup();
+    controller.setMode('AIMING');
+    canvas.dispatchEvent(pointerEvent('pointerdown', 1, 80, 272));
+    controller.setMode('AIMING', 'butter');
+    canvas.dispatchEvent(pointerEvent('pointerup', 1, 80, 272));
+    expect(handlers.onAimCancel).toHaveBeenCalledOnce();
+    expect(handlers.onAimEnd).not.toHaveBeenCalled();
+    controller.setMode('FLYING', 'butter');
+    canvas.dispatchEvent(pointerEvent('pointerdown', 2, 200, 150));
+    expect(handlers.onTarget).toHaveBeenCalledWith({ x: 400, y: 260 });
+    expect(handlers.onSkill).not.toHaveBeenCalled();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(handlers.onTargetCancel).toHaveBeenCalledOnce();
+    controller.dispose();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(handlers.onTargetCancel).toHaveBeenCalledOnce();
+  });
+
+  it('rejects paused target taps and ignores a second pointer during a drag', () => {
+    const { canvas, handlers, controller } = setup();
+    controller.setMode('PAUSED', 'butter');
+    canvas.dispatchEvent(pointerEvent('pointerdown', 1, 200, 150));
+    expect(handlers.onTarget).not.toHaveBeenCalled();
+    controller.setMode('AIMING');
+    canvas.dispatchEvent(pointerEvent('pointerdown', 2, 80, 272));
+    canvas.dispatchEvent(pointerEvent('pointerdown', 3, 80, 272));
+    expect(handlers.onAimStart).toHaveBeenCalledOnce();
+    canvas.dispatchEvent(pointerEvent('lostpointercapture', 2, 80, 272));
+    canvas.dispatchEvent(pointerEvent('pointerup', 2, 80, 272));
+    expect(handlers.onAimEnd).not.toHaveBeenCalled();
+    expect(handlers.onAimCancel).toHaveBeenCalledOnce();
+    controller.dispose();
   });
 });

@@ -7,7 +7,7 @@ import type { GameStage } from './types';
 describe('campaign stage data', () => {
   it('contains six distinct destinations with their ammunition and shared chick forms', () => {
     expect(Object.keys(STAGES)).toHaveLength(6);
-    expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([3, 3, 4, 4, 5, 5]);
+    expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([4, 4, 5, 5, 6, 7]);
     expect(new Set(Object.values(STAGES).map((stage) => stage.theme)).size).toBe(6);
     expect(STAGE_ORDER.map((stage) => CHICK_FORMS[stage].formId)).toEqual(['baby', 'baby', 'breeze', 'breeze', 'fighter', 'golden']);
   });

@@ -30,7 +30,7 @@ describe('EndingModal', () => {
     expect(screen.getByText('4,200')).toBeTruthy();
     expect(screen.getByRole('button', { name: '순위 등록' }).hasAttribute('disabled')).toBe(false);
     fireEvent.click(screen.getByRole('button', { name: '전체 순위' }));
-    fireEvent.click(screen.getByRole('button', { name: '다시 모험하기' }));
+    fireEvent.click(screen.getByRole('button', { name: '처음부터 다시' }));
     expect(fetcher).not.toHaveBeenCalled();
     expect(onOpenLeaderboard).toHaveBeenCalledOnce();
     expect(onPlayAgain).toHaveBeenCalledOnce();

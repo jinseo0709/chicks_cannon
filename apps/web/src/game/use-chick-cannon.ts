@@ -13,6 +13,7 @@ export interface ChickCannonController {
   assetsReady: boolean;
   attachCanvas(canvas: HTMLCanvasElement | null): void;
   startCampaign(): void;
+  selectStage(stage: GameSnapshot['stage']): void;
   dismissDialogue(): void;
   continueAfterEvolution(): void;
   retryStage(): void;
@@ -29,7 +30,10 @@ const initialSnapshot: GameSnapshot = {
   ammo: STAGES[1].ammo,
   campaignComplete: false,
   state: 'DIALOGUE',
-  items: { booster: 1, quake: 1, mega: 1 },
+  items: { booster: 1, quake: 1, mega: 1, butter: 1 },
+  targetingItem: null,
+  slickZones: [],
+  scorePopups: [],
   muted: false,
   entities: [],
   aimPosition: null,
@@ -47,6 +51,7 @@ export function useChickCannon(): ChickCannonController {
   const audioRef = useRef<WebAudioSynth | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stopRuntimeRef = useRef<(() => void) | null>(null);
+  const inputRef = useRef<PointerInputController | null>(null);
 
   const attachCanvas = useCallback((canvas: HTMLCanvasElement | null) => {
     if (canvasRef.current === canvas && (!canvas || stopRuntimeRef.current)) return;
@@ -62,11 +67,18 @@ export function useChickCannon(): ChickCannonController {
       onAimStart: (point) => engine.setAim(point),
       onAimMove: (point) => engine.setAim(point),
       onAimEnd: () => engine.releaseAim(),
+      onAimCancel: () => engine.cancelAim(),
+      onTarget: (point) => {
+        if (engine.applyTargetedItem(point)) audioRef.current?.playBounce();
+      },
+      onTargetCancel: () => engine.cancelTargetedItem(),
       onSkill: () => {
         engine.activateSkill();
         audioRef.current?.playSkill(engine.getSnapshot().stage);
       },
     });
+    inputRef.current = input;
+    input.setMode(engine.getSnapshot().state, engine.getSnapshot().targetingItem);
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       renderer.resize(rect.width || 1, rect.height || 1, window.devicePixelRatio || 1);
@@ -87,7 +99,7 @@ export function useChickCannon(): ChickCannonController {
       engine.step(delta);
       const current = engine.getSnapshot();
       if (current.state !== 'PAUSED') sceneTime = time;
-      input.setMode(current.state);
+      input.setMode(current.state, current.targetingItem);
       if (current.state !== lastState) {
         if (current.state === 'FLYING') audioRef.current?.playLaunch();
         if (current.state === 'EVOLUTION' || current.state === 'ENDING') audioRef.current?.playEvolution();
@@ -106,6 +118,7 @@ export function useChickCannon(): ChickCannonController {
       observer?.disconnect();
       window.removeEventListener('resize', resize);
       input.dispose();
+      inputRef.current = null;
       renderer.dispose();
     };
   }, []);
@@ -113,7 +126,10 @@ export function useChickCannon(): ChickCannonController {
   useEffect(() => {
     const assets = new SvgAssetCache();
     const audio = new WebAudioSynth();
-    const engine = new ChickCannonEngine(setSnapshot);
+    const engine = new ChickCannonEngine((current) => {
+      setSnapshot(current);
+      inputRef.current?.setMode(current.state, current.targetingItem);
+    });
     assetsRef.current = assets;
     audioRef.current = audio;
     engineRef.current = engine;
@@ -145,6 +161,10 @@ export function useChickCannon(): ChickCannonController {
     void audioRef.current?.unlock();
     engineRef.current?.startCampaign();
   }, []);
+  const selectStage = useCallback((stage: GameSnapshot['stage']) => {
+    void audioRef.current?.unlock();
+    engineRef.current?.selectStage(stage);
+  }, []);
   const dismissDialogue = useCallback(() => {
     void audioRef.current?.unlock();
     engineRef.current?.dismissDialogue();
@@ -157,7 +177,7 @@ export function useChickCannon(): ChickCannonController {
   }, []);
   const useItem = useCallback((kind: ItemKind) => {
     void audioRef.current?.unlock();
-    engineRef.current?.useItem(kind);
+    if (!engineRef.current?.useItem(kind) || kind === 'butter') return;
     if (kind === 'quake') audioRef.current?.playExplosion();
     else if (kind === 'booster') audioRef.current?.playSkill(2);
     else audioRef.current?.playBounce();
@@ -178,6 +198,7 @@ export function useChickCannon(): ChickCannonController {
     assetsReady,
     attachCanvas,
     startCampaign,
+    selectStage,
     dismissDialogue,
     continueAfterEvolution,
     retryStage,

@@ -20,7 +20,8 @@ const context = {
 
 const snapshot: GameSnapshot = {
   screen: 'game', stage: 1, score: 0, ammo: 3, campaignComplete: false,
-  state: 'AIMING', items: { booster: 1, quake: 1, mega: 1 }, muted: false,
+  state: 'AIMING', items: { booster: 1, quake: 1, mega: 1, butter: 1 }, muted: false,
+  targetingItem: null, slickZones: [],
   entities: [], aimPosition: null,
   defeatCause: null, story: STAGES[1].story, form: CHICK_FORMS[1], evolvedForm: null,
 };
@@ -67,10 +68,10 @@ describe('GameCanvasRenderer', () => {
     const radius = snapshot.form.radius;
     expect(context.drawImage).toHaveBeenCalledWith(
       image,
-      -radius * 1.4,
-      -radius * 1.4,
-      radius * 2.8,
-      radius * 2.8,
+      -radius * 1.6,
+      -radius * 1.6,
+      radius * 3.2,
+      radius * 3.2,
     );
     renderer.dispose();
   });
@@ -115,6 +116,20 @@ describe('GameCanvasRenderer', () => {
     expect(context.drawImage).toHaveBeenCalledWith(image, 1140, 580, 130, 80);
     expect(context.arc).toHaveBeenCalledWith(620, 200, 9, 0, Math.PI * 2);
     expect(context.lineTo).toHaveBeenCalledWith(620, 360);
+    renderer.dispose();
+  });
+
+  it('shows a local butter patch and a highlight without changing block dimensions', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    renderer.render({
+      ...snapshot,
+      slickZones: [{ id: 1, x: 900, width: 180 }],
+      entities: [{ id: 20, kind: 'block', x: 850, y: 620, width: 24, height: 100, angle: 0, material: 'wood', alive: true, slick: true }],
+    }, 100);
+    expect(context.ellipse).toHaveBeenCalledWith(900, 669, 90, 5, 0, 0, Math.PI * 2);
+    expect(context.strokeRect).toHaveBeenCalledWith(-12, -50, 24, 100);
     renderer.dispose();
   });
 

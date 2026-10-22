@@ -46,13 +46,17 @@ export class GameCanvasRenderer {
     const shake = snapshot.state === 'LOST' || snapshot.state === 'WON' ? Math.sin(sceneTime / 24) * 2 : 0;
     ctx.translate(shake, 0);
     this.drawGround(snapshot.stage);
+    this.drawSlickZones(snapshot.slickZones, sceneTime);
     snapshot.entities.forEach((entity) => this.drawEntityShadow(entity));
     this.drawProp('nest', WORLD.nest.x, WORLD.nest.y, 130, 80);
     this.drawSlingshotBase(WORLD.cannon.x, WORLD.cannon.y + 20);
+    this.drawSlingshotBand(snapshot, false);
     this.drawProp('slingshot', WORLD.cannon.x, WORLD.cannon.y + 20, 78, 136);
     this.drawAimGuide(snapshot);
-    this.drawLoadedChick(snapshot);
+    this.drawLoadedChick(snapshot, sceneTime);
+    this.drawSlingshotBand(snapshot, true);
     snapshot.entities.forEach((entity) => this.drawEntity(entity, snapshot.stage, sceneTime));
+    this.drawScorePopups(snapshot.scorePopups ?? []);
     ctx.restore();
     ctx.restore();
   }
@@ -61,9 +65,34 @@ export class GameCanvasRenderer {
     this.disposed = true;
   }
 
+  private drawSlickZones(zones: GameSnapshot['slickZones'], sceneTime: number): void {
+    const ctx = this.context;
+    ctx.save();
+    for (const zone of zones) {
+      ctx.fillStyle = 'rgba(255, 217, 76, .65)';
+      ctx.beginPath();
+      ctx.ellipse(zone.x, 669, zone.width / 2, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255, 250, 191, .85)';
+      for (let index = 0; index < 4; index += 1) {
+        ctx.beginPath();
+        ctx.ellipse(zone.x - 60 + index * 38, 667 + Math.sin(sceneTime / 350 + index), 7, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
   private drawBackground(stage: GameSnapshot['stage'], sceneTime: number): void {
     const ctx = this.context;
     ctx.save();
+    const image = this.assets.get(`background-${stage}`);
+    if (image) {
+      ctx.drawImage(image, 0, 0, WORLD.width, WORLD.height);
+      if (stage === 6) this.drawFestivalParticles(sceneTime);
+      ctx.restore();
+      return;
+    }
     switch (STAGES[stage].theme) {
       case 'alley-day':
       case 'wall-afternoon': this.drawChapterOneBackground(); break;
@@ -323,38 +352,41 @@ export class GameCanvasRenderer {
     ctx.save();
     const theme = STAGES[stage].theme;
     if (theme === 'alley-day' || theme === 'wall-afternoon') {
-      ctx.fillStyle = '#444b55';
-      ctx.fillRect(0, 682, WORLD.width, 38);
-      ctx.fillStyle = '#8b9297';
-      ctx.fillRect(0, 682, WORLD.width, 5);
-      ctx.fillStyle = '#f6d16b';
-      for (let x = 36; x < WORLD.width; x += 180) ctx.fillRect(x, 703, 78, 5);
+      const ground = ctx.createLinearGradient(0, 664, 0, WORLD.height);
+      ground.addColorStop(0, 'rgba(233, 174, 91, .08)');
+      ground.addColorStop(0.18, 'rgba(176, 105, 48, .72)');
+      ground.addColorStop(1, 'rgba(91, 61, 36, .82)');
+      ctx.fillStyle = ground;
+      ctx.fillRect(0, 664, WORLD.width, 56);
+      ctx.fillStyle = 'rgba(255, 229, 151, .82)';
+      ctx.fillRect(0, 664, WORLD.width, 4);
     } else if (theme === 'rooftop-sunset') {
-      ctx.fillStyle = '#47a9a2';
-      ctx.fillRect(0, 682, WORLD.width, 38);
-      ctx.fillStyle = '#f58b72';
-      ctx.fillRect(0, 682, WORLD.width, 6);
-      ctx.fillStyle = 'rgba(255,235,195,.72)';
-      for (let x = 35; x < WORLD.width; x += 220) ctx.fillRect(x, 695, 95, 4);
+      const roof = ctx.createLinearGradient(0, 664, 0, WORLD.height);
+      roof.addColorStop(0, 'rgba(87, 195, 184, .16)');
+      roof.addColorStop(0.2, 'rgba(35, 135, 140, .76)');
+      roof.addColorStop(1, 'rgba(21, 80, 99, .9)');
+      ctx.fillStyle = roof;
+      ctx.fillRect(0, 664, WORLD.width, 56);
+      ctx.fillStyle = 'rgba(255, 190, 117, .9)';
+      ctx.fillRect(0, 664, WORLD.width, 4);
     } else if (theme === 'clock-twilight' || theme === 'factory-night') {
-      ctx.fillStyle = '#47356f';
-      ctx.fillRect(0, 682, WORLD.width, 38);
-      ctx.fillStyle = '#38b6c8';
-      ctx.fillRect(0, 682, WORLD.width, 5);
-      ctx.strokeStyle = 'rgba(192,170,255,.72)';
-      ctx.lineWidth = 2;
-      for (let x = 40; x < WORLD.width; x += 145) {
-        ctx.beginPath();
-        ctx.arc(x, 695, 3, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      const floor = ctx.createLinearGradient(0, 664, 0, WORLD.height);
+      floor.addColorStop(0, 'rgba(96, 78, 118, .12)');
+      floor.addColorStop(0.2, theme === 'factory-night' ? 'rgba(27, 66, 101, .86)' : 'rgba(90, 57, 78, .82)');
+      floor.addColorStop(1, 'rgba(40, 28, 45, .94)');
+      ctx.fillStyle = floor;
+      ctx.fillRect(0, 664, WORLD.width, 56);
+      ctx.fillStyle = 'rgba(242, 184, 87, .88)';
+      ctx.fillRect(0, 664, WORLD.width, 4);
     } else {
-      ctx.fillStyle = '#6cb879';
-      ctx.fillRect(0, 682, WORLD.width, 38);
-      ctx.fillStyle = '#b8df89';
-      ctx.fillRect(0, 682, WORLD.width, 7);
-      ctx.fillStyle = '#b77a54';
-      ctx.fillRect(0, 708, WORLD.width, 12);
+      const meadow = ctx.createLinearGradient(0, 664, 0, WORLD.height);
+      meadow.addColorStop(0, 'rgba(170, 220, 102, .12)');
+      meadow.addColorStop(0.2, 'rgba(95, 160, 75, .8)');
+      meadow.addColorStop(1, 'rgba(73, 111, 54, .9)');
+      ctx.fillStyle = meadow;
+      ctx.fillRect(0, 664, WORLD.width, 56);
+      ctx.fillStyle = 'rgba(222, 239, 137, .92)';
+      ctx.fillRect(0, 664, WORLD.width, 4);
     }
     ctx.restore();
   }
@@ -418,29 +450,26 @@ export class GameCanvasRenderer {
     const vy = Math.sin(angle) * power;
     const ctxPoint = (point: Point) => point;
     ctx.save();
-    ctx.setLineDash([3, 11]);
-    ctx.fillStyle = 'rgba(255,255,255,.84)';
-    for (let frame = 3; frame <= 55; frame += 5) {
+    const strength = Math.min(1, distance / WORLD.maxDrag);
+    const maxFrame = 42 + Math.round(strength * 54);
+    const step = strength > 0.72 ? 4 : 5;
+    ctx.fillStyle = `rgba(255, ${Math.round(235 - strength * 40)}, ${Math.round(155 - strength * 60)}, .92)`;
+    ctx.shadowColor = 'rgba(255,255,255,.65)';
+    ctx.shadowBlur = 5;
+    for (let frame = 3; frame <= maxFrame; frame += step) {
       const point = ctxPoint({
         x: WORLD.cannon.x + vx * frame,
-        y: WORLD.cannon.y + vy * frame + 0.5 * WORLD.gravityY * frame * frame,
+        y: WORLD.cannon.y + vy * frame + 0.145 * WORLD.gravityY * frame * frame,
       });
-      if (point.x < 0 || point.x > WORLD.width || point.y > WORLD.height) break;
+      if (point.x < 0 || point.x > WORLD.width || point.y > WORLD.height || point.y < 0) break;
       ctx.beginPath();
-      ctx.arc(point.x, point.y, Math.max(2, 5 - frame / 18), 0, Math.PI * 2);
+      ctx.arc(point.x, point.y, Math.max(2.2, 5.6 - frame / 26), 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(255,255,255,.82)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(WORLD.cannon.x, WORLD.cannon.y);
-    ctx.lineTo(snapshot.aimPosition.x, snapshot.aimPosition.y);
-    ctx.stroke();
     ctx.restore();
   }
 
-  private drawLoadedChick(snapshot: GameSnapshot): void {
+  private drawLoadedChick(snapshot: GameSnapshot, nowMs: number): void {
     if (snapshot.state !== 'AIMING' || snapshot.ammo <= 0) return;
     const position = snapshot.aimPosition ?? WORLD.cannon;
     this.drawSprite({
@@ -451,7 +480,37 @@ export class GameCanvasRenderer {
       radius: snapshot.form.radius,
       angle: 0,
       alive: true,
-    }, snapshot.stage);
+    }, snapshot.stage, nowMs);
+  }
+
+  private drawSlingshotBand(snapshot: GameSnapshot, front: boolean): void {
+    const ctx = this.context;
+    const center = { x: WORLD.cannon.x, y: WORLD.cannon.y };
+    const pouch = snapshot.state === 'AIMING' && snapshot.ammo > 0 ? (snapshot.aimPosition ?? center) : center;
+    const distance = Math.hypot(center.x - pouch.x, center.y - pouch.y);
+    const strength = Math.min(1, distance / WORLD.maxDrag);
+    const anchor = front
+      ? { x: WORLD.cannon.x + 23, y: WORLD.cannon.y - 42 }
+      : { x: WORLD.cannon.x - 23, y: WORLD.cannon.y - 42 };
+    ctx.save();
+    ctx.strokeStyle = front ? '#7a261f' : '#4f1717';
+    ctx.lineWidth = 6.5 - strength * 1.5;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(53, 24, 18, .4)';
+    ctx.shadowBlur = 3;
+    ctx.beginPath();
+    ctx.moveTo(anchor.x, anchor.y);
+    ctx.lineTo(pouch.x, pouch.y);
+    ctx.stroke();
+    if (front && snapshot.state === 'AIMING' && snapshot.ammo > 0) {
+      const radius = snapshot.form.radius;
+      ctx.strokeStyle = '#9b3e2c';
+      ctx.lineWidth = Math.max(7, radius * 0.42);
+      ctx.beginPath();
+      ctx.arc(pouch.x, pouch.y + radius * 0.08, radius * 0.62, 0.12 * Math.PI, 0.88 * Math.PI);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   private drawEntityShadow(entity: GameEntityView): void {
@@ -476,17 +535,26 @@ export class GameCanvasRenderer {
       return;
     }
     if (entity.kind === 'cat' || entity.kind === 'egg' || entity.kind === 'chick') {
-      this.drawSprite(entity, stage);
+      this.drawSprite(entity, stage, nowMs);
       return;
     }
     if (entity.kind === 'shutter') this.drawShutterSupport(entity);
+    if (entity.kind === 'chandelier') this.drawChandelierSupport(entity);
     ctx.save();
     ctx.translate(entity.x, entity.y);
     ctx.rotate(entity.angle);
     if (entity.kind === 'block') this.drawBlock(entity);
     else if (entity.kind === 'shutter') this.drawShutter(entity);
+    else if (entity.kind === 'tire') this.drawRoundProp('tire', entity.radius ?? 40);
+    else if (entity.kind === 'gear') this.drawRoundProp('gear', entity.radius ?? 44);
+    else if (entity.kind === 'chandelier') this.drawChandelier(entity);
     else if (entity.kind === 'trampoline') this.drawTrampoline(entity);
     else if (entity.kind === 'boulder') this.drawBoulder(entity);
+    if (entity.kind === 'block' && entity.slick) {
+      ctx.strokeStyle = 'rgba(255, 239, 139, .9)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(-(entity.width ?? 24) / 2, -(entity.height ?? 24) / 2, entity.width ?? 24, entity.height ?? 24);
+    }
     ctx.restore();
   }
 
@@ -530,21 +598,38 @@ export class GameCanvasRenderer {
     ctx.restore();
   }
 
-  private drawSprite(entity: GameEntityView, stage: GameSnapshot['stage']): void {
+  private drawSprite(entity: GameEntityView, stage: GameSnapshot['stage'], nowMs: number): void {
     const ctx = this.context;
     const radius = entity.radius ?? 24;
-    const width = radius * 2.8;
-    const height = radius * 2.8;
+    const scale = entity.kind === 'cat' ? (entity.boss ? 3.6 : 3.25) : entity.kind === 'chick' ? 3.2 : 3;
+    const width = radius * scale;
+    const height = radius * scale;
     let id: Parameters<SvgAssetCache['get']>[0];
-    if (entity.kind === 'chick') id = `chick-${CHICK_FORMS[stage].assetVariant}`;
+    const blinkPhase = (nowMs / 1000 + Math.abs(entity.id) * 0.37) % 4.2;
+    const blinking = entity.kind !== 'egg' && blinkPhase > 4.02;
+    if (entity.kind === 'chick') id = blinking && CHICK_FORMS[stage].assetVariant === 1 ? 'chick-1-blink' : `chick-${CHICK_FORMS[stage].assetVariant}`;
     else if (entity.kind === 'egg') id = 'egg';
     else id = entity.boss ? 'cat-boss' : entity.shield ? 'cat-shield' : 'cat-normal';
     const image = this.assets.get(id);
+    const resting = Math.abs(entity.angle) < 0.12 && (entity.kind === 'cat' || entity.id === -1);
+    const idleOffset = resting ? Math.sin(nowMs / 360 + entity.id) * 2 : 0;
+    const breathe = resting ? 1 + Math.sin(nowMs / 520 + entity.id * 0.4) * 0.018 : 1;
     ctx.save();
-    ctx.translate(entity.x, entity.y);
+    ctx.translate(entity.x, entity.y + idleOffset);
     ctx.rotate(entity.angle);
+    ctx.scale(1 / breathe, breathe);
     if (image) {
       ctx.drawImage(image, -width / 2, -height / 2, width, height);
+      if (blinking && id !== 'chick-1-blink' && entity.kind !== 'egg') {
+        ctx.strokeStyle = '#3a251c';
+        ctx.lineWidth = Math.max(2, width * 0.035);
+        ctx.lineCap = 'round';
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(side * width * 0.15, -height * 0.09, width * 0.07, 0.12 * Math.PI, 0.88 * Math.PI);
+          ctx.stroke();
+        }
+      }
     } else {
       ctx.fillStyle = entity.kind === 'chick' ? '#f4c84f' : entity.kind === 'egg' ? '#f8f3e6' : '#817a7d';
       ctx.strokeStyle = '#4b4039';
@@ -562,6 +647,32 @@ export class GameCanvasRenderer {
     ctx.restore();
   }
 
+  private drawScorePopups(popups: readonly NonNullable<GameSnapshot['scorePopups']>[number][]): void {
+    const ctx = this.context;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const popup of popups) {
+      const progress = 1 - Math.min(1, popup.remainingMs / 1100);
+      const y = popup.y - progress * 52;
+      ctx.globalAlpha = Math.min(1, popup.remainingMs / 280);
+      ctx.font = '900 30px "Jua", sans-serif';
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = 'rgba(70, 43, 21, .78)';
+      ctx.strokeText(`+${popup.value}`, popup.x, y);
+      ctx.fillStyle = '#fff36e';
+      ctx.fillText(`+${popup.value}`, popup.x, y);
+      if (popup.label) {
+        ctx.font = '800 13px "Jua", sans-serif';
+        ctx.lineWidth = 4;
+        ctx.strokeText(popup.label, popup.x, y + 24);
+        ctx.fillStyle = '#fffaf0';
+        ctx.fillText(popup.label, popup.x, y + 24);
+      }
+    }
+    ctx.restore();
+  }
+
   private drawBlock(entity: GameEntityView): void {
     const ctx = this.context;
     const baseWidth = entity.width ?? 24;
@@ -569,6 +680,17 @@ export class GameCanvasRenderer {
     const width = baseWidth + Math.min(8, baseWidth * 0.12);
     const height = baseHeight + Math.min(6, baseHeight * 0.08);
     const material = entity.material ?? 'wood';
+    const sprite = this.assets.get(`block-${material}`);
+    if (sprite) {
+      const displayWidth = Math.max(width, Math.min(58, height * 0.46 + 12));
+      const displayHeight = Math.max(height, Math.min(46, width * 0.26 + 12));
+      ctx.save();
+      ctx.shadowColor = 'rgba(37, 35, 31, .28)';
+      ctx.shadowBlur = 8;
+      ctx.drawImage(sprite, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
+      ctx.restore();
+      return;
+    }
     const config = BLOCK_CONFIG[material];
     const gradient = ctx.createLinearGradient(-width / 2, -height / 2, width / 2, height / 2);
     if (material === 'wood') {
@@ -679,6 +801,12 @@ export class GameCanvasRenderer {
     const ctx = this.context;
     const width = entity.width ?? 24;
     const height = entity.height ?? 140;
+    const sprite = this.assets.get('shutter');
+    if (sprite) {
+      const displayWidth = Math.max(58, width * 2.6);
+      ctx.drawImage(sprite, -displayWidth / 2, -height / 2, displayWidth, height);
+      return;
+    }
     const metal = ctx.createLinearGradient(-width / 2, 0, width / 2, 0);
     metal.addColorStop(0, '#26343d');
     metal.addColorStop(0.32, '#b6c1c1');
@@ -728,6 +856,11 @@ export class GameCanvasRenderer {
   private drawBoulder(entity: GameEntityView): void {
     const ctx = this.context;
     const radius = entity.radius ?? 28;
+    const sprite = this.assets.get('block-stone');
+    if (sprite) {
+      ctx.drawImage(sprite, -radius, -radius, radius * 2, radius * 2);
+      return;
+    }
     ctx.fillStyle = '#747b7b';
     ctx.strokeStyle = '#40484a';
     ctx.lineWidth = 4;
@@ -762,6 +895,55 @@ export class GameCanvasRenderer {
       ctx.stroke();
     }
     ctx.setLineDash([]);
+    const sprite = this.assets.get('fan');
+    if (sprite) {
+      const size = Math.min(104, Math.max(74, (entity.width ?? 100) * 0.72));
+      ctx.drawImage(sprite, entity.x - size / 2, entity.y + (entity.height ?? 0) / 2 - size, size, size);
+    }
+    ctx.restore();
+  }
+
+  private drawRoundProp(id: 'tire' | 'gear', radius: number): void {
+    const image = this.assets.get(id);
+    if (image) {
+      const size = radius * 2.2;
+      this.context.drawImage(image, -size / 2, -size / 2, size, size);
+      return;
+    }
+    this.context.fillStyle = id === 'gear' ? '#d79a3f' : '#403b39';
+    this.context.beginPath();
+    this.context.arc(0, 0, radius, 0, Math.PI * 2);
+    this.context.fill();
+  }
+
+  private drawChandelier(entity: GameEntityView): void {
+    const image = this.assets.get('chandelier');
+    const width = Math.max(112, (entity.width ?? 100) * 1.25);
+    const height = Math.max(76, (entity.height ?? 36) * 2.3);
+    if (image) {
+      this.context.drawImage(image, -width / 2, -height / 2, width, height);
+      return;
+    }
+    this.context.fillStyle = '#d79a3f';
+    this.context.fillRect(-width / 2, -height / 4, width, height / 2);
+  }
+
+  private drawChandelierSupport(entity: GameEntityView): void {
+    if (entity.attached === false) return;
+    const anchor = entity.anchor ?? { x: entity.x, y: 175 };
+    const ctx = this.context;
+    ctx.save();
+    ctx.strokeStyle = '#6a4a2d';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(anchor.x, anchor.y);
+    ctx.lineTo(entity.x, entity.y - Math.max(34, (entity.height ?? 36) * 0.85));
+    ctx.stroke();
+    ctx.fillStyle = '#d79a3f';
+    ctx.beginPath();
+    ctx.arc(anchor.x, anchor.y, 7, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 }
