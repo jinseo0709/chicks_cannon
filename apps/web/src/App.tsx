@@ -54,7 +54,7 @@ export function App(): JSX.Element {
 
   const openStage = (stage: GameStage) => {
     if (stage > unlockedStage) return;
-    controller.selectStage(stage);
+    controller.selectStage(stage, completedStages.includes(stage));
     setScreen('game');
   };
 

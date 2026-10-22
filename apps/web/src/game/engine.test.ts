@@ -8,10 +8,18 @@ import type { GameSnapshot, GameStage, SpawnSpec } from './types';
 type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number } };
 interface CampaignHarness {
   stage: GameStage;
+  score: number;
+  stageScore: number;
+  ammo: number;
+  items: Record<string, number>;
+  replayOnly: boolean;
   engine: Matter.Engine;
   bodies: Map<number, TestBody>;
   activeChick: TestBody | null;
   loadStage(stage: GameStage): void;
+  awardScore(value: number, x: number, y: number, label?: string): void;
+  applyStagePenalty(value: number, x: number, y: number, label: string): void;
+  calculateStageStars(): 1 | 2 | 3;
   spawn(spec: SpawnSpec): void;
   publish(): void;
 }
@@ -133,7 +141,7 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().aimPosition).toEqual({ x: 35, y: 525 });
     engine.releaseAim();
     expect(snapshot().state).toBe('FLYING');
-    expect(snapshot().ammo).toBe(3);
+    expect(snapshot().ammo).toBe(5);
     expect(snapshot().entities.some((entity) => entity.kind === 'chick')).toBe(true);
     engine.dispose();
   });
@@ -144,7 +152,7 @@ describe('ChickCannonEngine', () => {
     engine.setAim({ x: 150, y: 525 });
     engine.releaseAim();
     expect(snapshot().state).toBe('AIMING');
-    expect(snapshot().ammo).toBe(4);
+    expect(snapshot().ammo).toBe(6);
 
     engine.setAim({ x: 80, y: 500 });
     engine.releaseAim();
@@ -175,14 +183,63 @@ describe('ChickCannonEngine', () => {
     engine.dispose();
   });
 
-  it('retains spent items and campaign score across a stage retry', () => {
-    const { engine, snapshot } = createEngine();
+  it('restores stage-entry score, ammo and all item charges on retry', () => {
+    const { engine, snapshot, harness } = createEngine();
+    harness.score = 3400;
+    engine.selectStage(2);
+    harness.awardScore(1500, 850, 500, 'test');
     engine.dismissDialogue();
     engine.useItem('quake');
+    engine.setAim({ x: 80, y: 500 });
+    engine.releaseAim();
     engine.retryStage();
-    expect(snapshot().stage).toBe(1);
-    expect(snapshot().ammo).toBe(4);
-    expect(snapshot().items.quake).toBe(0);
+    expect(snapshot()).toMatchObject({ stage: 2, score: 3400, stageScore: 0, ammo: 6 });
+    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1 });
+    engine.dispose();
+  });
+
+  it('applies an egg penalty once and floors stage score at zero without campaign failure', () => {
+    const { engine, harness, snapshot } = createEngine();
+    harness.spawn({ kind: 'egg', x: 1180, y: 620 });
+    const egg = [...harness.bodies.values()].find((body) => body.label === 'hostageEgg')!;
+    harness.awardScore(300, egg.position.x, egg.position.y);
+    harness.applyStagePenalty(500, egg.position.x, egg.position.y, 'egg');
+    harness.publish();
+    expect(snapshot()).toMatchObject({ score: 0, stageScore: 0 });
+    harness.awardScore(1000, egg.position.x, egg.position.y);
+    harness.applyStagePenalty(500, egg.position.x, egg.position.y, 'egg');
+    harness.publish();
+    expect(snapshot()).toMatchObject({ score: 500, stageScore: 500 });
+    expect(snapshot().state).not.toBe('LOST');
+    engine.dispose();
+  });
+
+  it('calculates one, two and three star thresholds using stage-local score and ammo', () => {
+    const { harness, snapshot } = createEngine();
+    harness.stage = 1;
+    harness.ammo = 3;
+    harness.stageScore = snapshot().scoreTarget - 1;
+    expect(harness.calculateStageStars()).toBe(2);
+    harness.stageScore = snapshot().scoreTarget;
+    expect(harness.calculateStageStars()).toBe(3);
+    harness.ammo = 1;
+    expect(harness.calculateStageStars()).toBe(2);
+    harness.ammo = 0;
+    expect(harness.calculateStageStars()).toBe(1);
+    harness.stage = 5;
+    harness.ammo = 3;
+    harness.stageScore = 10000;
+    expect(harness.calculateStageStars()).toBe(3);
+  });
+
+  it('excludes completed-stage replay points from the campaign total', () => {
+    const { engine, harness, snapshot } = createEngine();
+    harness.score = 2500;
+    engine.selectStage(1, true);
+    harness.awardScore(1200, 800, 500, 'replay');
+    harness.publish();
+    expect(snapshot()).toMatchObject({ score: 2500, stageScore: 1200 });
+    expect(harness.replayOnly).toBe(true);
     engine.dispose();
   });
 

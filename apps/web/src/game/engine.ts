@@ -8,7 +8,7 @@ import {
   Query,
   type IEventCollision,
 } from 'matter-js';
-import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, WORLD } from './constants';
+import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
 import { STAGES } from './stages';
 import type {
   BlockKind,
@@ -94,6 +94,10 @@ export class ChickCannonEngine {
   private stateBeforePause: 'AIMING' | 'FLYING' | 'RESOLVING' | null = null;
   private stage: GameStage = 1;
   private score = 0;
+  private stageScore = 0;
+  private stageEntryCampaignScore = 0;
+  private replayOnly = false;
+  private stageStars: 0 | 1 | 2 | 3 = 0;
   private ammo = STAGES[1].ammo;
   private items = initialItems();
   private targetingItem: 'butter' | null = null;
@@ -127,15 +131,21 @@ export class ChickCannonEngine {
   startCampaign(): void {
     this.stage = 1;
     this.score = 0;
+    this.stageScore = 0;
+    this.stageEntryCampaignScore = 0;
+    this.replayOnly = false;
     this.items = initialItems();
     this.megaNext = false;
     this.loadStage(1);
     this.publish();
   }
 
-  selectStage(stage: GameStage): void {
+  selectStage(stage: GameStage, replay = false): void {
     if (!this.alive || !STAGE_ORDER.includes(stage)) return;
     this.stage = stage;
+    this.stageEntryCampaignScore = this.score;
+    this.stageScore = 0;
+    this.replayOnly = replay;
     this.loadStage(stage);
     this.publish();
   }
@@ -341,12 +351,18 @@ export class ChickCannonEngine {
     const next = STAGE_ORDER[STAGE_ORDER.indexOf(this.stage) + 1];
     if (this.state !== 'EVOLUTION' || !next) return;
     this.stage = next;
+    this.stageEntryCampaignScore = this.score;
+    this.stageScore = 0;
+    this.replayOnly = false;
     this.loadStage(this.stage);
     this.publish();
   }
 
   retryStage(): void {
     if (!this.alive) return;
+    this.score = this.stageEntryCampaignScore;
+    this.stageScore = 0;
+    this.items = initialItems();
     this.loadStage(this.stage);
     this.publish();
   }
@@ -408,6 +424,8 @@ export class ChickCannonEngine {
     this.skillUsed = false;
     this.megaNext = false;
     this.ammo = STAGES[stage].ammo;
+    this.items = initialItems();
+    this.stageStars = 0;
     this.targetingItem = null;
     this.slickZones = [];
     this.scorePopups = [];
@@ -687,8 +705,7 @@ export class ChickCannonEngine {
     if (body.label === 'hostageEgg') {
       if (data.hp <= 0 || body.position.y > 685) {
         data.alive = false;
-        this.state = 'LOST';
-        this.defeatCause = 'hostage';
+        this.applyStagePenalty(500, body.position.x, body.position.y, '알 파손');
         this.removeBody(body);
       }
     } else if (data.hp <= 0 && body.label === 'enemy') {
@@ -758,7 +775,8 @@ export class ChickCannonEngine {
   }
 
   private awardScore(value: number, x: number, y: number, label?: string): void {
-    this.score += value;
+    this.stageScore += value;
+    if (!this.replayOnly) this.score += value;
     this.scorePopups.push({
       id: ++this.nextScorePopupId,
       x,
@@ -807,14 +825,6 @@ export class ChickCannonEngine {
 
   private checkTurnSettlement(): void {
     if (this.state !== 'FLYING' && this.state !== 'RESOLVING') return;
-    const eggBroken = [...this.bodies.values()].some(
-      (body) => body.label === 'hostageEgg' && body.customData?.alive === false,
-    );
-    if (eggBroken) {
-      this.state = 'LOST';
-      this.defeatCause = 'hostage';
-      return;
-    }
     const chick = this.activeChick;
     const speed = chick ? Math.hypot(chick.velocity.x, chick.velocity.y) : 0;
     const outOfBounds = chick && (
@@ -828,6 +838,7 @@ export class ChickCannonEngine {
     );
     if (!catsAlive) {
       this.state = 'WON';
+      this.stageStars = this.calculateStageStars();
       this.winFrames = 0;
     } else if (this.ammo <= 0) {
       this.state = 'LOST';
@@ -842,6 +853,28 @@ export class ChickCannonEngine {
       this.state = 'AIMING';
     }
     this.settleFrames = 0;
+  }
+
+  private applyStagePenalty(value: number, x: number, y: number, label: string): void {
+    const previous = this.stageScore;
+    this.stageScore = Math.max(0, this.stageScore - value);
+    const delta = this.stageScore - previous;
+    if (!this.replayOnly) this.score += delta;
+    this.scorePopups.push({
+      id: ++this.nextScorePopupId,
+      x,
+      y,
+      value: delta,
+      label,
+      expiresAtMs: this.engine.timing.timestamp + 1100,
+    });
+  }
+
+  private calculateStageStars(): 1 | 2 | 3 {
+    const ammoForThreeStars = Math.ceil(STAGES[this.stage].ammo / 2);
+    if (this.ammo >= ammoForThreeStars && this.stageScore >= STAGE_SCORE_TARGETS[this.stage]) return 3;
+    if (this.ammo >= 1) return 2;
+    return 1;
   }
 
   private createSnapshot(): GameSnapshot {
@@ -898,6 +931,10 @@ export class ChickCannonEngine {
       screen: 'game',
       stage: this.stage,
       score: this.score,
+      stageScore: this.stageScore,
+      scoreTarget: STAGE_SCORE_TARGETS[this.stage],
+      stageAmmo: STAGES[this.stage].ammo,
+      stageStars: this.stageStars,
       ammo: this.ammo,
       campaignComplete: this.state === 'ENDING',
       state: this.state,

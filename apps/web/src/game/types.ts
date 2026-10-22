@@ -110,7 +110,12 @@ export type ItemCounts = Readonly<Record<ItemKind, number>>;
 export interface GameSnapshot {
   screen: GameScreen;
   stage: GameStage;
+  /** Campaign total. Replay points are excluded. */
   score: number;
+  stageScore: number;
+  scoreTarget: number;
+  stageAmmo: number;
+  stageStars: 0 | 1 | 2 | 3;
   ammo: number;
   campaignComplete: boolean;
   state: GameState;

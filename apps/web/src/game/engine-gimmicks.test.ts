@@ -175,12 +175,14 @@ describe('interactive obstacle physics', () => {
     expect(harness.bodies.size).toBe(0);
   });
 
-  it('makes an explosion-broken hostage an immediate defeat with priority over settlement', () => {
+  it('treats an explosion-broken egg as a score penalty instead of a defeat', () => {
     const { game, harness, spawn } = setup();
     spawn({ kind: 'egg', x: 330, y: 300 });
     harness.explode(300, 300, 230, 0.14);
     game.step(16.667);
-    expect(game.getSnapshot()).toMatchObject({ state: 'LOST', defeatCause: 'hostage' });
+    expect(game.getSnapshot().state).not.toBe('LOST');
+    expect(game.getSnapshot().entities.some((entity) => entity.kind === 'egg')).toBe(false);
+    expect(game.getSnapshot().stageScore).toBe(100);
   });
 
   it('scores cats leaving the world once and sanitizes non-positive prop dimensions', () => {

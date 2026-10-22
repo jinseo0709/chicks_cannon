@@ -11,6 +11,14 @@ export const WORLD = {
 
 export const STAGE_ORDER: readonly GameStage[] = [1, 2, 3, 4, 5, 6];
 export const LAST_STAGE: GameStage = STAGE_ORDER[STAGE_ORDER.length - 1];
+export const STAGE_SCORE_TARGETS: Readonly<Record<GameStage, number>> = {
+  1: 3600,
+  2: 5000,
+  3: 6000,
+  4: 6500,
+  5: 7000,
+  6: 8000,
+};
 
 const FORM_DEFINITIONS: Readonly<Record<ChickFormId, Omit<ChickForm, 'stage'>>> = {
   baby: {

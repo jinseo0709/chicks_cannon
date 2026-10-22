@@ -19,7 +19,8 @@ const context = {
 } as unknown as CanvasRenderingContext2D;
 
 const snapshot: GameSnapshot = {
-  screen: 'game', stage: 1, score: 0, ammo: 3, campaignComplete: false,
+  screen: 'game', stage: 1, score: 0, stageScore: 0, scoreTarget: 3600, stageAmmo: 6, stageStars: 0,
+  ammo: 3, campaignComplete: false,
   state: 'AIMING', items: { booster: 1, quake: 1, mega: 1, butter: 1 }, muted: false,
   targetingItem: null, slickZones: [],
   entities: [], aimPosition: null,

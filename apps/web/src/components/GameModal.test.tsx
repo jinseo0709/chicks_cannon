@@ -9,7 +9,8 @@ afterEach(cleanup);
 
 function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['defeatCause'] = null): GameSnapshot {
   return {
-    screen: 'game', stage: 3, score: 4200, ammo: 0, campaignComplete: state === 'ENDING', state,
+    screen: 'game', stage: 3, score: 4200, stageScore: 4200, scoreTarget: 6000, stageAmmo: 5, stageStars: 0,
+    ammo: 0, campaignComplete: state === 'ENDING', state,
     items: { booster: 0, quake: 1, mega: 0, butter: 1 }, muted: false, entities: [], aimPosition: null,
     targetingItem: null, slickZones: [],
     defeatCause, story: STAGES[3].story, form: CHICK_FORMS[3],

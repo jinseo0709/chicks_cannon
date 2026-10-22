@@ -4,7 +4,7 @@ import { SvgAssetCache, stageAssetIds } from './asset-cache';
 import { ChickCannonEngine } from './engine';
 import { PointerInputController } from './pointer-input';
 import { GameCanvasRenderer } from './renderer';
-import { CHICK_FORMS } from './constants';
+import { CHICK_FORMS, STAGE_SCORE_TARGETS } from './constants';
 import { STAGES } from './stages';
 import type { GameSnapshot, ItemKind } from './types';
 
@@ -13,7 +13,7 @@ export interface ChickCannonController {
   assetsReady: boolean;
   attachCanvas(canvas: HTMLCanvasElement | null): void;
   startCampaign(): void;
-  selectStage(stage: GameSnapshot['stage']): void;
+  selectStage(stage: GameSnapshot['stage'], replay?: boolean): void;
   dismissDialogue(): void;
   continueAfterEvolution(): void;
   retryStage(): void;
@@ -27,6 +27,10 @@ const initialSnapshot: GameSnapshot = {
   screen: 'game',
   stage: 1,
   score: 0,
+  stageScore: 0,
+  scoreTarget: STAGE_SCORE_TARGETS[1],
+  stageAmmo: STAGES[1].ammo,
+  stageStars: 0,
   ammo: STAGES[1].ammo,
   campaignComplete: false,
   state: 'DIALOGUE',
@@ -161,9 +165,9 @@ export function useChickCannon(): ChickCannonController {
     void audioRef.current?.unlock();
     engineRef.current?.startCampaign();
   }, []);
-  const selectStage = useCallback((stage: GameSnapshot['stage']) => {
+  const selectStage = useCallback((stage: GameSnapshot['stage'], replay = false) => {
     void audioRef.current?.unlock();
-    engineRef.current?.selectStage(stage);
+    engineRef.current?.selectStage(stage, replay);
   }, []);
   const dismissDialogue = useCallback(() => {
     void audioRef.current?.unlock();
