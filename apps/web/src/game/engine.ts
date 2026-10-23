@@ -6,6 +6,7 @@ import {
   Engine,
   Events,
   Query,
+  Sleeping,
   type IEventCollision,
 } from 'matter-js';
 import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
@@ -117,6 +118,7 @@ export class ChickCannonEngine {
   private snapshot: GameSnapshot;
 
   constructor(private readonly onSnapshot: (snapshot: GameSnapshot) => void) {
+    this.engine.enableSleeping = true;
     this.engine.gravity.y = WORLD.gravityY;
     this.engine.gravity.x = 0;
     this.collisionListener = (event) => this.handleCollisions(event);
@@ -489,6 +491,7 @@ export class ChickCannonEngine {
         restitution: 0.2,
         label: 'enemy',
       }) as GameBody;
+      Sleeping.set(body, true);
       customData = {
         radius,
         hp,

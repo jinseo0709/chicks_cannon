@@ -1,16 +1,16 @@
 # Current Context
 
 ## Active Plan
-[클리어 이동, 깜빡임, 구조물 난이도](./plans/2026-10-23-clear-routing-eyebrow-and-obstacles.md)
+[고양이 대기 안정화와 구조물 다양화](./plans/2026-10-23-cat-idle-and-structure-variety.md)
 
 ## Active Phase
-[P01 클리어 흐름과 게임 표현 개선](./phases/2026-10-23-clear-routing-eyebrow-and-obstacles/P01-clear-flow-and-gameplay/phase.md)
+[P01 물리 안정화 및 구조물 확장](./phases/2026-10-23-cat-idle-and-structure-variety/P01-physics-and-levels/phase.md)
 
 ## Active Task
-없음
+[T02 강철·고무 재질 구현](./phases/2026-10-23-cat-idle-and-structure-variety/P01-physics-and-levels/T02-steel-rubber-materials.md) - in progress
 
 ## Status
-- 완료: 클리어 후 다음 단계/월드맵 선택, 깜빡임 눈썹 렌더링 수정, 후반 장애물 구조 복잡화 (3/3 Task)
+- 발사 전 캐릭터 고정, 강철·고무 물성/표현 추가, 계단형 고층 구조물을 순차 적용한다.
 
 ## Decisions
-[확정한 개선 결정](./decisions/2026-10-23-clear-routing-eyebrow-and-obstacles.md)
+[확정한 물리·재질·배치 결정](./decisions/2026-10-23-cat-idle-and-structure-variety.md)
