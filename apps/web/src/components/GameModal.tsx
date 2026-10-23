@@ -24,7 +24,7 @@ export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameMo
                 </span>
               ))}
             </div>
-            <p className="clear-result">Stage score {snapshot.stageScore.toLocaleString('ko-KR')} / target {snapshot.scoreTarget.toLocaleString('ko-KR')}</p>
+            <p className="clear-result">이번 판 점수 {snapshot.stageScore.toLocaleString('ko-KR')}점 · 별 3개 목표 {snapshot.scoreTarget.toLocaleString('ko-KR')}점</p>
             <h2>길을 열었어요!</h2>
             <p>둥지를 향한 다음 모험이 곧 시작돼요.</p>
           </div>

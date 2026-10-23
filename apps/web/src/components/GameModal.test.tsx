@@ -23,7 +23,7 @@ describe('GameModal', () => {
     const { container } = render(<GameModal snapshot={makeSnapshot('WON', null, stars)} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
     expect(screen.getByRole('img', { name: `Stage stars ${stars} of 3` })).toBeTruthy();
     expect(container.querySelectorAll('.clear-star.earned')).toHaveLength(stars);
-    expect(container.querySelector('.clear-result')?.textContent).toBe('Stage score 4,200 / target 6,000');
+    expect(container.querySelector('.clear-result')?.textContent).toBe('이번 판 점수 4,200점 · 별 3개 목표 6,000점');
   });
 
   it('distinguishes an egg failure and an ammo failure and retries', () => {

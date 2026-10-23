@@ -22,7 +22,7 @@ describe('GameHud', () => {
     const onUseItem = vi.fn();
     const onTogglePause = vi.fn();
     const { container } = render(<GameHud snapshot={makeSnapshot('FLYING')} onRestart={onRestart} onMute={onMute} onUseItem={onUseItem} onTogglePause={onTogglePause} />);
-    expect(container.querySelector('.stage-score-value')?.textContent).toBe('1,200');
+    expect(container.querySelector('.stage-score-value')?.textContent).toBe('1,200점');
     expect(screen.getByLabelText('남은 병아리 2개')).toBeTruthy();
     expect(screen.getByLabelText('사용 아이템').className).toBe('item-tray');
     expect(screen.getByRole('button', { name: '달걀 지진, 남은 1개' }).textContent).toContain('1');
@@ -69,17 +69,17 @@ describe('GameHud', () => {
 
   it('shows stage score progress prominently and keeps campaign total secondary', () => {
     const { container } = render(<GameHud snapshot={makeSnapshot()} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} />);
-    expect(container.querySelector('.score-card .stage-score-value')?.textContent).toBe('1,200');
-    expect(container.querySelector('.score-target-label')?.textContent).toBe('3-star target 1,200 / 3,600');
+    expect(container.querySelector('.score-card .stage-score-value')?.textContent).toBe('1,200점');
+    expect(container.querySelector('.score-target-label')?.textContent).toBe('⭐ 별 3개 목표 1,200 / 3,600');
     expect(container.querySelector('.score-target-track')?.getAttribute('aria-valuenow')).toBe('33');
-    expect(container.querySelector('.campaign-score')?.textContent).toBe('Campaign total 1,200');
+    expect(container.querySelector('.campaign-score')?.textContent).toBe('🏆 모험 누적 1,200점');
   });
 
   it('clamps the score progress bar after the target while retaining the actual score', () => {
     const snapshot = { ...makeSnapshot(), stageScore: 5000 };
     const { container } = render(<GameHud snapshot={snapshot} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} />);
     expect(container.querySelector('.score-target-track')?.getAttribute('aria-valuenow')).toBe('100');
-    expect(container.querySelector('.stage-score-value')?.textContent).toBe('5,000');
+    expect(container.querySelector('.stage-score-value')?.textContent).toBe('5,000점');
   });
 
   it('labels the selected butter item and allows the aiming mega action', () => {

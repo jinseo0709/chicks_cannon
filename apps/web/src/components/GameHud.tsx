@@ -32,15 +32,15 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
           <span className="hud-kicker">CHAPTER {snapshot.stage}</span>
           <strong title={stage.title}>{stage.title}</strong>
         </div>
-        <div className="hud-card score-card" aria-label="Stage score">
-          <span className="hud-kicker">STAGE SCORE</span>
-          <strong className="stage-score-value">{snapshot.stageScore.toLocaleString('ko-KR')}</strong>
-          <span className="score-target-label">3-star target {snapshot.stageScore.toLocaleString('ko-KR')} / {snapshot.scoreTarget.toLocaleString('ko-KR')}</span>
-          <div className="score-target-track" role="progressbar" aria-label="Three-star score target progress"
+        <div className="hud-card score-card" aria-label="이번 스테이지 점수">
+          <span className="hud-kicker">🐣 이번 판 점수</span>
+          <strong className="stage-score-value">{snapshot.stageScore.toLocaleString('ko-KR')}<small>점</small></strong>
+          <span className="score-target-label"><span aria-hidden="true">⭐</span> 별 3개 목표 {snapshot.stageScore.toLocaleString('ko-KR')} / {snapshot.scoreTarget.toLocaleString('ko-KR')}</span>
+          <div className="score-target-track" role="progressbar" aria-label="별 3개 점수 목표 진행률"
             aria-valuemin={0} aria-valuemax={100} aria-valuenow={targetProgress}>
             <span style={{ width: `${targetProgress}%` }} />
           </div>
-          <span className="campaign-score">Campaign total {snapshot.score.toLocaleString('ko-KR')}</span>
+          <span className="campaign-score"><span aria-hidden="true">🏆</span> 모험 누적 {snapshot.score.toLocaleString('ko-KR')}점</span>
         </div>
         <div className="hud-card ammo-card" aria-label={`남은 병아리 ${snapshot.ammo}개`}>
           <span className="hud-kicker">탄환</span>

@@ -27,6 +27,11 @@
 - 검증: `npm.cmd test --workspace @chicks-cannon/web -- engine.test.ts stages.test.ts` 및 `npm.cmd run build`
 - 커밋: `물리·레벨: 받침 파괴 시 고양이 낙하와 요새 구조 개편`
 
+### T05 점수 HUD 한국어·아기자기한 표현
+- HUD와 클리어 결과의 점수 안내를 한국어로 바꾸고, 따뜻한 파스텔 카드와 장식으로 표현한다.
+- 검증: `npm.cmd test --workspace @chicks-cannon/web -- GameHud.test.tsx GameModal.test.tsx` 및 `npm.cmd run build`
+- 커밋: `화면: 점수 안내 한국어화와 귀여운 HUD 적용`
+
 ## 실행 규칙
 - 각 Task 검증 통과 후 한국어 커밋을 만들고 다음 Task로 진행한다.
 - 검증 실패를 해결할 수 없으면 그 Task에서 멈추고 결과를 보고한다.

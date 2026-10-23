@@ -713,12 +713,35 @@ h2 {
 
 .chapter-card { grid-area: chapter; min-width: 0; }
 .chapter-card strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.score-card { grid-area: score; min-width: 0; gap: 0.12rem; }
-.stage-score-value { color: #8a4929; font-size: clamp(1.15rem, 2vw, 1.8rem); line-height: 1; }
+.score-card {
+  position: relative;
+  grid-area: score;
+  min-width: 0;
+  gap: 0.16rem;
+  overflow: hidden;
+  background: linear-gradient(145deg, #fffdf1 0%, #fff7df 68%, #ffefd8 100%);
+  border-color: #fffef7;
+  border-radius: 1.15rem 1.55rem 1.2rem 1.5rem;
+  box-shadow: 0 4px 0 #d7a85f, 0 0.5rem 1rem rgb(73 55 37 / 18%);
+}
+.score-card::after {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.8rem;
+  color: rgb(243 183 73 / 34%);
+  content: '✦';
+  font-size: 1.45rem;
+  transform: rotate(12deg);
+  pointer-events: none;
+}
+.stage-score-value { color: #9c512e; font-size: clamp(1.15rem, 2vw, 1.8rem); line-height: 1; text-shadow: 0 1px 0 #fff; }
+.stage-score-value small { margin-left: 0.18rem; color: #b77c43; font-size: 0.48em; }
 .score-target-label, .campaign-score { font-size: 0.68rem; font-weight: 800; }
-.campaign-score { color: #786c5b; font-size: 0.62rem; }
-.score-target-track { height: 7px; overflow: hidden; background: #e6d7b9; border-radius: 999px; }
-.score-target-track > span { display: block; height: 100%; background: linear-gradient(90deg, #f2b83d, #ef7841); border-radius: inherit; transition: width 180ms ease-out; }
+.score-target-label { color: #5f503b; }
+.score-target-label > span, .campaign-score > span { margin-right: 0.2rem; }
+.campaign-score { color: #806f5a; font-size: 0.62rem; }
+.score-target-track { height: 9px; overflow: hidden; background: #eadfca; border: 1px solid #fff; border-radius: 999px; box-shadow: inset 0 1px 2px rgb(115 91 55 / 16%); }
+.score-target-track > span { display: block; height: 100%; background: linear-gradient(90deg, #f3c544, #ff9c62 58%, #f27487); border-radius: inherit; transition: width 180ms ease-out; }
 
 .hud-card {
   display: grid;
