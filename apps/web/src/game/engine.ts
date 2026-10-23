@@ -879,7 +879,7 @@ export class ChickCannonEngine {
   private applyFans(): void {
     for (const fan of this.fans) {
       for (const body of Composite.allBodies(this.engine.world)) {
-        if (body.isStatic) continue;
+        if (body.isStatic || body.label !== 'chick') continue;
         if (
           body.position.x >= fan.x - fan.width / 2 &&
           body.position.x <= fan.x + fan.width / 2 &&
