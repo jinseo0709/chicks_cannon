@@ -455,7 +455,7 @@ export class GameCanvasRenderer {
     const strength = Math.min(1, distance / WORLD.maxDrag);
     const maxFrame = 42 + Math.round(strength * 54);
     const trajectory: Point[] = [];
-    for (let frame = 0; frame <= maxFrame; frame += 1) {
+    for (let frame = 0; frame <= maxFrame; frame += 0.65) {
       const point = {
         x: WORLD.cannon.x + vx * frame,
         y: WORLD.cannon.y + vy * frame + 0.145 * WORLD.gravityY * frame * frame,
@@ -469,49 +469,23 @@ export class GameCanvasRenderer {
       return;
     }
 
-    // Draw a soft shadow, a warm glow, and a bright core along the physics prediction.
-    ctx.beginPath();
-    trajectory.forEach((point, index) => {
-      if (index === 0) ctx.moveTo(point.x, point.y);
-      else ctx.lineTo(point.x, point.y);
-    });
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(73, 43, 29, .78)';
-    ctx.lineWidth = 9;
-    ctx.shadowColor = 'rgba(255, 187, 76, .95)';
-    ctx.shadowBlur = 14;
-    ctx.stroke();
-    const ribbon = ctx.createLinearGradient(WORLD.cannon.x, WORLD.cannon.y, end.x, end.y);
-    ribbon.addColorStop(0, 'rgba(255, 255, 228, .95)');
-    ribbon.addColorStop(0.55, 'rgba(255, 214, 108, .94)');
-    ribbon.addColorStop(1, 'rgba(255, 130, 71, .2)');
-    ctx.strokeStyle = ribbon;
-    ctx.lineWidth = 4;
-    ctx.shadowColor = 'rgba(255, 247, 187, .95)';
-    ctx.shadowBlur = 8;
-    ctx.stroke();
-
-    const step = strength > 0.72 ? 7 : 9;
-    ctx.shadowBlur = 5;
-    for (let frame = step; frame < trajectory.length; frame += step) {
+    // Individual neon beads follow the physics prediction without a connecting ribbon.
+    const step = strength > 0.72 ? 2 : 3;
+    for (let frame = 0; frame < trajectory.length; frame += step) {
       const point = ctxPoint(trajectory[frame]);
       ctx.beginPath();
-      ctx.arc(point.x, point.y, Math.max(2.6, 4.8 - frame / 34), 0, Math.PI * 2);
-      ctx.fillStyle = '#fff9d8';
-      ctx.strokeStyle = '#9a572f';
-      ctx.lineWidth = 1.5;
+      ctx.arc(point.x, point.y, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(74, 255, 145, .14)';
+      ctx.shadowColor = 'rgba(74, 255, 145, .52)';
+      ctx.shadowBlur = 8;
       ctx.fill();
-      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 2.6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 255, 174, .86)';
+      ctx.shadowColor = 'rgba(104, 255, 158, .72)';
+      ctx.shadowBlur = 5;
+      ctx.fill();
     }
-    ctx.beginPath();
-    ctx.arc(end.x, end.y, 7, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 236, 167, .28)';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(end.x, end.y, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff6cc';
-    ctx.fill();
     ctx.restore();
   }
 
