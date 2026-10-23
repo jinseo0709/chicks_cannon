@@ -21,8 +21,8 @@ describe('GameHud', () => {
     const onMute = vi.fn();
     const onUseItem = vi.fn();
     const onTogglePause = vi.fn();
-    render(<GameHud snapshot={makeSnapshot('FLYING')} onRestart={onRestart} onMute={onMute} onUseItem={onUseItem} onTogglePause={onTogglePause} />);
-    expect(screen.getByText('점수 1,200')).toBeTruthy();
+    const { container } = render(<GameHud snapshot={makeSnapshot('FLYING')} onRestart={onRestart} onMute={onMute} onUseItem={onUseItem} onTogglePause={onTogglePause} />);
+    expect(container.querySelector('.stage-score-value')?.textContent).toBe('1,200');
     expect(screen.getByLabelText('남은 병아리 2개')).toBeTruthy();
     expect(screen.getByLabelText('사용 아이템').className).toBe('item-tray');
     expect(screen.getByRole('button', { name: '달걀 지진, 남은 1개' }).textContent).toContain('1');
@@ -56,7 +56,7 @@ describe('GameHud', () => {
     const hud = container.querySelector('.game-hud');
     expect([...hud!.children].map((child) => child.id)).toEqual(['top-bar', 'item-bar']);
     const topline = container.querySelector('#top-bar');
-    expect([...topline!.children].map((child) => child.className)).toEqual(['hud-card chapter-card', 'hud-card ammo-card', 'hud-actions']);
+    expect([...topline!.children].map((child) => child.className)).toEqual(['hud-card chapter-card', 'hud-card score-card', 'hud-card ammo-card', 'hud-actions']);
     expect(container.querySelector('#item-bar')?.querySelectorAll('button')).toHaveLength(4);
     expect(container.querySelector('[aria-label="치즈 로켓, 남은 1개"]')).toBeTruthy();
     expect(container.querySelector('[aria-label="달걀 지진, 남은 1개"]')).toBeTruthy();
@@ -65,6 +65,21 @@ describe('GameHud', () => {
     expect(container.querySelector('[aria-label="일시정지"]')).toBeTruthy();
     expect(container.querySelector('[aria-label="현재 챕터 다시 시작"]')).toBeTruthy();
     expect(container.querySelectorAll('.item-label')).toHaveLength(4);
+  });
+
+  it('shows stage score progress prominently and keeps campaign total secondary', () => {
+    const { container } = render(<GameHud snapshot={makeSnapshot()} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} />);
+    expect(container.querySelector('.score-card .stage-score-value')?.textContent).toBe('1,200');
+    expect(container.querySelector('.score-target-label')?.textContent).toBe('3-star target 1,200 / 3,600');
+    expect(container.querySelector('.score-target-track')?.getAttribute('aria-valuenow')).toBe('33');
+    expect(container.querySelector('.campaign-score')?.textContent).toBe('Campaign total 1,200');
+  });
+
+  it('clamps the score progress bar after the target while retaining the actual score', () => {
+    const snapshot = { ...makeSnapshot(), stageScore: 5000 };
+    const { container } = render(<GameHud snapshot={snapshot} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} />);
+    expect(container.querySelector('.score-target-track')?.getAttribute('aria-valuenow')).toBe('100');
+    expect(container.querySelector('.stage-score-value')?.textContent).toBe('5,000');
   });
 
   it('labels the selected butter item and allows the aiming mega action', () => {

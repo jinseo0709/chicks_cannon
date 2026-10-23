@@ -16,6 +16,9 @@ const activeStates = new Set(['AIMING', 'FLYING', 'RESOLVING']);
 export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause }: GameHudProps): JSX.Element {
   const stage = STAGES[snapshot.stage];
   const active = activeStates.has(snapshot.state);
+  const targetProgress = snapshot.scoreTarget > 0
+    ? Math.max(0, Math.min(100, Math.floor((snapshot.stageScore / snapshot.scoreTarget) * 100)))
+    : 0;
   const items: { kind: ItemKind; label: string; icon: string; available: boolean }[] = [
     { kind: 'booster', label: '치즈 로켓', icon: '🚀', available: snapshot.state === 'FLYING' },
     { kind: 'quake', label: '달걀 지진', icon: '🥚', available: active },
@@ -28,12 +31,21 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
         <div className="hud-card chapter-card">
           <span className="hud-kicker">CHAPTER {snapshot.stage}</span>
           <strong title={stage.title}>{stage.title}</strong>
-          <span className="hud-score">점수 {snapshot.score.toLocaleString('ko-KR')}</span>
+        </div>
+        <div className="hud-card score-card" aria-label="Stage score">
+          <span className="hud-kicker">STAGE SCORE</span>
+          <strong className="stage-score-value">{snapshot.stageScore.toLocaleString('ko-KR')}</strong>
+          <span className="score-target-label">3-star target {snapshot.stageScore.toLocaleString('ko-KR')} / {snapshot.scoreTarget.toLocaleString('ko-KR')}</span>
+          <div className="score-target-track" role="progressbar" aria-label="Three-star score target progress"
+            aria-valuemin={0} aria-valuemax={100} aria-valuenow={targetProgress}>
+            <span style={{ width: `${targetProgress}%` }} />
+          </div>
+          <span className="campaign-score">Campaign total {snapshot.score.toLocaleString('ko-KR')}</span>
         </div>
         <div className="hud-card ammo-card" aria-label={`남은 병아리 ${snapshot.ammo}개`}>
           <span className="hud-kicker">탄환</span>
           <div className="ammo-dots" aria-hidden="true">
-            {Array.from({ length: stage.ammo }, (_, index) => (
+            {Array.from({ length: snapshot.stageAmmo }, (_, index) => (
               <span key={index} className={index < snapshot.ammo ? 'ammo-dot' : 'ammo-dot spent'}>
                 {index < snapshot.ammo
                   ? <img src={assetUrl(`assets/chicks/stage-${snapshot.form.assetVariant}.png`)} alt="" />

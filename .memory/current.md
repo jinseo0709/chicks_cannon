@@ -7,14 +7,14 @@
 [P01 Campaign Progression](./phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/phase.md)
 
 ## Active Task
-[T04 Score HUD and Clear Stars](./phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/T04-score-hud-and-clear-stars.md)
+[T05 Progress Persistence and Integration](./phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/T05-progress-persistence-and-integration.md)
 
 ## Status
-- T01 through T03 implementation and validation passed.
-- P01 progress: 3/5. T04 is in progress.
+- T01 through T04 implementation and validation passed.
+- P01 progress: 4/5. T05 is in progress.
 
 ## Next Step (IMPORTANT)
-Read `.memory/phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/T04-score-hud-and-clear-stars.md` and present current-stage score/target progress and engine-calculated earned stars. Run the specified component tests, web typecheck, and `git diff --check`; update progress only after they pass.
+Read `.memory/phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/T05-progress-persistence-and-integration.md` and persist validated stage completion/best-star progress, show ratings on the world map, and verify replay/leaderboard integration. Run its specified component/integration tests, web tests, build, and `git diff --check`; update progress only after they pass.
 
 ## Decisions
 [Confirmed gameplay difficulty decisions](./decisions/2026-10-22-gameplay-difficulty-curve.md)

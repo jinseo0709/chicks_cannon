@@ -16,6 +16,14 @@ export function GameModal({ snapshot, onRetry, onContinue }: GameModalProps): JS
           <img src={assetUrl('assets/story/chapter-clear.png')} alt="병아리가 고양이 장애물을 넘어 다음 길을 여는 모습" />
           <div className="clear-copy">
             <p className="eyebrow">CHAPTER CLEAR</p>
+            <div className="clear-stars" role="img" aria-label={`Stage stars ${snapshot.stageStars} of 3`}>
+              {Array.from({ length: 3 }, (_, index) => (
+                <span key={index} className={index < snapshot.stageStars ? 'clear-star earned' : 'clear-star'} aria-hidden="true">
+                  {index < snapshot.stageStars ? '\u2605' : '\u2606'}
+                </span>
+              ))}
+            </div>
+            <p className="clear-result">Stage score {snapshot.stageScore.toLocaleString('ko-KR')} / target {snapshot.scoreTarget.toLocaleString('ko-KR')}</p>
             <h2>길을 열었어요!</h2>
             <p>둥지를 향한 다음 모험이 곧 시작돼요.</p>
           </div>
