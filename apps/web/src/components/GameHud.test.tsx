@@ -52,12 +52,12 @@ describe('GameHud', () => {
     expect(onTogglePause).not.toHaveBeenCalled();
   });
 
-  it('separates the top chapter, ammunition and controls from the bottom five items', () => {
+  it('keeps compact item buttons inside the top HUD bar', () => {
     const { container } = render(<GameHud snapshot={makeSnapshot('FLYING')} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} />);
     const hud = container.querySelector('.game-hud');
-    expect([...hud!.children].map((child) => child.id)).toEqual(['top-bar', 'item-bar']);
+    expect([...hud!.children].map((child) => child.id)).toEqual(['top-bar']);
     const topline = container.querySelector('#top-bar');
-    expect([...topline!.children].map((child) => child.className)).toEqual(['hud-card chapter-card', 'hud-card score-card', 'hud-card ammo-card', 'hud-actions']);
+    expect([...topline!.children].map((child) => child.className)).toEqual(['hud-card chapter-card', 'hud-card score-card', 'hud-card ammo-card', 'hud-actions', 'item-tray']);
     expect(container.querySelector('#item-bar')?.querySelectorAll('button')).toHaveLength(5);
     expect(container.querySelector('[aria-label="치즈 로켓, 남은 1개"]')).toBeTruthy();
     expect(container.querySelector('[aria-label="달걀 지진, 남은 1개"]')).toBeTruthy();

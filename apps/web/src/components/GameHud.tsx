@@ -64,21 +64,21 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
             onClick={onTogglePause} disabled={!active} aria-label={snapshot.state === 'PAUSED' ? '계속하기' : '일시정지'} />
           <button className="icon-button ui-icon-button ui-icon-restart" onClick={onRestart} disabled={!active} aria-label="현재 챕터 다시 시작" />
         </div>
-      </div>
-      <div id="item-bar" className="item-tray" aria-label="사용 아이템">
-        {items.map(({ kind, available }) => {
-          const item = ITEM_INFO[kind];
-          const selected = kind === 'butter' ? snapshot.targetingItem === 'butter'
-            : kind === 'cushion' && snapshot.eggCushionActive;
-          return <button key={kind} className={`item-button${selected ? ' selected' : ''}`}
-            title={item.description}
-            aria-label={`${item.label}, 남은 ${snapshot.items[kind]}개${kind === 'cushion' && snapshot.eggCushionActive ? ', 알 보호 중' : ''}`}
-            aria-pressed={kind === 'butter' || kind === 'cushion' ? selected : undefined}
-            disabled={!active || !available || !snapshot.items[kind]}
-            onClick={() => onUseItem(kind)}>
-            <span aria-hidden="true">{item.icon}</span><span className="item-label">{item.label}</span><b>{snapshot.items[kind]}</b>
-          </button>;
-        })}
+        <div id="item-bar" className="item-tray" aria-label="사용 아이템">
+          {items.map(({ kind, available }) => {
+            const item = ITEM_INFO[kind];
+            const selected = kind === 'butter' ? snapshot.targetingItem === 'butter'
+              : kind === 'cushion' && snapshot.eggCushionActive;
+            return <button key={kind} className={`item-button${selected ? ' selected' : ''}`}
+              title={item.description}
+              aria-label={`${item.label}, 남은 ${snapshot.items[kind]}개${kind === 'cushion' && snapshot.eggCushionActive ? ', 알 보호 중' : ''}`}
+              aria-pressed={kind === 'butter' || kind === 'cushion' ? selected : undefined}
+              disabled={!active || !available || !snapshot.items[kind]}
+              onClick={() => onUseItem(kind)}>
+              <span aria-hidden="true">{item.icon}</span><span className="item-label">{item.label}</span><b>{snapshot.items[kind]}</b>
+            </button>;
+          })}
+        </div>
       </div>
     </div>
   );

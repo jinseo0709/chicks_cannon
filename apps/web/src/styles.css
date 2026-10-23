@@ -705,9 +705,9 @@ h2 {
   right: 16px;
   display: grid;
   grid-template-columns: minmax(150px, 1fr) minmax(200px, 1.2fr) auto auto;
-  grid-template-areas: "chapter score ammo actions";
+  grid-template-areas: "chapter score ammo actions" "items items items items";
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   pointer-events: none;
 }
 
@@ -857,24 +857,22 @@ h2 {
 }
 
 #item-bar {
-  position: absolute;
-  z-index: 50;
-  bottom: 24px;
-  right: 24px;
+  grid-area: items;
+  justify-self: end;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: nowrap;
   min-width: 0;
-  gap: 12px;
+  gap: 6px;
   width: max-content;
-  max-width: calc(100% - 32px);
-  padding: 0.45rem;
+  max-width: 100%;
+  padding: 0.25rem;
   pointer-events: none;
   background: rgb(255 249 228 / 90%);
   border: 2px solid #fffdf2;
-  border-radius: 1rem;
-  box-shadow: 0 4px 0 #a97e50, 0 0.5rem 1.2rem rgb(42 53 59 / 22%);
+  border-radius: 0.8rem;
+  box-shadow: 0 2px 0 #a97e50, 0 0.3rem 0.7rem rgb(42 53 59 / 18%);
 }
 
 .item-button {
@@ -883,16 +881,16 @@ h2 {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  min-height: 2.6rem;
+  min-height: 2rem;
   flex: 0 1 auto;
   white-space: nowrap;
-  padding: 0.35rem 0.75rem;
+  padding: 0.2rem 0.45rem;
   color: #493b2a;
   cursor: pointer;
   background: #fff4d6;
   border: 2px solid #fffdf2;
   border-radius: 0.75rem;
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   font-weight: 800;
   text-shadow: 0 1px 0 #fff;
   box-shadow: 0 3px 0 #bb955e, inset 0 1px 0 #fff;
@@ -1403,23 +1401,23 @@ h2 {
 @media (min-width: 561px) and (max-width: 760px) {
   #top-bar {
     grid-template-columns: minmax(105px, 1fr) minmax(185px, 1.35fr) auto;
-    grid-template-areas: "chapter score ammo" "actions actions actions";
+    grid-template-areas: "chapter score ammo" "actions actions actions" "items items items";
     gap: 6px;
   }
   .hud-actions { justify-content: flex-end; }
 }
 
 @media (max-width: 760px) {
-  #item-bar { right: 8px; width: min(calc(100% - 16px), 360px); gap: 6px; padding: 6px; }
-  .item-button { flex: 1 1 0; min-width: 44px; min-height: 44px; justify-content: center; padding: 6px; gap: 0; }
+  #item-bar { justify-self: end; width: max-content; gap: 4px; padding: 4px; }
+  .item-button { flex: 1 1 0; min-width: 38px; min-height: 36px; justify-content: center; padding: 4px; gap: 0; }
   .item-label { display: none; }
   .item-button span:first-child { font-size: 1.3rem; }
   .item-button b { position: absolute; top: -4px; right: -3px; min-width: 16px; height: 16px; font-size: 10px; }
 }
 
 @media (max-width: 560px) {
-  #top-bar { top: 8px; left: 8px; right: 8px; grid-template-columns: minmax(88px, 1fr) auto; grid-template-areas: "chapter ammo" "score actions"; align-items: stretch; gap: 4px; }
-  #item-bar { right: 8px; bottom: max(12px, env(safe-area-inset-bottom)); }
+  #top-bar { top: 8px; left: 8px; right: 8px; grid-template-columns: minmax(88px, 1fr) auto; grid-template-areas: "chapter ammo" "score actions" "items items"; align-items: stretch; gap: 4px; }
+  #item-bar { justify-self: end; }
   .hud-card { padding: 0.28rem 0.32rem; border-width: 1px; }
   .chapter-card { min-width: 0; }
   .chapter-card strong { font-size: 0.62rem; }
