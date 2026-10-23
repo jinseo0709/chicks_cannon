@@ -5,7 +5,7 @@ import { STAGES } from './stages';
 import { CHICK_FORMS, STAGE_ORDER } from './constants';
 import type { GameSnapshot, GameStage, SpawnSpec } from './types';
 
-type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number } };
+type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number; alive?: boolean } };
 interface CampaignHarness {
   stage: GameStage;
   score: number;
@@ -44,31 +44,34 @@ function createEngine(stage: GameStage = 1) {
 }
 
 describe('ChickCannonEngine', () => {
-  it.each(STAGE_ORDER)('keeps level %s cats idle until an active body hits them', (stage) => {
+  it.each(STAGE_ORDER)('keeps level %s cats fixed until the chick hits an obstacle', (stage) => {
     const { engine, harness, snapshot } = createEngine(stage);
     const cats = [...harness.bodies.values()].filter((body) => body.label === 'enemy');
     const startingPositions = cats.map(({ position }) => ({ x: position.x, y: position.y }));
     expect(cats.length).toBeGreaterThan(0);
-    expect(cats.every((cat) => cat.isSleeping)).toBe(true);
+    expect(cats.every((cat) => cat.isStatic)).toBe(true);
     engine.dismissDialogue();
     for (let frame = 0; frame < 120; frame += 1) engine.step(16.667);
     expect(cats.map(({ position }) => ({ x: position.x, y: position.y }))).toEqual(startingPositions);
     expect(snapshot().stageScore).toBe(0);
   });
 
-  it('wakes a sleeping cat when a moving body collides with it', () => {
+  it('releases cats to fall when the chick hits a structure', () => {
     const { engine, harness } = createEngine();
     Composite.clear(harness.engine.world, false, true);
     harness.bodies.clear();
-    harness.engine.gravity.y = 0;
+    harness.engine.gravity.y = 1.05;
     harness.spawn({ kind: 'cat', x: 900, y: 300 });
     const cat = [...harness.bodies.values()][0];
-    const probe = Bodies.circle(850, 300, 12, { density: 0.01, label: 'probe' });
-    Composite.add(harness.engine.world, probe);
-    Body.setVelocity(probe, { x: 18, y: 0 });
-    for (let frame = 0; frame < 8; frame += 1) engine.step(16.667);
-    expect(cat.isSleeping).toBe(false);
-    expect(cat.position.x).toBeGreaterThan(900);
+    harness.spawn({ kind: 'block', material: 'stone', x: 850, y: 300, w: 24, h: 20 });
+    const obstacle = [...harness.bodies.values()][1];
+    const chick = Bodies.circle(820, 300, 12, { label: 'chick' }) as TestBody;
+    Composite.add(harness.engine.world, chick);
+    const startY = cat.position.y;
+    Events.trigger(harness.engine, 'collisionStart', { pairs: [{ bodyA: chick, bodyB: obstacle, collision: { supports: [] } }] });
+    expect(cat.isStatic).toBe(false);
+    for (let frame = 0; frame < 10; frame += 1) engine.step(16.667);
+    expect(cat.position.y).toBeGreaterThan(startY);
   });
 
   it('gives steel and rubber blocks distinct mass, durability, and bounce', () => {

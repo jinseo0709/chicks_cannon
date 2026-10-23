@@ -6,7 +6,6 @@ import {
   Engine,
   Events,
   Query,
-  Sleeping,
   type IEventCollision,
 } from 'matter-js';
 import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
@@ -87,6 +86,7 @@ export class ChickCannonEngine {
   private readonly bodies = new Map<number, GameBody>();
   private readonly chandelierConstraints = new Map<number, Matter.Constraint>();
   private readonly pendingVelocities = new Map<number, { body: GameBody; velocity: Point }>();
+  private catsReleased = false;
   private readonly gearContactTimes = new Map<number, number>();
   private explosionQueue: Explosion[] = [];
   private processingExplosions = false;
@@ -436,6 +436,7 @@ export class ChickCannonEngine {
     this.winFrames = 0;
     this.defeatCause = null;
     this.stateBeforePause = null;
+    this.catsReleased = false;
     this.state = 'DIALOGUE';
 
     const ground = Bodies.rectangle(640, 695, 2560, 50, { isStatic: true, label: 'ground' }) as GameBody;
@@ -491,7 +492,7 @@ export class ChickCannonEngine {
         restitution: 0.2,
         label: 'enemy',
       }) as GameBody;
-      Sleeping.set(body, true);
+      Body.setStatic(body, true);
       customData = {
         radius,
         hp,
@@ -632,6 +633,12 @@ export class ChickCannonEngine {
       const a = bodyA as GameBody;
       const b = bodyB as GameBody;
       if (a.customData?.alive === false || b.customData?.alive === false) continue;
+      const involvesChick = a.label === 'chick' || b.label === 'chick';
+      if (!this.catsReleased && !involvesChick) continue;
+      if (involvesChick && [a.label, b.label].some((label) =>
+        ['block', 'tnt', 'enemy', 'tire', 'gear', 'shutter', 'bouncePad', 'boulder', 'chandelier'].includes(label))) {
+        this.releaseCats();
+      }
       if (a.label === 'tire' || b.label === 'tire') {
         const tire = a.label === 'tire' ? a : b;
         const dynamic = tire === a ? b : a;
@@ -663,7 +670,6 @@ export class ChickCannonEngine {
       }
 
       const relativeSpeed = Math.hypot(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
-      const involvesChick = a.label === 'chick' || b.label === 'chick';
       const multiplier = involvesChick ? CHICK_FORMS[this.stage].damageMultiplier : 1;
       const impact = relativeSpeed * 3.5 * multiplier;
       const contact = collision?.supports?.[0];
@@ -725,6 +731,14 @@ export class ChickCannonEngine {
     const reward = data.boss ? 3000 : data.shield ? 2000 : 1200;
     this.awardScore(reward, body.position.x, body.position.y - 24, data.boss ? '보스 격파' : '고양이 격파');
     this.removeBody(body);
+  }
+
+  private releaseCats(): void {
+    if (this.catsReleased) return;
+    this.catsReleased = true;
+    for (const body of this.bodies.values()) {
+      if (body.label === 'enemy' && body.isStatic) Body.setStatic(body, false);
+    }
   }
 
   private breakBlock(body: GameBody, _context: DamageContext): void {
