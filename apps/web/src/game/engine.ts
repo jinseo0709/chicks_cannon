@@ -188,7 +188,7 @@ export class ChickCannonEngine {
     const dx = WORLD.cannon.x - this.aimPosition.x;
     const dy = WORLD.cannon.y - this.aimPosition.y;
     const distance = Math.hypot(dx, dy);
-    if (distance < 15) {
+    if (distance < WORLD.cancelDragRadius) {
       this.aimPosition = null;
       this.publish();
       return;

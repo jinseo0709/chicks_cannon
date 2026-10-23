@@ -77,18 +77,11 @@ describe('GameHud', () => {
     expect(container.querySelector('.campaign-score')?.textContent).toBe('🏆 모험 누적 1,200점');
   });
 
-  it('offers launch and cancel after aiming and shows mega as armed', () => {
-    const launch = vi.fn();
-    const cancel = vi.fn();
+  it('does not replace release-to-launch with extra HUD buttons and shows mega as armed', () => {
     const snapshot = { ...makeSnapshot(), aimPosition: { x: 55, y: 490 }, megaNext: true };
-    render(<GameHud snapshot={snapshot} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} onLaunchAim={launch} onCancelAim={cancel} />);
-    expect(screen.getByRole('button', { name: '발사' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: '조준 취소' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /거대화 망치/ }).getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(screen.getByRole('button', { name: '발사' }));
-    fireEvent.click(screen.getByRole('button', { name: '조준 취소' }));
-    expect(launch).toHaveBeenCalledOnce();
-    expect(cancel).toHaveBeenCalledOnce();
+    const { container } = render(<GameHud snapshot={snapshot} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} />);
+    expect(container.querySelector('.aim-action')).toBeNull();
+    expect(container.querySelector('[aria-pressed="true"]')?.getAttribute('aria-label')).toMatch(/거대화 망치/);
   });
 
   it('clamps the score progress bar after the target while retaining the actual score', () => {

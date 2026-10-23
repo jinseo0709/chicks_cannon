@@ -80,8 +80,6 @@ export function App(): JSX.Element {
                 onMute={controller.toggleMute}
                 onUseItem={controller.useItem}
                 onTogglePause={controller.togglePause}
-                onLaunchAim={controller.launchAim}
-                onCancelAim={controller.cancelAim}
               />
             )}
             {controller.snapshot.state === 'DIALOGUE' && (

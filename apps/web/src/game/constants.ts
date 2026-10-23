@@ -6,6 +6,7 @@ export const WORLD = {
   cannon: { x: 160, y: 525 } satisfies Point,
   nest: { x: 1205, y: 620 } satisfies Point,
   maxDrag: 125,
+  cancelDragRadius: 34,
   gravityY: 1.05,
 } as const;
 

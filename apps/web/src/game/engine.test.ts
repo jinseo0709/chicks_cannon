@@ -279,7 +279,7 @@ describe('ChickCannonEngine', () => {
   it('rejects a short launch and allows a skill only once per shot', () => {
     const { engine, snapshot } = createEngine();
     engine.dismissDialogue();
-    engine.setAim({ x: 150, y: 525 });
+    engine.setAim({ x: 130, y: 525 });
     engine.releaseAim();
     expect(snapshot().state).toBe('AIMING');
     expect(snapshot().ammo).toBe(6);

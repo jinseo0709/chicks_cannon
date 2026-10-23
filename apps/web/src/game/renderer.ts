@@ -52,6 +52,7 @@ export class GameCanvasRenderer {
     this.drawSlingshotBase(WORLD.cannon.x, WORLD.cannon.y + 20);
     this.drawSlingshotBand(snapshot, false);
     this.drawProp('slingshot', WORLD.cannon.x, WORLD.cannon.y + 20, 78, 136);
+    this.drawAimCancelZone(snapshot);
     this.drawAimGuide(snapshot);
     this.drawLoadedChick(snapshot, sceneTime);
     this.drawSlingshotBand(snapshot, true);
@@ -444,7 +445,7 @@ export class GameCanvasRenderer {
     const dx = WORLD.cannon.x - snapshot.aimPosition.x;
     const dy = WORLD.cannon.y - snapshot.aimPosition.y;
     const distance = Math.hypot(dx, dy);
-    if (distance < 15) return;
+    if (distance < WORLD.cancelDragRadius) return;
     const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * snapshot.form.launchPower * 1.2;
     const angle = Math.atan2(dy, dx);
     const vx = Math.cos(angle) * power;
@@ -470,6 +471,39 @@ export class GameCanvasRenderer {
       ctx.fill();
       ctx.stroke();
     }
+    ctx.restore();
+  }
+
+  private drawAimCancelZone(snapshot: GameSnapshot): void {
+    if (!snapshot.aimPosition || snapshot.state !== 'AIMING') return;
+    const ctx = this.context;
+    const distance = Math.hypot(snapshot.aimPosition.x - WORLD.cannon.x, snapshot.aimPosition.y - WORLD.cannon.y);
+    const inside = distance < WORLD.cancelDragRadius;
+    const radius = WORLD.cancelDragRadius;
+    ctx.save();
+    ctx.fillStyle = inside ? 'rgba(113, 201, 116, .32)' : 'rgba(255, 235, 159, .18)';
+    ctx.strokeStyle = inside ? '#74cf79' : '#fff1a6';
+    ctx.lineWidth = inside ? 4 : 3;
+    ctx.setLineDash([7, 5]);
+    ctx.shadowColor = inside ? 'rgba(61, 160, 75, .8)' : 'rgba(70, 43, 22, .75)';
+    ctx.shadowBlur = 9;
+    ctx.beginPath();
+    ctx.arc(WORLD.cannon.x, WORLD.cannon.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+    const label = inside ? '취소 구역' : '여기 놓으면 취소';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const labelWidth = ctx.measureText(label).width + 18;
+    ctx.fillStyle = 'rgba(77, 52, 31, .9)';
+    ctx.beginPath();
+    ctx.roundRect(WORLD.cannon.x - labelWidth / 2, WORLD.cannon.y - radius - 28, labelWidth, 23, 11);
+    ctx.fill();
+    ctx.fillStyle = '#fff7d7';
+    ctx.fillText(label, WORLD.cannon.x, WORLD.cannon.y - radius - 16);
     ctx.restore();
   }
 

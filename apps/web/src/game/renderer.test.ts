@@ -12,7 +12,7 @@ const context = {
   createRadialGradient: vi.fn(() => gradient),
   beginPath: vi.fn(), ellipse: vi.fn(), fill: vi.fn(), stroke: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
   quadraticCurveTo: vi.fn(), bezierCurveTo: vi.fn(), rect: vi.fn(), clip: vi.fn(), closePath: vi.fn(), arc: vi.fn(), setLineDash: vi.fn(), rotate: vi.fn(), strokeRect: vi.fn(),
-  fillText: vi.fn(), roundRect: vi.fn(),
+  fillText: vi.fn(), roundRect: vi.fn(), measureText: vi.fn(() => ({ width: 80 })),
   fillStyle: '', strokeStyle: '', lineWidth: 1, lineCap: 'butt', shadowColor: '', shadowBlur: 0,
   globalAlpha: 1,
   font: '', textAlign: 'start', textBaseline: 'alphabetic',
@@ -33,6 +33,16 @@ beforeEach(() => {
 });
 
 describe('GameCanvasRenderer', () => {
+  it('shows the no-launch zone around the sling center during aim', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    renderer.render({ ...snapshot, aimPosition: { x: WORLD.cannon.x + 10, y: WORLD.cannon.y } }, 100);
+    expect(context.roundRect).toHaveBeenCalled();
+    expect(context.fillText).toHaveBeenCalled();
+    renderer.dispose();
+  });
+
   it('scales the backing canvas for DPR and letterboxes the 1280 by 720 scene', () => {
     const canvas = document.createElement('canvas');
     const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());

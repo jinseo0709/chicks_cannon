@@ -10,13 +10,11 @@ export interface GameHudProps {
   onMute(): void;
   onUseItem(kind: ItemKind): void;
   onTogglePause(): void;
-  onLaunchAim?(): void;
-  onCancelAim?(): void;
 }
 
 const activeStates = new Set(['AIMING', 'FLYING', 'RESOLVING']);
 
-export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause, onLaunchAim = () => undefined, onCancelAim = () => undefined }: GameHudProps): JSX.Element {
+export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause }: GameHudProps): JSX.Element {
   const stage = STAGES[snapshot.stage];
   const active = activeStates.has(snapshot.state);
   const targetProgress = snapshot.scoreTarget > 0
@@ -78,10 +76,6 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause,
           })}
         </div>
         <div className="hud-actions">
-          {snapshot.state === 'AIMING' && snapshot.aimPosition && <>
-            <button className="aim-action launch-action" onClick={onLaunchAim} aria-label="발사">발사</button>
-            <button className="aim-action cancel-action" onClick={onCancelAim} aria-label="조준 취소">취소</button>
-          </>}
           <button className={`icon-button ui-icon-button ${snapshot.muted ? 'ui-icon-muted' : 'ui-icon-sound'}`}
             onClick={onMute} disabled={!active} aria-label={snapshot.muted ? '소리 켜기' : '소리 끄기'} />
           <button className={`icon-button ui-icon-button ${snapshot.state === 'PAUSED' ? 'ui-icon-play' : 'ui-icon-pause'}`}
