@@ -9,7 +9,7 @@ const makeSnapshot = (state: GameSnapshot['state'] = 'AIMING'): GameSnapshot => 
   screen: 'game', stage: 1, score: 1200, stageScore: 1200, scoreTarget: 3600, stageAmmo: 6, stageStars: 0, bonusChallengeRemainingMs: 65000, bonusChallengeStatus: 'ready',
   ammo: 2, campaignComplete: false, state,
   items: { booster: 1, quake: 1, mega: 1, butter: 1, cushion: 1 }, eggCushionActive: false, finalRewardClaimed: false,
-  muted: false, entities: [], aimPosition: null,
+  muted: false, entities: [], aimPosition: null, megaNext: false,
   targetingItem: null, slickZones: [],
   defeatCause: null, story: STAGES[1].story, form: CHICK_FORMS[1], evolvedForm: null,
 });
@@ -75,6 +75,20 @@ describe('GameHud', () => {
     expect(container.querySelector('.score-target-label')?.textContent).toBe('⭐ 별 3개 목표 1,200 / 3,600');
     expect(container.querySelector('.score-target-track')?.getAttribute('aria-valuenow')).toBe('33');
     expect(container.querySelector('.campaign-score')?.textContent).toBe('🏆 모험 누적 1,200점');
+  });
+
+  it('offers launch and cancel after aiming and shows mega as armed', () => {
+    const launch = vi.fn();
+    const cancel = vi.fn();
+    const snapshot = { ...makeSnapshot(), aimPosition: { x: 55, y: 490 }, megaNext: true };
+    render(<GameHud snapshot={snapshot} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} onLaunchAim={launch} onCancelAim={cancel} />);
+    expect(screen.getByRole('button', { name: '발사' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '조준 취소' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /거대화 망치/ }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: '발사' }));
+    fireEvent.click(screen.getByRole('button', { name: '조준 취소' }));
+    expect(launch).toHaveBeenCalledOnce();
+    expect(cancel).toHaveBeenCalledOnce();
   });
 
   it('clamps the score progress bar after the target while retaining the actual score', () => {

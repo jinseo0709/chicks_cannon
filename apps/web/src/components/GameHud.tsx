@@ -10,11 +10,13 @@ export interface GameHudProps {
   onMute(): void;
   onUseItem(kind: ItemKind): void;
   onTogglePause(): void;
+  onLaunchAim?(): void;
+  onCancelAim?(): void;
 }
 
 const activeStates = new Set(['AIMING', 'FLYING', 'RESOLVING']);
 
-export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause }: GameHudProps): JSX.Element {
+export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause, onLaunchAim = () => undefined, onCancelAim = () => undefined }: GameHudProps): JSX.Element {
   const stage = STAGES[snapshot.stage];
   const active = activeStates.has(snapshot.state);
   const targetProgress = snapshot.scoreTarget > 0
@@ -63,12 +65,12 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
         <div id="item-bar" className="item-tray" aria-label="사용 아이템">
           {items.map(({ kind, available }) => {
             const item = ITEM_INFO[kind];
-            const selected = kind === 'butter' ? snapshot.targetingItem === 'butter'
+            const selected = kind === 'mega' ? snapshot.megaNext : kind === 'butter' ? snapshot.targetingItem === 'butter'
               : kind === 'cushion' && snapshot.eggCushionActive;
             return <button key={kind} className={`item-button${selected ? ' selected' : ''}`}
               title={item.description}
               aria-label={`${item.label}, 남은 ${snapshot.items[kind]}개${kind === 'cushion' && snapshot.eggCushionActive ? ', 알 보호 중' : ''}`}
-              aria-pressed={kind === 'butter' || kind === 'cushion' ? selected : undefined}
+              aria-pressed={kind === 'mega' || kind === 'butter' || kind === 'cushion' ? selected : undefined}
               disabled={!active || !available || !snapshot.items[kind]}
               onClick={() => onUseItem(kind)}>
               <span aria-hidden="true">{item.icon}</span><span className="item-label">{item.label}</span><b>{snapshot.items[kind]}</b>
@@ -76,6 +78,10 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
           })}
         </div>
         <div className="hud-actions">
+          {snapshot.state === 'AIMING' && snapshot.aimPosition && <>
+            <button className="aim-action launch-action" onClick={onLaunchAim} aria-label="발사">발사</button>
+            <button className="aim-action cancel-action" onClick={onCancelAim} aria-label="조준 취소">취소</button>
+          </>}
           <button className={`icon-button ui-icon-button ${snapshot.muted ? 'ui-icon-muted' : 'ui-icon-sound'}`}
             onClick={onMute} disabled={!active} aria-label={snapshot.muted ? '소리 켜기' : '소리 끄기'} />
           <button className={`icon-button ui-icon-button ${snapshot.state === 'PAUSED' ? 'ui-icon-play' : 'ui-icon-pause'}`}

@@ -445,7 +445,7 @@ export class GameCanvasRenderer {
     const dy = WORLD.cannon.y - snapshot.aimPosition.y;
     const distance = Math.hypot(dx, dy);
     if (distance < 15) return;
-    const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * snapshot.form.launchPower;
+    const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * snapshot.form.launchPower * 1.2;
     const angle = Math.atan2(dy, dx);
     const vx = Math.cos(angle) * power;
     const vy = Math.sin(angle) * power;
@@ -454,9 +454,11 @@ export class GameCanvasRenderer {
     const strength = Math.min(1, distance / WORLD.maxDrag);
     const maxFrame = 42 + Math.round(strength * 54);
     const step = strength > 0.72 ? 4 : 5;
-    ctx.fillStyle = `rgba(255, ${Math.round(235 - strength * 40)}, ${Math.round(155 - strength * 60)}, .92)`;
-    ctx.shadowColor = 'rgba(255,255,255,.65)';
-    ctx.shadowBlur = 5;
+    ctx.fillStyle = '#fff5b5';
+    ctx.strokeStyle = '#6c4027';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(255,255,255,.95)';
+    ctx.shadowBlur = 8;
     for (let frame = 3; frame <= maxFrame; frame += step) {
       const point = ctxPoint({
         x: WORLD.cannon.x + vx * frame,
@@ -464,8 +466,9 @@ export class GameCanvasRenderer {
       });
       if (point.x < 0 || point.x > WORLD.width || point.y > WORLD.height || point.y < 0) break;
       ctx.beginPath();
-      ctx.arc(point.x, point.y, Math.max(2.2, 5.6 - frame / 26), 0, Math.PI * 2);
+      ctx.arc(point.x, point.y, Math.max(3.2, 6.5 - frame / 22), 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -510,7 +513,7 @@ export class GameCanvasRenderer {
       kind: 'chick',
       x: position.x,
       y: position.y,
-      radius: snapshot.form.radius,
+      radius: snapshot.form.radius * (snapshot.megaNext ? 1.8 : 1),
       angle: 0,
       alive: true,
     }, snapshot.stage, nowMs);

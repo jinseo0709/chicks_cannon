@@ -21,6 +21,8 @@ export interface ChickCannonController {
   restartCampaign(): void;
   claimFinalReward(kind: ItemKind): void;
   useItem(kind: ItemKind): void;
+  launchAim(): void;
+  cancelAim(): void;
   toggleMute(): void;
   togglePause(): void;
 }
@@ -47,6 +49,7 @@ const initialSnapshot: GameSnapshot = {
   muted: false,
   entities: [],
   aimPosition: null,
+  megaNext: false,
   defeatCause: null,
   story: STAGES[1].story,
   form: CHICK_FORMS[1],
@@ -76,7 +79,7 @@ export function useChickCannon(): ChickCannonController {
     const input = new PointerInputController(canvas, {
       onAimStart: (point) => engine.setAim(point),
       onAimMove: (point) => engine.setAim(point),
-      onAimEnd: () => engine.releaseAim(),
+      onAimEnd: () => undefined,
       onAimCancel: () => engine.cancelAim(),
       onTarget: (point) => {
         if (engine.applyTargetedItem(point)) audioRef.current?.playBounce();
@@ -193,6 +196,8 @@ export function useChickCannon(): ChickCannonController {
     else if (kind === 'booster') audioRef.current?.playSkill(2);
     else audioRef.current?.playBounce();
   }, []);
+  const launchAim = useCallback(() => engineRef.current?.releaseAim(), []);
+  const cancelAim = useCallback(() => engineRef.current?.cancelAim(), []);
   const toggleMute = useCallback(() => {
     engineRef.current?.toggleMute();
     audioRef.current?.setMuted(engineRef.current?.getSnapshot().muted ?? false);
@@ -216,6 +221,8 @@ export function useChickCannon(): ChickCannonController {
     restartCampaign,
     claimFinalReward,
     useItem,
+    launchAim,
+    cancelAim,
     toggleMute,
     togglePause,
   };

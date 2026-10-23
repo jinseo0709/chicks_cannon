@@ -23,7 +23,7 @@ const snapshot: GameSnapshot = {
   ammo: 3, campaignComplete: false,
   state: 'AIMING', items: { booster: 0, quake: 0, mega: 0, butter: 0, cushion: 0 }, eggCushionActive: false, finalRewardClaimed: false, muted: false,
   targetingItem: null, slickZones: [],
-  entities: [], aimPosition: null,
+  entities: [], aimPosition: null, megaNext: false,
   defeatCause: null, story: STAGES[1].story, form: CHICK_FORMS[1], evolvedForm: null,
 };
 

@@ -86,7 +86,10 @@ export class PointerInputController {
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
-    if (!this.disposed && this.targetingItem && event.key === 'Escape') this.handlers.onTargetCancel();
+    if (this.disposed || event.key !== 'Escape') return;
+    if (this.targetingItem) this.handlers.onTargetCancel();
+    else if (this.dragging) this.cancelDrag();
+    else this.handlers.onAimCancel();
   };
 
   private cancelDrag(): void {

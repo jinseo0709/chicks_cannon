@@ -12,7 +12,7 @@ function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['d
     screen: 'game', stage: 3, score: 4200, stageScore: 4200, scoreTarget: 6000, stageAmmo: 5, stageStars: stars, bonusChallengeRemainingMs: 80000, bonusChallengeStatus: 'ready',
     ammo: 0, campaignComplete: state === 'ENDING', state,
     items: { booster: 0, quake: 1, mega: 0, butter: 1, cushion: 0 }, eggCushionActive: false, finalRewardClaimed: false,
-    muted: false, entities: [], aimPosition: null,
+    muted: false, entities: [], aimPosition: null, megaNext: false,
     targetingItem: null, slickZones: [],
     defeatCause, story: STAGES[3].story, form: CHICK_FORMS[3],
     evolvedForm: state === 'EVOLUTION' ? CHICK_FORMS[4] : null,

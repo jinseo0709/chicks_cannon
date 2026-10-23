@@ -205,7 +205,7 @@ export class ChickCannonEngine {
       collisionFilter: { group: Body.nextGroup(true) },
     }) as GameBody;
     this.track(chick, { radius, hp: 1, maxHp: 1, alive: true });
-    const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * form.launchPower;
+    const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * form.launchPower * 1.2;
     const angle = Math.atan2(dy, dx);
     Body.setVelocity(chick, { x: Math.cos(angle) * power, y: Math.sin(angle) * power });
     Composite.add(this.engine.world, chick);
@@ -419,6 +419,7 @@ export class ChickCannonEngine {
       }
     }
     Engine.update(this.engine, delta);
+    if (this.catsReleased) this.dropUnsupportedCats();
     for (const { body, velocity } of this.pendingVelocities.values()) {
       if (body.customData?.alive !== false) Body.setVelocity(body, velocity);
     }
@@ -724,7 +725,7 @@ export class ChickCannonEngine {
 
       const relativeSpeed = Math.hypot(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
       const multiplier = involvesChick ? CHICK_FORMS[this.stage].damageMultiplier : 1;
-      const impact = relativeSpeed * 3.5 * multiplier;
+      const impact = relativeSpeed * 4.5 * multiplier;
       const contact = collision?.supports?.[0];
       const point = contact && Number.isFinite(contact.x) && Number.isFinite(contact.y)
         ? { x: contact.x, y: contact.y }
@@ -828,6 +829,23 @@ export class ChickCannonEngine {
       const horizontalOverlap = Math.abs(cat.position.x - block.position.x) <= halfWidth + radius * 0.65;
       const restingOnBlock = horizontalOverlap && Math.abs(catBottom - blockTop) <= radius * 0.6;
       if (!restingOnBlock) continue;
+      if (cat.isStatic) Body.setStatic(cat, false);
+      Sleeping.set(cat, false);
+      Body.setVelocity(cat, { x: cat.velocity.x, y: Math.max(cat.velocity.y, 2.2) });
+    }
+  }
+
+  private dropUnsupportedCats(): void {
+    const bodies = Composite.allBodies(this.engine.world) as GameBody[];
+    const supports = bodies.filter((body) => ['ground', 'block', 'tnt', 'shutter', 'bouncePad', 'boulder', 'tire', 'gear', 'chandelier'].includes(body.label));
+    for (const cat of this.bodies.values()) {
+      if (cat.label !== 'enemy' || cat.customData?.alive === false || (!cat.isStatic && !cat.isSleeping)) continue;
+      const radius = cat.customData?.radius ?? 22;
+      const bottom = cat.bounds.max.y;
+      const supported = supports.some((support) => support.customData?.alive !== false &&
+        cat.bounds.max.x > support.bounds.min.x + 2 && cat.bounds.min.x < support.bounds.max.x - 2 &&
+        Math.abs(bottom - support.bounds.min.y) <= Math.max(8, radius * 0.3));
+      if (supported) continue;
       if (cat.isStatic) Body.setStatic(cat, false);
       Sleeping.set(cat, false);
       Body.setVelocity(cat, { x: cat.velocity.x, y: Math.max(cat.velocity.y, 2.2) });
@@ -1067,6 +1085,7 @@ export class ChickCannonEngine {
       muted: this.muted,
       entities,
       aimPosition: this.aimPosition ? { ...this.aimPosition } : null,
+      megaNext: this.megaNext,
       defeatCause: this.defeatCause,
       story: STAGES[this.stage].story,
       form: CHICK_FORMS[this.stage],

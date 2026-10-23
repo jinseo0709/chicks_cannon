@@ -175,13 +175,13 @@ describe('ChickCannonEngine', () => {
     engine.releaseAim();
     const bird = harness.activeChick!;
     const form = CHICK_FORMS[stage];
-    expect(bird.velocity.x).toBeCloseTo(form.launchPower);
+    expect(bird.velocity.x).toBeCloseTo(form.launchPower * 1.2);
     expect(bird.density).toBeCloseTo(form.density);
     engine.activateSkill();
     const auxiliaries = snapshot().entities.filter((entity) => entity.projectile);
     if (form.skillKind === 'shell') expect(auxiliaries).toHaveLength(3);
     else if (form.skillKind === 'feathers') expect(auxiliaries).toHaveLength(7);
-    else if (form.skillKind === 'boost') expect(bird.velocity.x).toBeCloseTo(form.launchPower * 1.6);
+    else if (form.skillKind === 'boost') expect(bird.velocity.x).toBeCloseTo(form.launchPower * 1.2 * 1.6);
     else expect(bird.velocity.y).toBeCloseTo(28);
     const count = snapshot().entities.length;
     engine.activateSkill();
@@ -224,7 +224,7 @@ describe('ChickCannonEngine', () => {
     Body.setPosition(bird, { x: 870, y: 350 });
     Body.setVelocity(bird, { x: 4, y: 0 });
     Events.trigger(harness.engine, 'collisionStart', { pairs: [{ bodyA: cat, bodyB: bird, collision: { supports: [] } }] });
-    expect(cat.customData?.hp).toBeCloseTo(1000 - 4 * 3.5 * CHICK_FORMS[stage].damageMultiplier);
+    expect(cat.customData?.hp).toBeCloseTo(1000 - 4 * 4.5 * CHICK_FORMS[stage].damageMultiplier);
   });
 
   it('progresses through all six levels and opens the ending only after the last one', () => {

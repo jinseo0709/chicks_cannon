@@ -138,6 +138,7 @@ export interface GameSnapshot {
   muted: boolean;
   entities: readonly GameEntityView[];
   aimPosition: Point | null;
+  megaNext: boolean;
   defeatCause: 'ammo' | 'hostage' | 'timer' | null;
   story: StageDefinition['story'];
   form: ChickForm;

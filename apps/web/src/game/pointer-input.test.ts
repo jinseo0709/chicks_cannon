@@ -58,6 +58,17 @@ describe('PointerInputController', () => {
     controller.dispose();
   });
 
+  it('cancels a pulled aim with Escape before the player launches', () => {
+    const { canvas, handlers, controller } = setup();
+    controller.setMode('AIMING');
+    canvas.dispatchEvent(pointerEvent('pointerdown', 1, 80, 272));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    canvas.dispatchEvent(pointerEvent('pointerup', 1, 80, 272));
+    expect(handlers.onAimCancel).toHaveBeenCalledOnce();
+    expect(handlers.onAimEnd).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
   it('removes listeners and restores the previous touch-action style on dispose', () => {
     const canvas = document.createElement('canvas');
     canvas.style.touchAction = 'pan-y';

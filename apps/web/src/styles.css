@@ -823,6 +823,22 @@ h2 {
   pointer-events: none;
 }
 
+.aim-action {
+  pointer-events: auto;
+  min-height: 2.35rem;
+  padding: 0 0.75rem;
+  color: #fff9dc;
+  border: 2px solid #fff0b8;
+  border-radius: 0.7rem;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #663719, inset 0 1px 0 rgb(255 255 255 / 50%);
+}
+
+.launch-action { background: linear-gradient(160deg, #f49a3e, #b84a2d); }
+.cancel-action { background: linear-gradient(160deg, #8d7657, #594637); }
+
 .icon-button {
   pointer-events: auto;
   display: grid;
