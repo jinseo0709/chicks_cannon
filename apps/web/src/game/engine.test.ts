@@ -71,6 +71,20 @@ describe('ChickCannonEngine', () => {
     expect(cat.position.x).toBeGreaterThan(900);
   });
 
+  it('gives steel and rubber blocks distinct mass, durability, and bounce', () => {
+    const { harness } = createEngine();
+    harness.engine.gravity.y = 0;
+    harness.spawn({ kind: 'block', material: 'steel', x: 300, y: 300, w: 40, h: 30 });
+    harness.spawn({ kind: 'block', material: 'rubber', x: 500, y: 300, w: 40, h: 30 });
+    const [steel, rubber] = [...harness.bodies.values()].slice(-2);
+    expect(steel.density).toBeCloseTo(0.012);
+    expect(steel.restitution).toBeCloseTo(0.08);
+    expect(steel.customData?.hp).toBe(150);
+    expect(rubber.density).toBeCloseTo(0.0024);
+    expect(rubber.restitution).toBeCloseTo(0.78);
+    expect(rubber.customData?.hp).toBe(28);
+  });
+
   it.each(STAGE_ORDER)('uses the form power and skill for level %s', (stage) => {
     const { engine, harness, snapshot } = createEngine(stage);
     engine.dismissDialogue();

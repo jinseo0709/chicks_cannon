@@ -695,6 +695,16 @@ export class GameCanvasRenderer {
       gradient.addColorStop(0.55, '#469bb8');
       gradient.addColorStop(0.82, '#d8fbf2');
       gradient.addColorStop(1, config.stroke);
+    } else if (material === 'steel') {
+      gradient.addColorStop(0, '#e9f3f2');
+      gradient.addColorStop(0.22, '#b2c2c8');
+      gradient.addColorStop(0.5, '#687e8c');
+      gradient.addColorStop(0.78, '#aab9bf');
+      gradient.addColorStop(1, '#435561');
+    } else if (material === 'rubber') {
+      gradient.addColorStop(0, '#f59aaa');
+      gradient.addColorStop(0.45, '#cb5b72');
+      gradient.addColorStop(1, '#6b2944');
     } else {
       gradient.addColorStop(0, config.fill);
       gradient.addColorStop(1, config.stroke);
@@ -776,6 +786,30 @@ export class GameCanvasRenderer {
         }
       }
       ctx.restore();
+    } else if (material === 'steel') {
+      ctx.strokeStyle = 'rgba(247, 255, 255, .72)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-width * 0.35, -height * 0.2);
+      ctx.lineTo(width * 0.35, -height * 0.2);
+      ctx.moveTo(-width * 0.35, height * 0.2);
+      ctx.lineTo(width * 0.35, height * 0.2);
+      ctx.stroke();
+      for (const x of [-width * 0.38, width * 0.38]) {
+        ctx.fillStyle = '#263b49';
+        ctx.beginPath();
+        ctx.arc(x, 0, Math.max(2, Math.min(4, height * 0.12)), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (material === 'rubber') {
+      ctx.strokeStyle = 'rgba(255, 217, 225, .62)';
+      ctx.lineWidth = Math.max(2, Math.min(5, width * 0.08));
+      for (const x of [-width * 0.25, 0, width * 0.25]) {
+        ctx.beginPath();
+        ctx.moveTo(x - 5, -height * 0.38);
+        ctx.lineTo(x + 5, height * 0.38);
+        ctx.stroke();
+      }
     } else if (material === 'glass') {
       ctx.fillStyle = 'rgba(255,255,255,.48)';
       ctx.fillRect(-width / 2 + 4, -height / 2 + 4, Math.max(2, width * 0.18), height - 8);
@@ -875,6 +909,36 @@ export class GameCanvasRenderer {
         ctx.lineTo(x, y + dy);
         ctx.stroke();
       }
+    } else if (entity.material === 'steel') {
+      ctx.strokeStyle = 'rgba(39, 54, 67, .88)';
+      ctx.lineWidth = Math.max(2, Math.min(4, width * 0.035));
+      ctx.beginPath();
+      ctx.moveTo(-halfWidth * 0.45, -halfHeight * 0.2);
+      ctx.lineTo(-halfWidth * 0.12, -halfHeight * 0.05);
+      ctx.lineTo(halfWidth * 0.05, halfHeight * 0.18);
+      ctx.lineTo(halfWidth * 0.42, halfHeight * 0.1);
+      if (tier >= 2) {
+        ctx.moveTo(-halfWidth * 0.12, -halfHeight * 0.05);
+        ctx.lineTo(-halfWidth * 0.3, halfHeight * 0.36);
+        ctx.lineTo(halfWidth * 0.05, halfHeight * 0.18);
+      }
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(226, 241, 242, .9)';
+      ctx.beginPath();
+      ctx.ellipse(halfWidth * 0.08, -halfHeight * 0.02, halfWidth * 0.18 * tier, halfHeight * 0.11 * tier, -0.25, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (entity.material === 'rubber') {
+      ctx.strokeStyle = 'rgba(74, 25, 48, .86)';
+      ctx.lineWidth = Math.max(2, Math.min(4, width * 0.04));
+      ctx.beginPath();
+      ctx.moveTo(-halfWidth * 0.45, -halfHeight * 0.12);
+      ctx.quadraticCurveTo(-halfWidth * 0.08, -halfHeight * 0.38, halfWidth * 0.1, 0);
+      ctx.lineTo(halfWidth * 0.42, halfHeight * 0.28);
+      if (tier >= 2) {
+        ctx.moveTo(halfWidth * 0.1, 0);
+        ctx.lineTo(-halfWidth * 0.05, halfHeight * 0.42);
+      }
+      ctx.stroke();
     }
     ctx.restore();
   }

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100">
+  <defs>
+    <linearGradient id="steel" x2="1" y2="1"><stop stop-color="#edf7f4"/><stop offset=".28" stop-color="#9eafb9"/><stop offset=".55" stop-color="#536b7a"/><stop offset=".78" stop-color="#bdc9cc"/><stop offset="1" stop-color="#354958"/></linearGradient>
+    <linearGradient id="face" x2="0" y2="1"><stop stop-color="#dce7e6"/><stop offset="1" stop-color="#718590"/></linearGradient>
+  </defs>
+  <path d="M11 19 31 8h117l-15 12z" fill="#f4fbf8" stroke="#344854" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M31 20h102v58H31z" fill="url(#steel)" stroke="#344854" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M19 29 31 20v58L19 69z" fill="#526c7b" stroke="#344854" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M42 31h80M42 67h80" stroke="#e9f4f1" stroke-width="4" opacity=".75"/>
+  <g fill="url(#face)" stroke="#304550" stroke-width="3"><circle cx="43" cy="31" r="5"/><circle cx="121" cy="31" r="5"/><circle cx="43" cy="67" r="5"/><circle cx="121" cy="67" r="5"/></g>
+  <path d="m20 70 11 8h102l15-9v10l-15 10H31L19 80z" fill="#647b87" stroke="#344854" stroke-width="4" stroke-linejoin="round"/>
+</svg>

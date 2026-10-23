@@ -16,7 +16,7 @@ export type GameState =
   | 'EVOLUTION'
   | 'ENDING';
 
-export type BlockKind = 'wood' | 'stone' | 'glass' | 'tnt';
+export type BlockKind = 'wood' | 'stone' | 'glass' | 'steel' | 'rubber' | 'tnt';
 export type GimmickKind = 'fan' | 'trampoline' | 'boulder' | 'shutter' | 'tire' | 'gear' | 'chandelier';
 export type ItemKind = 'booster' | 'quake' | 'mega' | 'butter';
 

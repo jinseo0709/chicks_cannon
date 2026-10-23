@@ -15,6 +15,8 @@ export type AssetId =
   | 'block-wood'
   | 'block-stone'
   | 'block-glass'
+  | 'block-steel'
+  | 'block-rubber'
   | 'block-tnt'
   | 'tire'
   | 'gear'
@@ -43,6 +45,8 @@ const assetPaths: Record<AssetId, string> = {
   'block-wood': '/assets/props/wood.png',
   'block-stone': '/assets/props/stone.png',
   'block-glass': '/assets/props/glass.png',
+  'block-steel': '/assets/props/steel.svg',
+  'block-rubber': '/assets/props/rubber.svg',
   'block-tnt': '/assets/props/tnt.png',
   tire: '/assets/props/tire.png',
   gear: '/assets/props/gear.png',
@@ -119,6 +123,8 @@ export const stageAssetIds = (stage: GameStage): readonly AssetId[] => [
   'block-wood',
   'block-stone',
   'block-glass',
+  'block-steel',
+  'block-rubber',
   'block-tnt',
   'tire',
   'gear',

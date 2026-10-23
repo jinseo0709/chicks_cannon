@@ -88,10 +88,12 @@ export const CHICK_FORMS = Object.fromEntries(STAGE_ORDER.map((stage) => [
 ])) as Readonly<Record<GameStage, ChickForm>>;
 
 export const BLOCK_CONFIG: Readonly<
-  Record<BlockKind, { fill: string; stroke: string; hp: number; density: number }>
+  Record<BlockKind, { fill: string; stroke: string; hp: number; density: number; friction?: number; restitution?: number }>
 > = {
   wood: { fill: '#ee963d', stroke: '#754226', hp: 32, density: 0.003 },
   stone: { fill: '#469bb8', stroke: '#164e68', hp: 75, density: 0.007 },
   glass: { fill: '#68d9e5', stroke: '#117d9b', hp: 12, density: 0.0018 },
+  steel: { fill: '#95a6b6', stroke: '#354655', hp: 150, density: 0.012, friction: 0.72, restitution: 0.08 },
+  rubber: { fill: '#cb5b72', stroke: '#6b2944', hp: 28, density: 0.0024, friction: 0.82, restitution: 0.78 },
   tnt: { fill: '#f04455', stroke: '#8c2637', hp: 18, density: 0.0018 },
 };

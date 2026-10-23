@@ -38,7 +38,7 @@ describe('SvgAssetCache', () => {
   it('preloads the chapter scene and all character/prop artwork', () => {
     expect(stageAssetIds(4)).toEqual([
       'background-4', 'chick-2', 'chick-1-blink', 'cat-normal', 'cat-shield', 'cat-boss', 'nest', 'slingshot', 'egg',
-      'block-wood', 'block-stone', 'block-glass', 'block-tnt', 'tire', 'gear', 'fan', 'shutter', 'chandelier',
+      'block-wood', 'block-stone', 'block-glass', 'block-steel', 'block-rubber', 'block-tnt', 'tire', 'gear', 'fan', 'shutter', 'chandelier',
     ]);
   });
 

@@ -109,11 +109,13 @@ describe('GameCanvasRenderer', () => {
     expect(BLOCK_CONFIG.wood).toMatchObject({ hp: 32, density: 0.003 });
     expect(BLOCK_CONFIG.stone).toMatchObject({ hp: 75, density: 0.007 });
     expect(BLOCK_CONFIG.glass).toMatchObject({ hp: 12, density: 0.0018 });
+    expect(BLOCK_CONFIG.steel).toMatchObject({ hp: 150, density: 0.012, restitution: 0.08 });
+    expect(BLOCK_CONFIG.rubber).toMatchObject({ hp: 28, density: 0.0024, restitution: 0.78 });
     expect(BLOCK_CONFIG.tnt).toMatchObject({ hp: 18, density: 0.0018 });
     renderer.dispose();
   });
 
-  it.each(['wood', 'glass', 'stone'] as const)('draws deterministic progressive damage for %s blocks only below full health', (material) => {
+  it.each(['wood', 'glass', 'stone', 'steel', 'rubber'] as const)('draws deterministic progressive damage for %s blocks only below full health', (material) => {
     const canvas = document.createElement('canvas');
     const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
     renderer.resize(1280, 720, 1);

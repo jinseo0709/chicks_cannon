@@ -467,8 +467,8 @@ export class ChickCannonEngine {
       const height = positive(spec.h, 20);
       body = Bodies.rectangle(spec.x, spec.y, width, height, {
         density: config.density,
-        friction: 0.6,
-        restitution: 0.1,
+        friction: config.friction ?? 0.6,
+        restitution: config.restitution ?? 0.1,
         label: material === 'tnt' ? 'tnt' : 'block',
       }) as GameBody;
       customData = {
