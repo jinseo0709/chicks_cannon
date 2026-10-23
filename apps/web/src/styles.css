@@ -703,19 +703,17 @@ h2 {
   top: 16px;
   left: 16px;
   right: 16px;
-  display: grid;
-  grid-template-columns: minmax(120px, 0.85fr) minmax(190px, 1.15fr) auto minmax(310px, 1.7fr) auto;
-  grid-template-areas: "chapter score ammo items actions";
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: clamp(4px, 0.55vw, 10px);
   pointer-events: none;
 }
 
-.chapter-card { grid-area: chapter; min-width: 0; }
+.chapter-card { flex: 0 1 16%; min-width: 0; }
 .chapter-card strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .score-card {
   position: relative;
-  grid-area: score;
+  flex: 0 1 23%;
   min-width: 0;
   gap: 0.16rem;
   overflow: hidden;
@@ -769,7 +767,8 @@ h2 {
 }
 
 .ammo-card {
-  grid-area: ammo;
+  flex: 0 1 15%;
+  min-width: 0;
   text-align: center;
 }
 
@@ -804,7 +803,6 @@ h2 {
 }
 
 .hud-actions {
-  grid-area: actions;
   display: flex;
   flex: 0 0 auto;
   align-items: center;
@@ -857,14 +855,14 @@ h2 {
 }
 
 #item-bar {
-  grid-area: items;
+  flex: 0 1 39%;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: nowrap;
   min-width: 0;
   gap: 5px;
-  width: 100%;
+  width: auto;
   pointer-events: none;
 }
 
@@ -875,7 +873,8 @@ h2 {
   align-items: center;
   gap: 0.28rem;
   min-height: 2.2rem;
-  flex: 0 1 auto;
+  flex: 1 1 0;
+  min-width: 0;
   white-space: nowrap;
   padding: 0.2rem 0.4rem;
   color: #493b2a;
@@ -1392,37 +1391,40 @@ h2 {
 }
 
 @media (min-width: 561px) and (max-width: 760px) {
-  #top-bar {
-    grid-template-columns: minmax(68px, 0.75fr) minmax(105px, 1fr) auto minmax(180px, 1.7fr) auto;
-    grid-template-areas: "chapter score ammo items actions";
-    gap: 5px;
-  }
+  #top-bar { gap: 4px; }
+}
+
+@media (max-width: 1320px) {
+  .item-label { display: none; }
 }
 
 @media (max-width: 760px) {
   #item-bar { gap: 3px; }
-  .item-button { flex: 1 1 0; min-width: 32px; min-height: 34px; justify-content: center; padding: 3px; gap: 0; }
+  .item-button { min-width: 27px; min-height: 32px; justify-content: center; padding: 3px; gap: 0; }
   .item-label { display: none; }
   .item-button span:first-child { font-size: 1rem; }
   .item-button b { position: absolute; top: -4px; right: -3px; min-width: 16px; height: 16px; font-size: 10px; }
 }
 
 @media (max-width: 560px) {
-  #top-bar { top: 6px; left: 4px; right: 4px; grid-template-columns: 42px minmax(48px, auto) minmax(40px, auto) minmax(142px, 1fr) auto; grid-template-areas: "chapter score ammo items actions"; align-items: center; gap: 3px; }
-  .chapter-card { min-width: 0; padding: 0.25rem; }
+  #top-bar { top: 6px; left: 4px; right: 4px; gap: 2px; }
+  .chapter-card { flex: 0 1 28px; min-width: 0; padding: 0.2rem; }
   .chapter-card strong, .chapter-card .hud-kicker { display: none; }
-  .score-card { min-width: 0; padding: 0.25rem; }
+  .score-card { flex: 0 1 38px; min-width: 0; padding: 0.2rem; }
   .score-card .hud-kicker, .score-target-label, .score-target-track, .campaign-score { display: none; }
   .stage-score-value { font-size: 0.75rem; }
   .hud-card { padding: 0.28rem 0.32rem; border-width: 1px; }
-  .ammo-card { min-width: 0; flex: 0 1 auto; }
+  .ammo-card { flex: 0 1 38px; min-width: 0; }
   .ammo-card .hud-kicker { display: none; }
   .ammo-dot, .ammo-dot.spent { font-size: 0.72rem; }
   .ammo-dot img { width: 0.95rem; height: 0.95rem; }
   .ammo-dots { gap: 0; }
   .ammo-empty { display: none; }
-  .hud-actions { gap: 2px; }
-  .icon-button { width: 26px; height: 26px; min-width: 26px; min-height: 26px; padding: 0; font-size: 0.72rem; }
+  #item-bar { flex: 1 1 120px; }
+  .item-button { min-width: 20px; min-height: 28px; }
+  .item-button b { min-width: 13px; height: 13px; font-size: 9px; }
+  .hud-actions { gap: 1px; }
+  .icon-button { width: 23px; height: 23px; min-width: 23px; min-height: 23px; padding: 0; font-size: 0.68rem; }
   .clear-card { width: min(100%, 34rem); }
   .clear-copy p:not(.clear-result) { display: none; }
   .targeting-hint { top: 90px; font-size: 0.7rem; }

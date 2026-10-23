@@ -57,13 +57,6 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
           </div>
           {snapshot.ammo === 0 && <span className="ammo-empty">탄환을 모두 썼어요</span>}
         </div>
-        <div className="hud-actions">
-          <button className={`icon-button ui-icon-button ${snapshot.muted ? 'ui-icon-muted' : 'ui-icon-sound'}`}
-            onClick={onMute} disabled={!active} aria-label={snapshot.muted ? '소리 켜기' : '소리 끄기'} />
-          <button className={`icon-button ui-icon-button ${snapshot.state === 'PAUSED' ? 'ui-icon-play' : 'ui-icon-pause'}`}
-            onClick={onTogglePause} disabled={!active} aria-label={snapshot.state === 'PAUSED' ? '계속하기' : '일시정지'} />
-          <button className="icon-button ui-icon-button ui-icon-restart" onClick={onRestart} disabled={!active} aria-label="현재 챕터 다시 시작" />
-        </div>
         <div id="item-bar" className="item-tray" aria-label="사용 아이템">
           {items.map(({ kind, available }) => {
             const item = ITEM_INFO[kind];
@@ -78,6 +71,13 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
               <span aria-hidden="true">{item.icon}</span><span className="item-label">{item.label}</span><b>{snapshot.items[kind]}</b>
             </button>;
           })}
+        </div>
+        <div className="hud-actions">
+          <button className={`icon-button ui-icon-button ${snapshot.muted ? 'ui-icon-muted' : 'ui-icon-sound'}`}
+            onClick={onMute} disabled={!active} aria-label={snapshot.muted ? '소리 켜기' : '소리 끄기'} />
+          <button className={`icon-button ui-icon-button ${snapshot.state === 'PAUSED' ? 'ui-icon-play' : 'ui-icon-pause'}`}
+            onClick={onTogglePause} disabled={!active} aria-label={snapshot.state === 'PAUSED' ? '계속하기' : '일시정지'} />
+          <button className="icon-button ui-icon-button ui-icon-restart" onClick={onRestart} disabled={!active} aria-label="현재 챕터 다시 시작" />
         </div>
       </div>
     </div>
