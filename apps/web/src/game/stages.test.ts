@@ -14,12 +14,25 @@ describe('campaign stage data', () => {
 
   it('increases the block puzzle in the opening and final combo stages without reducing the existing ammo curve', () => {
     const blockCounts = STAGE_ORDER.map((stage) => STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block').length);
-    expect(blockCounts).toEqual([12, 14, 18, 10, 23, 25]);
+    expect(blockCounts).toEqual([12, 14, 18, 10, 23, 28]);
     expect(blockCounts[1]).toBeGreaterThan(blockCounts[0]);
     expect(blockCounts[2]).toBeGreaterThan(blockCounts[1]);
     expect(blockCounts[4]).toBeGreaterThan(blockCounts[2]);
     expect(blockCounts[5]).toBeGreaterThan(blockCounts[4]);
     expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([6, 6, 5, 5, 4, 5]);
+  });
+
+  it('uses a rising staircase, higher upper structure, and both new materials in later stages', () => {
+    const stairs = STAGES[3].spawns.filter((spawn) => spawn.kind === 'block' && [580, 645, 710].includes(spawn.x));
+    expect(stairs.filter((spawn) => spawn.w === 24).map((spawn) => spawn.y)).toEqual([620, 570, 520]);
+    expect(stairs.filter((spawn) => spawn.h === 24).map((spawn) => spawn.y)).toEqual([558, 458, 358]);
+    const highestStageSixBlock = Math.min(...STAGES[6].spawns.filter((spawn) => spawn.kind === 'block').map((spawn) => spawn.y - (spawn.h ?? 0) / 2));
+    expect(highestStageSixBlock).toBe(212);
+    for (const stage of [3, 4, 5, 6] as const) {
+      const materials = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block').map((spawn) => spawn.material);
+      expect(materials).toContain('steel');
+      expect(materials).toContain('rubber');
+    }
   });
 
   it('keeps all required special objects and protected targets in the campaign', () => {
