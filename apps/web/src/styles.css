@@ -877,8 +877,6 @@ h2 {
   box-shadow: 0 4px 0 #a97e50, 0 0.5rem 1.2rem rgb(42 53 59 / 22%);
 }
 
-.game-hud #item-bar { display: none; }
-
 .item-button {
   position: relative;
   pointer-events: auto;
