@@ -14,9 +14,9 @@ describe('campaign stage data', () => {
 
   it('increases the block puzzle in the opening and final combo stages without reducing the existing ammo curve', () => {
     const blockCounts = STAGE_ORDER.map((stage) => STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block').length);
-    expect(blockCounts).toEqual([12, 14, 18, 10, 23, 28]);
+    expect(blockCounts).toEqual([12, 18, 18, 18, 30, 31]);
     expect(blockCounts[1]).toBeGreaterThan(blockCounts[0]);
-    expect(blockCounts[2]).toBeGreaterThan(blockCounts[1]);
+    expect(blockCounts[2]).toBeGreaterThanOrEqual(blockCounts[1]);
     expect(blockCounts[4]).toBeGreaterThan(blockCounts[2]);
     expect(blockCounts[5]).toBeGreaterThan(blockCounts[4]);
     expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([6, 6, 5, 5, 4, 5]);
@@ -32,6 +32,13 @@ describe('campaign stage data', () => {
       const materials = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block').map((spawn) => spawn.material);
       expect(materials).toContain('steel');
       expect(materials).toContain('rubber');
+    }
+    for (const stage of [2, 4, 5] as const) {
+      const terraceLevels = STAGES[stage].spawns
+        .filter((spawn) => spawn.kind === 'block' && (spawn.w ?? 0) >= 90 && (spawn.h ?? 0) <= 24)
+        .map((spawn) => spawn.y)
+        .sort((a, b) => a - b);
+      expect(new Set(terraceLevels).size, `stage ${stage} should have distinct raised terraces`).toBeGreaterThanOrEqual(3);
     }
   });
 

@@ -36,8 +36,11 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       block(825, 558, 174, 22, 'wood'), cat(790, 523, 24), cat(860, 523, 25, 1),
       block(790, 510, 24, 74, 'wood'), block(860, 510, 24, 74, 'stone'),
       block(825, 466, 112, 20, 'glass'), cat(825, 432, 24, 1),
-      block(700, 646, 62, 48, 'stone'), block(678, 605, 18, 46, 'wood'),
-      block(722, 605, 18, 46, 'glass'), block(700, 575, 78, 16, 'wood'),
+      // Three connected terraces rise into the main shield fort.
+      block(560, 620, 24, 100, 'stone'), block(560, 558, 120, 20, 'wood'), cat(560, 524, 22),
+      block(630, 570, 24, 200, 'steel'), block(630, 458, 120, 22, 'rubber'),
+      block(700, 520, 24, 300, 'stone'), block(700, 358, 120, 22, 'wood'), cat(700, 322, 23, 1),
+      block(595, 484, 18, 76, 'glass'), block(665, 414, 18, 88, 'wood'),
       block(965, 620, 28, 100, 'wood'), block(1105, 620, 28, 100, 'stone'),
       block(1035, 558, 184, 22, 'wood'), cat(1000, 523, 24), cat(1070, 523, 24, 1),
       block(1035, 514, 72, 58, 'glass'),
@@ -85,6 +88,11 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       block(1040, 620, 28, 100, 'stone'), block(1140, 620, 28, 100, 'wood'),
       block(1090, 558, 140, 22, 'rubber'), cat(1090, 522, 25, 1),
       block(1090, 508, 60, 76, 'glass'),
+      // A staggered side tower gives the timed shutter a clear route into the fort.
+      block(1190, 620, 24, 100, 'steel'), block(1190, 558, 92, 20, 'wood'),
+      block(1240, 570, 22, 200, 'stone'), block(1240, 458, 94, 22, 'rubber'),
+      block(1290, 520, 24, 300, 'wood'), block(1290, 358, 100, 22, 'steel'),
+      block(1215, 494, 16, 72, 'glass'), block(1265, 424, 16, 72, 'wood'),
     ],
   },
   5: {
@@ -108,6 +116,11 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       block(1095, 558, 178, 24, 'stone'), cat(1060, 520, 24, 2), cat(1130, 520, 24),
       block(1060, 505, 26, 82, 'wood'), block(1130, 505, 26, 82, 'wood'),
       block(1095, 456, 120, 20, 'stone'), block(1095, 424, 44, 44, 'tnt'),
+      // Offset decks and cross braces make the late TNT route a stepped, interlocked fort.
+      block(1190, 620, 26, 100, 'steel'), block(1190, 558, 110, 22, 'stone'), cat(1190, 522, 24, 1),
+      block(1245, 570, 24, 200, 'wood'), block(1245, 458, 112, 22, 'rubber'),
+      block(1300, 520, 28, 300, 'stone'), block(1300, 358, 118, 24, 'steel'),
+      block(1270, 334, 72, 18, 'tnt'),
     ],
   },
   6: {
@@ -130,6 +143,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       block(965, 448, 200, 24, 'stone'), block(910, 398, 26, 76, 'steel'),
       block(1020, 398, 26, 76, 'wood'), block(965, 348, 140, 24, 'steel'),
       block(880, 286, 26, 100, 'steel'), block(1050, 286, 26, 100, 'steel'),
+      block(965, 318, 176, 20, 'wood'), block(965, 286, 190, 20, 'rubber'),
+      block(965, 254, 150, 18, 'glass'),
       block(965, 224, 230, 24, 'rubber'),
       block(620, 646, 44, 48, 'stone'), block(620, 610, 60, 18, 'wood'),
       block(680, 646, 44, 48, 'stone'), block(680, 610, 60, 18, 'glass'),

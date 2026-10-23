@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Body, Bodies, Composite, Events } from 'matter-js';
+import { Body, Bodies, Composite, Events, Sleeping } from 'matter-js';
 import { ChickCannonEngine } from './engine';
 import { STAGES } from './stages';
 import { CHICK_FORMS, STAGE_ORDER } from './constants';
@@ -56,20 +56,27 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().stageScore).toBe(0);
   });
 
-  it('releases cats to fall when the chick hits a structure', () => {
+  it('drops a cat when the chick destroys the block supporting it', () => {
     const { engine, harness } = createEngine();
     Composite.clear(harness.engine.world, false, true);
     harness.bodies.clear();
     harness.engine.gravity.y = 1.05;
-    harness.spawn({ kind: 'cat', x: 900, y: 300 });
+    harness.spawn({ kind: 'cat', x: 900, y: 290, radius: 22 });
     const cat = [...harness.bodies.values()][0];
-    harness.spawn({ kind: 'block', material: 'stone', x: 850, y: 300, w: 24, h: 20 });
+    harness.spawn({ kind: 'block', material: 'wood', x: 900, y: 312, w: 100, h: 20 });
     const obstacle = [...harness.bodies.values()][1];
-    const chick = Bodies.circle(820, 300, 12, { label: 'chick' }) as TestBody;
+    obstacle.customData!.hp = 1;
+    Sleeping.set(cat, true);
+    expect(cat.isSleeping).toBe(true);
+    const chick = Bodies.circle(820, 312, 12, { label: 'chick' }) as TestBody;
+    Body.setVelocity(chick, { x: 10, y: 0 });
     Composite.add(harness.engine.world, chick);
     const startY = cat.position.y;
     Events.trigger(harness.engine, 'collisionStart', { pairs: [{ bodyA: chick, bodyB: obstacle, collision: { supports: [] } }] });
+    expect(obstacle.customData?.alive).toBe(false);
+    expect(harness.bodies.has(obstacle.id)).toBe(false);
     expect(cat.isStatic).toBe(false);
+    expect(cat.isSleeping).toBe(false);
     for (let frame = 0; frame < 10; frame += 1) engine.step(16.667);
     expect(cat.position.y).toBeGreaterThan(startY);
   });

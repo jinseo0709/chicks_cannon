@@ -6,6 +6,7 @@ import {
   Engine,
   Events,
   Query,
+  Sleeping,
   type IEventCollision,
 } from 'matter-js';
 import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
@@ -737,7 +738,9 @@ export class ChickCannonEngine {
     if (this.catsReleased) return;
     this.catsReleased = true;
     for (const body of this.bodies.values()) {
-      if (body.label === 'enemy' && body.isStatic) Body.setStatic(body, false);
+      if (body.label !== 'enemy' || !body.isStatic) continue;
+      Body.setStatic(body, false);
+      Sleeping.set(body, false);
     }
   }
 

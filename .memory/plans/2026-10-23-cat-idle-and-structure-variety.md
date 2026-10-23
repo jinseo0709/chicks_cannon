@@ -21,6 +21,12 @@
 - 검증: `npm.cmd test --workspace @chicks-cannon/web -- stages.test.ts` 및 `npm.cmd run build`
 - 커밋: `레벨: 계단형 고층 구조물과 재질 조합 확장`
 
+### T04 고양이 낙하와 요새 실루엣 개선
+- 잠든 고양이의 수면 상태까지 해제하고, 병아리가 실제 받침 블록을 파괴하면 고양이가 떨어지는 검증을 추가한다.
+- 2·4·5단계에 연결된 계단형 보조 요새를 더하고 6단계에는 교차 받침을 추가해 구조 실루엣을 복잡하게 만든다.
+- 검증: `npm.cmd test --workspace @chicks-cannon/web -- engine.test.ts stages.test.ts` 및 `npm.cmd run build`
+- 커밋: `물리·레벨: 받침 파괴 시 고양이 낙하와 요새 구조 개편`
+
 ## 실행 규칙
 - 각 Task 검증 통과 후 한국어 커밋을 만들고 다음 Task로 진행한다.
 - 검증 실패를 해결할 수 없으면 그 Task에서 멈추고 결과를 보고한다.
