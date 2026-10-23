@@ -454,23 +454,64 @@ export class GameCanvasRenderer {
     ctx.save();
     const strength = Math.min(1, distance / WORLD.maxDrag);
     const maxFrame = 42 + Math.round(strength * 54);
-    const step = strength > 0.72 ? 4 : 5;
-    ctx.fillStyle = '#fff5b5';
-    ctx.strokeStyle = '#6c4027';
-    ctx.lineWidth = 2;
-    ctx.shadowColor = 'rgba(255,255,255,.95)';
-    ctx.shadowBlur = 8;
-    for (let frame = 3; frame <= maxFrame; frame += step) {
-      const point = ctxPoint({
+    const trajectory: Point[] = [];
+    for (let frame = 0; frame <= maxFrame; frame += 1) {
+      const point = {
         x: WORLD.cannon.x + vx * frame,
         y: WORLD.cannon.y + vy * frame + 0.145 * WORLD.gravityY * frame * frame,
-      });
+      };
       if (point.x < 0 || point.x > WORLD.width || point.y > WORLD.height || point.y < 0) break;
+      trajectory.push(point);
+    }
+    const end = trajectory[trajectory.length - 1];
+    if (trajectory.length < 2 || !end) {
+      ctx.restore();
+      return;
+    }
+
+    // Draw a soft shadow, a warm glow, and a bright core along the physics prediction.
+    ctx.beginPath();
+    trajectory.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(73, 43, 29, .78)';
+    ctx.lineWidth = 9;
+    ctx.shadowColor = 'rgba(255, 187, 76, .95)';
+    ctx.shadowBlur = 14;
+    ctx.stroke();
+    const ribbon = ctx.createLinearGradient(WORLD.cannon.x, WORLD.cannon.y, end.x, end.y);
+    ribbon.addColorStop(0, 'rgba(255, 255, 228, .95)');
+    ribbon.addColorStop(0.55, 'rgba(255, 214, 108, .94)');
+    ribbon.addColorStop(1, 'rgba(255, 130, 71, .2)');
+    ctx.strokeStyle = ribbon;
+    ctx.lineWidth = 4;
+    ctx.shadowColor = 'rgba(255, 247, 187, .95)';
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+
+    const step = strength > 0.72 ? 7 : 9;
+    ctx.shadowBlur = 5;
+    for (let frame = step; frame < trajectory.length; frame += step) {
+      const point = ctxPoint(trajectory[frame]);
       ctx.beginPath();
-      ctx.arc(point.x, point.y, Math.max(3.2, 6.5 - frame / 22), 0, Math.PI * 2);
+      ctx.arc(point.x, point.y, Math.max(2.6, 4.8 - frame / 34), 0, Math.PI * 2);
+      ctx.fillStyle = '#fff9d8';
+      ctx.strokeStyle = '#9a572f';
+      ctx.lineWidth = 1.5;
       ctx.fill();
       ctx.stroke();
     }
+    ctx.beginPath();
+    ctx.arc(end.x, end.y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 236, 167, .28)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(end.x, end.y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff6cc';
+    ctx.fill();
     ctx.restore();
   }
 
