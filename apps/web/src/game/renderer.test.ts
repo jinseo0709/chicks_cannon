@@ -77,6 +77,18 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
   });
 
+  it('uses the authored blink face for the baby chick', () => {
+    const image = document.createElement('img');
+    const assets = new SvgAssetCache();
+    const getAsset = vi.spyOn(assets, 'get').mockReturnValue(image);
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, assets);
+    renderer.resize(1280, 720, 1);
+    renderer.render(snapshot, 3800);
+    expect(getAsset).toHaveBeenCalledWith('chick-1-blink');
+    renderer.dispose();
+  });
+
   it('renders material texture and contact shadows for stage objects', () => {
     const canvas = document.createElement('canvas');
     const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());

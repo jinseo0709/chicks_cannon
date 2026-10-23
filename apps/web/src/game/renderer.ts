@@ -606,8 +606,8 @@ export class GameCanvasRenderer {
     const height = radius * scale;
     let id: Parameters<SvgAssetCache['get']>[0];
     const blinkPhase = (nowMs / 1000 + Math.abs(entity.id) * 0.37) % 4.2;
-    const blinking = entity.kind !== 'egg' && blinkPhase > 4.02;
-    if (entity.kind === 'chick') id = blinking && CHICK_FORMS[stage].assetVariant === 1 ? 'chick-1-blink' : `chick-${CHICK_FORMS[stage].assetVariant}`;
+    const blinking = entity.kind === 'chick' && CHICK_FORMS[stage].assetVariant === 1 && blinkPhase > 4.02;
+    if (entity.kind === 'chick') id = blinking ? 'chick-1-blink' : `chick-${CHICK_FORMS[stage].assetVariant}`;
     else if (entity.kind === 'egg') id = 'egg';
     else id = entity.boss ? 'cat-boss' : entity.shield ? 'cat-shield' : 'cat-normal';
     const image = this.assets.get(id);
@@ -620,16 +620,6 @@ export class GameCanvasRenderer {
     ctx.scale(1 / breathe, breathe);
     if (image) {
       ctx.drawImage(image, -width / 2, -height / 2, width, height);
-      if (blinking && id !== 'chick-1-blink' && entity.kind !== 'egg') {
-        ctx.strokeStyle = '#3a251c';
-        ctx.lineWidth = Math.max(2, width * 0.035);
-        ctx.lineCap = 'round';
-        for (const side of [-1, 1]) {
-          ctx.beginPath();
-          ctx.arc(side * width * 0.15, -height * 0.09, width * 0.07, 0.12 * Math.PI, 0.88 * Math.PI);
-          ctx.stroke();
-        }
-      }
     } else {
       ctx.fillStyle = entity.kind === 'chick' ? '#f4c84f' : entity.kind === 'egg' ? '#f8f3e6' : '#817a7d';
       ctx.strokeStyle = '#4b4039';

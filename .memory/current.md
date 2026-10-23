@@ -1,23 +1,16 @@
 # Current Context
 
 ## Active Plan
-[Gameplay Difficulty Curve](./plans/2026-10-22-gameplay-difficulty-curve.md)
+[클리어 이동, 깜빡임, 구조물 난이도](./plans/2026-10-23-clear-routing-eyebrow-and-obstacles.md)
 
 ## Active Phase
-[P01 Campaign Progression](./phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/phase.md)
+[P01 클리어 흐름과 게임 표현 개선](./phases/2026-10-23-clear-routing-eyebrow-and-obstacles/P01-clear-flow-and-gameplay/phase.md)
 
 ## Active Task
-[T05 Progress Persistence and Integration](./phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/T05-progress-persistence-and-integration.md) - done
+[T02 클리어 후 이동 선택](./phases/2026-10-23-clear-routing-eyebrow-and-obstacles/P01-clear-flow-and-gameplay/T02-clear-route-choice.md) - in progress
 
 ## Status
-- Gameplay Difficulty Curve is complete: 5/5 Tasks validated and committed.
-
-## Next Step (IMPORTANT)
-No remaining Tasks in the active plan. All implementation and validation work is complete.
+- 세 가지 요청을 순차 실행한다. 각 Task 검증 성공 후 한국어 커밋을 만들고 다음 Task로 진행한다.
 
 ## Decisions
-[Confirmed gameplay difficulty decisions](./decisions/2026-10-22-gameplay-difficulty-curve.md)
-
-## Out of Scope
-- Changing the leaderboard API contract or campaign-total ranking policy.
-- Replacing the existing game architecture or adding a separate tutorial screen.
+[확정한 개선 결정](./decisions/2026-10-23-clear-routing-eyebrow-and-obstacles.md)
