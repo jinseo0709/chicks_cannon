@@ -13,12 +13,15 @@ import { LeaderboardClient } from './leaderboard/client';
 import { getSafeBrowserStorage } from './leaderboard/identity';
 import { useChickCannon } from './game/use-chick-cannon';
 import type { GameStage } from './game/types';
-import { loadCampaignProgress, recordStageResult, saveCampaignProgress } from './game/progress';
+import { clearSavedCampaignProgress, createEmptyCampaignProgress, recordStageResult } from './game/progress';
 
 export function App(): JSX.Element {
   const [screen, setScreen] = useState<'opening' | 'home' | 'map' | 'game' | 'leaderboard'>('opening');
   const [leaderboardReturn, setLeaderboardReturn] = useState<'home' | 'map' | 'game'>('home');
-  const [progress, setProgress] = useState(() => loadCampaignProgress(getSafeBrowserStorage()));
+  const [progress, setProgress] = useState(() => {
+    clearSavedCampaignProgress(getSafeBrowserStorage());
+    return createEmptyCampaignProgress();
+  });
   const completedStages = progress.completedStages;
   const [leaderboardClient] = useState(() => new LeaderboardClient());
   const controller = useChickCannon();
@@ -33,11 +36,7 @@ export function App(): JSX.Element {
 
   useEffect(() => {
     if (controller.snapshot.state !== 'EVOLUTION' && controller.snapshot.state !== 'ENDING') return;
-    setProgress((current) => {
-      const next = recordStageResult(current, controller.snapshot.stage, controller.snapshot.stageStars || 1);
-      if (next !== current) saveCampaignProgress(next, getSafeBrowserStorage());
-      return next;
-    });
+    setProgress((current) => recordStageResult(current, controller.snapshot.stage, controller.snapshot.stageStars || 1));
   }, [controller.snapshot.stage, controller.snapshot.state]);
 
   const openStage = (stage: GameStage) => {

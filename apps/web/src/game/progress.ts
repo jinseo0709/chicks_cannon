@@ -9,60 +9,13 @@ export interface CampaignProgress {
 }
 
 const ALL_STAGES: readonly GameStage[] = [1, 2, 3, 4, 5, 6];
-const emptyProgress = (): CampaignProgress => ({ version: 2, completedStages: [], bestStars: {} });
+export const createEmptyCampaignProgress = (): CampaignProgress => ({ version: 2, completedStages: [], bestStars: {} });
 
-function normalizeStages(value: unknown): GameStage[] {
-  if (!Array.isArray(value)) return [];
-  return ALL_STAGES.filter((stage) => value.includes(stage));
-}
-
-function normalizeStars(value: unknown): CampaignProgress['bestStars'] {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
-  const source = value as Record<string, unknown>;
-  const result: CampaignProgress['bestStars'] = {};
-  for (const stage of ALL_STAGES) {
-    const stars = source[String(stage)];
-    if (typeof stars === 'number' && Number.isInteger(stars) && stars >= 1 && stars <= 3) result[stage] = stars as 1 | 2 | 3;
-  }
-  return result;
-}
-
-export function decodeCampaignProgress(serialized: string | null): CampaignProgress {
-  if (!serialized) return emptyProgress();
+export function clearSavedCampaignProgress(storage: Storage): void {
   try {
-    const parsed: unknown = JSON.parse(serialized);
-    if (Array.isArray(parsed)) return { version: 2, completedStages: normalizeStages(parsed), bestStars: {} };
-    if (!parsed || typeof parsed !== 'object') return emptyProgress();
-    const record = parsed as Record<string, unknown>;
-    return {
-      version: 2,
-      completedStages: normalizeStages(record.completedStages),
-      bestStars: normalizeStars(record.bestStars),
-    };
+    storage.removeItem(WORLD_PROGRESS_KEY);
   } catch {
-    return emptyProgress();
-  }
-}
-
-export function loadCampaignProgress(storage: Storage): CampaignProgress {
-  try {
-    const serialized = storage.getItem(WORLD_PROGRESS_KEY);
-    const progress = decodeCampaignProgress(serialized);
-    if (serialized) {
-      const parsed: unknown = JSON.parse(serialized);
-      if (Array.isArray(parsed)) saveCampaignProgress(progress, storage);
-    }
-    return progress;
-  } catch {
-    return emptyProgress();
-  }
-}
-
-export function saveCampaignProgress(progress: CampaignProgress, storage: Storage): void {
-  try {
-    storage.setItem(WORLD_PROGRESS_KEY, JSON.stringify(progress));
-  } catch {
-    // Keep the current session's progress in React state if storage is unavailable.
+    // Progress remains session-only even when browser storage is unavailable.
   }
 }
 

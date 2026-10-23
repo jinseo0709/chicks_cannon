@@ -13,24 +13,25 @@ afterEach(() => {
 });
 
 describe('App navigation and campaign entry', () => {
-  it('restores the best star rating on the world map after remounting', () => {
+  it('clears previously saved world-map stars and completion on app load', () => {
     localStorage.setItem('chicks-cannon-world-progress-v1', JSON.stringify({
       version: 2,
       completedStages: [1, 2],
       bestStars: { 1: 2, 2: 3 },
     }));
     const firstMount = render(<App />);
+    expect(localStorage.getItem('chicks-cannon-world-progress-v1')).toBeNull();
     fireEvent.click(firstMount.container.querySelector('.opening-screen button')!);
     fireEvent.click(firstMount.container.querySelector('.home-play-button')!);
-    expect(screen.getByRole('img', { name: 'Stage 1 best stars 2 of 3' })).toBeTruthy();
-    expect(screen.getByRole('img', { name: 'Stage 2 best stars 3 of 3' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Stage 1 best stars 0 of 3' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Stage 2 best stars 0 of 3' })).toBeTruthy();
     firstMount.unmount();
 
     const secondMount = render(<App />);
     fireEvent.click(secondMount.container.querySelector('.opening-screen button')!);
     fireEvent.click(secondMount.container.querySelector('.home-play-button')!);
-    expect(screen.getByRole('img', { name: 'Stage 1 best stars 2 of 3' })).toBeTruthy();
-    expect(screen.getByRole('img', { name: 'Stage 2 best stars 3 of 3' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Stage 1 best stars 0 of 3' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Stage 2 best stars 0 of 3' })).toBeTruthy();
   });
 
   it('renders the home title and starts a story-led game session', () => {
