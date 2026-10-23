@@ -448,18 +448,31 @@ export class GameCanvasRenderer {
     if (distance < WORLD.cancelDragRadius) return;
     const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * snapshot.form.launchPower * 1.2;
     const angle = Math.atan2(dy, dx);
-    const vx = Math.cos(angle) * power;
-    const vy = Math.sin(angle) * power;
+    let vx = Math.cos(angle) * power;
+    let vy = Math.sin(angle) * power;
+    let x = WORLD.cannon.x;
+    let y = WORLD.cannon.y;
     const ctxPoint = (point: Point) => point;
     ctx.save();
     const strength = Math.min(1, distance / WORLD.maxDrag);
     const maxFrame = 42 + Math.round(strength * 54);
     const trajectory: Point[] = [];
-    for (let frame = 0; frame <= maxFrame; frame += 0.65) {
-      const point = {
-        x: WORLD.cannon.x + vx * frame,
-        y: WORLD.cannon.y + vy * frame + 0.145 * WORLD.gravityY * frame * frame,
-      };
+    const frameStep = 0.65;
+    const deltaTimeSquared = (1000 / 60) ** 2;
+    const megaScale = snapshot.megaNext ? 1.8 : 1;
+    const mass = Math.PI * (snapshot.form.radius * megaScale) ** 2 * snapshot.form.density * (snapshot.megaNext ? 3.5 : 1);
+    const fans = STAGES[snapshot.stage].spawns.filter((spawn) => spawn.kind === 'fan');
+    for (let frame = 0; frame <= maxFrame; frame += frameStep) {
+      for (const fan of fans) {
+        const withinFan = Math.abs(x - fan.x) <= (fan.w ?? 0) / 2 && Math.abs(y - fan.y) <= (fan.h ?? 0) / 2;
+        if (!withinFan) continue;
+        vx += (fan.forceX ?? 0) / mass * deltaTimeSquared * frameStep;
+        vy += (fan.forceY ?? 0) / mass * deltaTimeSquared * frameStep;
+      }
+      vy += 0.001 * WORLD.gravityY * deltaTimeSquared * frameStep;
+      x += vx * frameStep;
+      y += vy * frameStep;
+      const point = { x, y };
       if (point.x < 0 || point.x > WORLD.width || point.y > WORLD.height || point.y < 0) break;
       trajectory.push(point);
     }

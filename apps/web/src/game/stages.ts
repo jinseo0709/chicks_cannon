@@ -66,7 +66,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       instruction: '\uC120\uD48D\uAE30 \uBC14\uB78C\uC744 \uD0C0\uBA74 \uBCD1\uC544\uB9AC\uC758 \uAD34\uC801\uC774 \uBC14\uB00C\uC5B4\uC694.',
     },
     spawns: [
-      { kind: 'fan', x: 490, y: 420, w: 220, h: 460, forceX: 0.003, forceY: -0.04 },
+      { kind: 'fan', x: 490, y: 420, w: 220, h: 460, forceX: 0.001, forceY: -0.012 },
       block(780, 620, 28, 100, 'stone'), block(920, 620, 28, 100, 'wood'),
       block(850, 558, 190, 22, 'stone'), cat(805, 522, 24), cat(890, 522, 24, 1),
       block(805, 505, 24, 84, 'glass'), block(890, 505, 24, 84, 'wood'),
@@ -155,7 +155,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       instruction: '\uC120\uD48D\uAE30\uC640 TNT\uB97C \uD65C\uC6A9\uD574 \uBCF4\uC2A4 \uC694\uC0C8\uB97C \uBB34\uB108\uB728\uB9AC\uC138\uC694.',
     },
     spawns: [
-      { kind: 'fan', x: 450, y: 425, w: 200, h: 450, forceX: 0.002, forceY: -0.032 },
+      { kind: 'fan', x: 450, y: 425, w: 200, h: 450, forceX: 0.0008, forceY: -0.012 },
       { kind: 'gear', x: 540, y: 430, radius: 44, angularSpeed: -0.025 },
       { kind: 'tire', x: 590, y: 630, radius: 40 },
       { kind: 'shutter', x: 660, y: 400, w: 26, h: 150, minY: 310, maxY: 490, speed: 2.4 },
