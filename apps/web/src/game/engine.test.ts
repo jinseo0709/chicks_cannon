@@ -111,6 +111,7 @@ describe('ChickCannonEngine', () => {
     expect(harness.bodies.has(obstacle.id)).toBe(false);
     expect(cat.isStatic).toBe(false);
     expect(cat.isSleeping).toBe(false);
+    expect(cat.velocity.y).toBeGreaterThan(0);
     for (let frame = 0; frame < 10; frame += 1) engine.step(16.667);
     expect(cat.position.y).toBeGreaterThan(startY);
   });

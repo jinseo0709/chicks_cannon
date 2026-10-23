@@ -798,9 +798,26 @@ export class ChickCannonEngine {
     if (!data || data.alive === false || data.destroyed) return;
     data.destroyed = true;
     data.alive = false;
+    this.dropCatsSupportedBy(body);
     this.removeBody(body);
     if (body.label === 'tnt') this.explode(body.position.x, body.position.y, 230, 0.14);
     else this.awardScore(180, body.position.x, body.position.y, '파괴');
+  }
+
+  private dropCatsSupportedBy(block: GameBody): void {
+    const blockTop = block.position.y - (block.customData?.height ?? 20) / 2;
+    const halfWidth = (block.customData?.width ?? 20) / 2;
+    for (const cat of this.bodies.values()) {
+      if (cat.label !== 'enemy' || cat.customData?.alive === false) continue;
+      const radius = cat.customData?.radius ?? 22;
+      const catBottom = cat.position.y + radius;
+      const horizontalOverlap = Math.abs(cat.position.x - block.position.x) <= halfWidth + radius * 0.65;
+      const restingOnBlock = horizontalOverlap && Math.abs(catBottom - blockTop) <= radius * 0.6;
+      if (!restingOnBlock) continue;
+      if (cat.isStatic) Body.setStatic(cat, false);
+      Sleeping.set(cat, false);
+      Body.setVelocity(cat, { x: cat.velocity.x, y: Math.max(cat.velocity.y, 2.2) });
+    }
   }
 
   private explode(x: number, y: number, radius: number, forceMagnitude: number): void {
