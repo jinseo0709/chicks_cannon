@@ -56,6 +56,7 @@ export class GameCanvasRenderer {
     this.drawLoadedChick(snapshot, sceneTime);
     this.drawSlingshotBand(snapshot, true);
     snapshot.entities.forEach((entity) => this.drawEntity(entity, snapshot.stage, sceneTime));
+    if (snapshot.state === 'AIMING' && snapshot.ammo > 0) this.drawAttackRouteMarkers(snapshot.stage, sceneTime);
     this.drawScorePopups(snapshot.scorePopups ?? []);
     ctx.restore();
     ctx.restore();
@@ -466,6 +467,38 @@ export class GameCanvasRenderer {
       ctx.arc(point.x, point.y, Math.max(2.2, 5.6 - frame / 26), 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.restore();
+  }
+
+  private drawAttackRouteMarkers(stage: GameSnapshot['stage'], sceneTime: number): void {
+    const ctx = this.context;
+    const pulse = 0.82 + Math.sin(sceneTime / 260) * 0.08;
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    STAGES[stage].attackRoutes.forEach((route, index) => {
+      const markerY = route.target.y - 28;
+      ctx.strokeStyle = 'rgba(255, 246, 207, .9)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(route.target.x, markerY + 13);
+      ctx.lineTo(route.target.x, route.target.y - 7);
+      ctx.stroke();
+      ctx.fillStyle = index === 0 ? '#f3c35d' : '#8cc9b0';
+      ctx.strokeStyle = '#fff2cc';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = 'rgba(42, 30, 17, .55)';
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      ctx.arc(route.target.x, markerY, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#4a321d';
+      ctx.fillText(String(index + 1), route.target.x, markerY + 1);
+    });
     ctx.restore();
   }
 

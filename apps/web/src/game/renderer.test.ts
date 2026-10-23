@@ -77,6 +77,17 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
   });
 
+  it('shows two numbered attack route markers while aiming', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    renderer.render(snapshot, 100);
+    const labels = vi.mocked(context.fillText).mock.calls.map(([text]) => text);
+    expect(labels).toContain('1');
+    expect(labels).toContain('2');
+    renderer.dispose();
+  });
+
   it('uses the authored blink face for the baby chick', () => {
     const image = document.createElement('img');
     const assets = new SvgAssetCache();

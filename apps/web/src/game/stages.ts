@@ -8,6 +8,10 @@ const cat = (x: number, y: number, radius: number, shieldLayers = 0, boss = fals
 export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   1: {
     stage: 1, title: '골목길 입구', theme: 'alley-day', ammo: 6,
+    attackRoutes: [
+      { name: '낮은 목재 받침', hint: '왼쪽 받침을 끊어 아래층부터 무너뜨리기', target: { x: 785, y: 620 } },
+      { name: '오른쪽 유리 선반', hint: '높은 유리 선반을 깨서 위층을 떨어뜨리기', target: { x: 1050, y: 574 } },
+    ],
     story: {
       speaker: '골목대장 길고양이', avatar: '🐱',
       text: '이 둥지는 이제 내 낮잠 자리다냥!', chickReply: '둥지를 돌려줘 삐약!',
@@ -26,6 +30,10 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   },
   2: {
     stage: 2, title: '도둑고양이 담장', theme: 'wall-afternoon', ammo: 6,
+    attackRoutes: [
+      { name: '왼쪽 계단 탑', hint: '계단 탑을 타고 방패 뒤쪽을 노리기', target: { x: 630, y: 570 } },
+      { name: '요새 윗층', hint: '윗층 목재 받침을 끊어 방패 고양이에게 낙하시키기', target: { x: 700, y: 358 } },
+    ],
     story: {
       speaker: '담장 경비 고양이', avatar: '😼',
       text: '방패 고양이를 정면에서 뚫어 보라냥!', chickReply: '튕겨서 뒤쪽을 노릴 거야!',
@@ -48,6 +56,10 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   },
   3: {
     stage: 3, title: '바람 부는 고층 옥상', theme: 'rooftop-sunset', ammo: 5,
+    attackRoutes: [
+      { name: '선풍기 바람길', hint: '상승 바람으로 왼쪽 계단 위를 덮치기', target: { x: 470, y: 420 } },
+      { name: '오른쪽 목재 지지대', hint: '오른쪽 받침을 끊어 본채를 옆으로 무너뜨리기', target: { x: 985, y: 620 } },
+    ],
     story: {
       speaker: '옥상 바람잡이', avatar: '😺',
       text: '상승 바람을 읽을 수 있겠냥?', chickReply: '질풍 부스터로 바람을 타겠어!',
@@ -70,6 +82,10 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   },
   4: {
     stage: 4, title: '위험천만 시계탑', theme: 'clock-twilight', ammo: 5,
+    attackRoutes: [
+      { name: '움직이는 셔터', hint: '셔터가 열릴 때 안쪽 기둥을 직접 맞히기', target: { x: 750, y: 390 } },
+      { name: '오른쪽 계단 탑', hint: '높은 계단 탑을 무너뜨려 측면에서 덮치기', target: { x: 1240, y: 458 } },
+    ],
     story: {
       speaker: '시계탑 집사냥', avatar: '🕰️😼',
       text: '셔터가 움직이는 틈을 노려 보라냥!', chickReply: '달걀을 지키며 쇠사슬을 끊겠어!',
@@ -97,6 +113,10 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   },
   5: {
     stage: 5, title: '보스의 폐공장 벙커', theme: 'factory-night', ammo: 4,
+    attackRoutes: [
+      { name: '왼쪽 TNT 연쇄', hint: '낮은 폭약 두 개를 연쇄시켜 벙커를 흔들기', target: { x: 716, y: 646 } },
+      { name: '오른쪽 상단 TNT', hint: '높은 폭약을 떨어뜨려 위층부터 폭파하기', target: { x: 1270, y: 334 } },
+    ],
     story: {
       speaker: '벙커 방패대장', avatar: '🛡️😾',
       text: '두 겹 방패와 TNT 벙커다냥!', chickReply: '메테오 급강하로 빈틈을 열겠어!',
@@ -125,6 +145,10 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   },
   6: {
     stage: 6, title: '둥지 탈환 대축제', theme: 'meadow-gold', ammo: 5,
+    attackRoutes: [
+      { name: '왼쪽 TNT 다리', hint: '낮은 TNT 다리를 끊어 보스 요새를 흔들기', target: { x: 756, y: 646 } },
+      { name: '선풍기와 높은 받침', hint: '바람을 타고 높은 보스 받침을 직접 노리기', target: { x: 910, y: 398 } },
+    ],
     story: {
       speaker: '보스 고양이 킹냥이', avatar: '👑🐱',
       text: '세 겹 요새를 지키는 내가 마지막 상대다냥!', chickReply: '황금 깃털로 우리 둥지를 되찾겠어!',

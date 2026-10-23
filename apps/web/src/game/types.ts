@@ -66,11 +66,18 @@ export interface SpawnSpec {
   forceY?: number;
 }
 
+export interface AttackRoute {
+  name: string;
+  hint: string;
+  target: Point;
+}
+
 export interface StageDefinition {
   stage: GameStage;
   theme: SceneTheme;
   title: string;
   ammo: number;
+  attackRoutes: readonly [AttackRoute, AttackRoute];
   story: {
     speaker: string;
     avatar: string;

@@ -81,6 +81,14 @@ describe('campaign stage data', () => {
       expect(stage.story.chickReply.length).toBeGreaterThan(0);
       expect(stage.story.instruction.length).toBeGreaterThan(0);
       expect(stage.spawns.length).toBeGreaterThan(0);
+      expect(stage.attackRoutes).toHaveLength(2);
+      expect(new Set(stage.attackRoutes.map((route) => route.name)).size).toBe(2);
+      for (const route of stage.attackRoutes) {
+        expect(route.hint.length).toBeGreaterThan(0);
+        expect(Number.isFinite(route.target.x)).toBe(true);
+        expect(Number.isFinite(route.target.y)).toBe(true);
+        expect(stage.spawns.some((spawn) => Math.hypot(spawn.x - route.target.x, spawn.y - route.target.y) < 80)).toBe(true);
+      }
       for (const spawn of stage.spawns) {
         expect(Number.isFinite(spawn.x)).toBe(true);
         expect(Number.isFinite(spawn.y)).toBe(true);
