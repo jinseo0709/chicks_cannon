@@ -16,6 +16,7 @@ interface CampaignHarness {
   eggCushionActive: boolean;
   finalRewardClaimed: boolean;
   replayOnly: boolean;
+  bonusChallengeElapsedMs: number;
   engine: Matter.Engine;
   bodies: Map<number, TestBody>;
   activeChick: TestBody | null;
@@ -76,6 +77,43 @@ describe('ChickCannonEngine', () => {
     engine.pause();
     engine.step(33.333);
     expect(snapshot().bonusChallengeRemainingMs).toBe(afterTick);
+  });
+
+  it('fails the stage when the time limit expires', () => {
+    const { engine, harness, snapshot } = createEngine();
+    engine.dismissDialogue();
+    harness.bonusChallengeElapsedMs = STAGES[1].bonusChallenge.timeLimitMs - 20;
+    engine.step(33.333);
+    expect(snapshot()).toMatchObject({ state: 'LOST', defeatCause: 'timer', bonusChallengeStatus: 'expired' });
+  });
+
+  it('fails stages four through six when the egg breaks, unless its cushion absorbs the break', () => {
+    const { harness, snapshot } = createEngine(4);
+    harness.spawn({ kind: 'egg', x: 1180, y: 620 });
+    const egg = [...harness.bodies.values()].find((body) => body.label === 'hostageEgg')!;
+    harness.damageBody(egg, 20, { source: 'chick', point: egg.position, direction: { x: 1, y: 0 }, frontal: false });
+    harness.publish();
+    expect(snapshot()).toMatchObject({ state: 'LOST', defeatCause: 'hostage' });
+
+    harness.loadStage(5);
+    harness.eggCushionActive = true;
+    harness.spawn({ kind: 'egg', x: 1180, y: 620 });
+    harness.publish();
+    const protectedEgg = [...harness.bodies.values()].find((body) => body.label === 'hostageEgg')!;
+    harness.damageBody(protectedEgg, 20, { source: 'chick', point: protectedEgg.position, direction: { x: 1, y: 0 }, frontal: false });
+    harness.publish();
+    expect(snapshot()).toMatchObject({ state: 'DIALOGUE', defeatCause: null, eggCushionActive: false });
+    expect(harness.bodies.has(protectedEgg.id)).toBe(true);
+  });
+
+  it('keeps early stages playable when the egg breaks and deducts stage points', () => {
+    const { harness, snapshot } = createEngine(3);
+    harness.spawn({ kind: 'egg', x: 1180, y: 620 });
+    harness.awardScore(1000, 1180, 620);
+    const egg = [...harness.bodies.values()].find((body) => body.label === 'hostageEgg')!;
+    harness.damageBody(egg, 20, { source: 'chick', point: egg.position, direction: { x: 1, y: 0 }, frontal: false });
+    harness.publish();
+    expect(snapshot()).toMatchObject({ state: 'DIALOGUE', defeatCause: null, stageScore: 500 });
   });
 
   it.each(STAGE_ORDER)('keeps level %s cats fixed until the chick hits an obstacle', (stage) => {

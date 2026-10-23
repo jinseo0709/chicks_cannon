@@ -120,7 +120,7 @@ export class ChickCannonEngine {
   private megaNext = false;
   private settleFrames = 0;
   private winFrames = 0;
-  private defeatCause: 'ammo' | 'hostage' | null = null;
+  private defeatCause: 'ammo' | 'hostage' | 'timer' | null = null;
   private alive = true;
   private snapshot: GameSnapshot;
 
@@ -412,7 +412,11 @@ export class ChickCannonEngine {
     const delta = clamp(Number.isFinite(deltaMs) ? deltaMs : 16.667, 1, 33.333);
     if (this.bonusChallengeStatus === 'running' && activeStates.has(this.state)) {
       this.bonusChallengeElapsedMs += delta;
-      if (this.bonusChallengeElapsedMs >= STAGES[this.stage].bonusChallenge.timeLimitMs) this.bonusChallengeStatus = 'expired';
+      if (this.bonusChallengeElapsedMs >= STAGES[this.stage].bonusChallenge.timeLimitMs) {
+        this.bonusChallengeStatus = 'expired';
+        this.state = 'LOST';
+        this.defeatCause = 'timer';
+      }
     }
     Engine.update(this.engine, delta);
     for (const { body, velocity } of this.pendingVelocities.values()) {
@@ -762,9 +766,19 @@ export class ChickCannonEngine {
     data.hp -= Math.max(0, amount);
     if (body.label === 'hostageEgg') {
       if (data.hp <= 0 || body.position.y > 685) {
+        if (this.stage >= 4 && this.eggCushionActive) {
+          this.eggCushionActive = false;
+          data.hp = data.maxHp ?? 8.5;
+          Body.setPosition(body, { x: body.position.x, y: Math.min(body.position.y, 660) });
+          Body.setVelocity(body, { x: 0, y: 0 });
+          return;
+        }
         data.alive = false;
         if (this.eggCushionActive) this.eggCushionActive = false;
-        else this.applyStagePenalty(500, body.position.x, body.position.y, '알 파손');
+        else if (this.stage >= 4) {
+          this.state = 'LOST';
+          this.defeatCause = 'hostage';
+        } else this.applyStagePenalty(500, body.position.x, body.position.y, 'egg broken');
         this.removeBody(body);
       }
     } else if (data.hp <= 0 && body.label === 'enemy') {

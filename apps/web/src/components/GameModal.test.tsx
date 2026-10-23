@@ -45,6 +45,12 @@ describe('GameModal', () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
+  it('explains that the stage timer expired', () => {
+    const { container } = render(<GameModal snapshot={makeSnapshot('LOST', 'timer')} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
+    expect(container.querySelector('#defeat-title')?.textContent).toContain('시간이 다 됐어요');
+    expect(container.querySelector('.modal-card > p:nth-of-type(2)')?.textContent).toContain('시간 안에');
+  });
+
   it('shows evolution and final score actions for campaign completion', () => {
     const onNextStage = vi.fn();
     const onWorldMap = vi.fn();

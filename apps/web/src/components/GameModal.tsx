@@ -62,13 +62,14 @@ export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameMo
   }
   if (snapshot.state === 'LOST') {
     const hostage = snapshot.defeatCause === 'hostage';
+    const timedOut = snapshot.defeatCause === 'timer';
     return (
       <div className="overlay-backdrop">
         <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="defeat-title">
           <img className="modal-status-image" src={assetUrl(hostage ? 'assets/props/egg.png' : 'assets/cats/normal.png')} alt="" />
           <p className="eyebrow">다시 해볼까요?</p>
-          <h2 id="defeat-title">{hostage ? '인질 달걀이 깨졌어요' : '둥지 탈환에 실패했어요'}</h2>
-          <p>{hostage ? '아기 달걀을 지키면서 요새를 공략해 주세요.' : '대포 탄환을 모두 소진했어요. 다른 각도로 도전해 보세요.'}</p>
+          <h2 id="defeat-title">{hostage ? '인질 달걀이 깨졌어요' : timedOut ? '시간이 다 됐어요' : '둥지 탈환에 실패했어요'}</h2>
+          <p>{hostage ? '후반 스테이지에서는 달걀을 지켜야 해요.' : timedOut ? '시간 안에 고양이들을 모두 쓰러뜨리지 못했어요. 다시 공략해 보세요.' : '탄환을 모두 소진했어요. 다른 각도로 도전해 보세요.'}</p>
           <button className="button button-primary" onClick={onRetry}>챕터 다시 도전</button>
         </section>
       </div>

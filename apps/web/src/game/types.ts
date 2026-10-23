@@ -138,7 +138,7 @@ export interface GameSnapshot {
   muted: boolean;
   entities: readonly GameEntityView[];
   aimPosition: Point | null;
-  defeatCause: 'ammo' | 'hostage' | null;
+  defeatCause: 'ammo' | 'hostage' | 'timer' | null;
   story: StageDefinition['story'];
   form: ChickForm;
   evolvedForm: ChickForm | null;

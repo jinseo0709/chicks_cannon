@@ -44,7 +44,7 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
           </div>
           <span className="campaign-score"><span aria-hidden="true">🏆</span> 모험 누적 {snapshot.score.toLocaleString('ko-KR')}점</span>
           {snapshot.bonusChallengeStatus !== 'ready' && <span className={`bonus-timer ${snapshot.bonusChallengeStatus}`} role="status">
-            {snapshot.bonusChallengeStatus === 'expired' ? '시간 도전 종료 · 계속 플레이!' : snapshot.bonusChallengeStatus === 'success' ? `도전 성공 · ${stage.bonusChallenge.badge}` : `⏱ ${Math.ceil(snapshot.bonusChallengeRemainingMs / 1000)}초 안에 깨면 +${stage.bonusChallenge.bonusScore}점`}
+            {snapshot.bonusChallengeStatus === 'expired' ? '시간 초과 · 도전 실패' : snapshot.bonusChallengeStatus === 'success' ? `도전 성공 · ${stage.bonusChallenge.badge}` : `⏱ ${Math.ceil(snapshot.bonusChallengeRemainingMs / 1000)}초 안에 클리어하면 +${stage.bonusChallenge.bonusScore}점`}
           </span>}
         </div>
         <div className="hud-card ammo-card" aria-label={`남은 병아리 ${snapshot.ammo}개`}>
