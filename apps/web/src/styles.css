@@ -711,20 +711,6 @@ h2 {
   pointer-events: none;
 }
 
-#top-bar::before {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  content: '';
-  background:
-    repeating-linear-gradient(2deg, transparent 0 12px, rgb(255 215 147 / 10%) 13px, transparent 15px),
-    repeating-linear-gradient(0deg, transparent 0 29px, rgb(77 37 18 / 24%) 30px 32px, transparent 33px 58px),
-    linear-gradient(180deg, #e7b56c 0%, #bd773d 16%, #d69750 28%, #a85e30 54%, #8e4928 100%);
-  border: 3px solid #f3d08c;
-  border-radius: 1.15rem;
-  box-shadow: 0 5px 0 #663719, 0 8px 15px rgb(38 29 20 / 36%), inset 0 2px 0 rgb(255 242 198 / 85%), inset 0 -3px 0 rgb(93 46 23 / 60%);
-}
-
 .chapter-card { flex: 0 1 16%; min-width: 0; }
 .chapter-card strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .score-card {
@@ -733,10 +719,13 @@ h2 {
   min-width: 0;
   gap: 0.16rem;
   overflow: hidden;
-  background: linear-gradient(145deg, #fff5d9 0%, #f8dca8 68%, #ebbf7d 100%);
-  border-color: #f6d58f;
+  background:
+    repeating-linear-gradient(2deg, transparent 0 8px, rgb(255 218 151 / 9%) 9px, transparent 11px),
+    repeating-linear-gradient(0deg, transparent 0 22px, rgb(73 35 17 / 20%) 23px 24px, transparent 25px 44px),
+    linear-gradient(180deg, #d99b55 0%, #bf773e 35%, #a65e31 68%, #8c4928 100%);
+  border-color: #f0c477;
   border-radius: 0.8rem 1rem 0.8rem 1rem;
-  box-shadow: 0 3px 0 #77421f, inset 0 2px 0 #fff8dc, inset 0 -2px 0 rgb(148 87 38 / 24%);
+  box-shadow: 0 4px 0 #663719, inset 0 2px 0 rgb(255 229 172 / 75%), inset 0 -3px 0 rgb(84 40 20 / 48%), 0 5px 10px rgb(52 33 19 / 24%);
 }
 .score-card::after {
   position: absolute;
@@ -748,13 +737,13 @@ h2 {
   transform: rotate(12deg);
   pointer-events: none;
 }
-.stage-score-value { color: #81401f; font-size: clamp(1.15rem, 2vw, 1.8rem); line-height: 1; text-shadow: 0 1px 0 #fff; }
-.stage-score-value small { margin-left: 0.18rem; color: #b77c43; font-size: 0.48em; }
+.stage-score-value { color: #fff0c9; font-size: clamp(1.15rem, 2vw, 1.8rem); line-height: 1; text-shadow: 0 1px 2px rgb(68 35 17 / 72%); }
+.stage-score-value small { margin-left: 0.18rem; color: #f5d28e; font-size: 0.48em; }
 .score-target-label, .campaign-score { font-size: 0.68rem; font-weight: 800; }
-.score-target-label { color: #5f503b; }
+.score-target-label { color: #fff0c9; text-shadow: 0 1px 2px rgb(68 35 17 / 72%); }
 .score-target-label > span, .campaign-score > span { margin-right: 0.2rem; }
-.campaign-score { color: #806f5a; font-size: 0.62rem; }
-.score-target-track { height: 9px; overflow: hidden; background: #eadfca; border: 1px solid #fff; border-radius: 999px; box-shadow: inset 0 1px 2px rgb(115 91 55 / 16%); }
+.campaign-score { color: #f4d49c; font-size: 0.62rem; text-shadow: 0 1px 2px rgb(68 35 17 / 72%); }
+.score-target-track { height: 9px; overflow: hidden; background: #744323; border: 1px solid #edc47a; border-radius: 999px; box-shadow: inset 0 2px 3px rgb(52 28 15 / 45%); }
 .score-target-track > span { display: block; height: 100%; background: linear-gradient(90deg, #f3c544, #ff9c62 58%, #f27487); border-radius: inherit; transition: width 180ms ease-out; }
 
 .hud-card {
@@ -762,18 +751,22 @@ h2 {
   gap: 0.15rem;
   min-width: 7rem;
   padding: 0.6rem 0.85rem;
-  color: #4e321b;
-  background: linear-gradient(160deg, #fff4d3 0%, #f7dfa9 100%);
-  border: 2px solid #f2cb7d;
+  color: #fff0cc;
+  background:
+    repeating-linear-gradient(2deg, transparent 0 7px, rgb(255 218 151 / 8%) 8px, transparent 10px),
+    repeating-linear-gradient(0deg, transparent 0 20px, rgb(73 35 17 / 19%) 21px 22px, transparent 23px 42px),
+    linear-gradient(180deg, #d99b55 0%, #bf773e 38%, #a65e31 72%, #8c4928 100%);
+  border: 2px solid #f0c477;
   border-radius: 0.8rem;
-  box-shadow: 0 3px 0 #78451f, inset 0 2px 0 #fff8df, inset 0 -2px 0 rgb(142 84 36 / 20%);
+  box-shadow: 0 4px 0 #663719, inset 0 2px 0 rgb(255 229 172 / 72%), inset 0 -3px 0 rgb(84 40 20 / 45%), 0 4px 8px rgb(52 33 19 / 22%);
 }
 
 .hud-kicker {
-  color: #987547;
+  color: #ffdda0;
   font-size: 0.65rem;
   font-weight: 900;
   letter-spacing: 0.12em;
+  text-shadow: 0 1px 2px rgb(77 40 20 / 76%);
 }
 
 .hud-score {
@@ -983,8 +976,8 @@ h2 {
 
 .item-button:disabled {
   cursor: not-allowed;
-  filter: grayscale(0.65);
-  opacity: 0.55;
+  filter: saturate(0.75) brightness(0.95);
+  opacity: 0.9;
 }
 
 .overlay-backdrop {
