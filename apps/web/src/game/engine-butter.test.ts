@@ -29,7 +29,7 @@ describe('targeted butter spray', () => {
     game.dismissDialogue();
     game.setAim({ x: 60, y: 540 });
     expect(game.useItem('butter')).toBe(true);
-    expect(game.getSnapshot()).toMatchObject({ targetingItem: 'butter', aimPosition: null, ammo: 4 });
+    expect(game.getSnapshot()).toMatchObject({ targetingItem: 'butter', aimPosition: null, ammo: 6 });
     game.releaseAim();
     expect(game.getSnapshot().entities.some((entity) => entity.kind === 'chick')).toBe(false);
     expect(game.useItem('butter')).toBe(true);
@@ -100,7 +100,7 @@ describe('targeted butter spray', () => {
     }
   });
 
-  it('restores physical friction on retry without refunding the campaign use', () => {
+  it('restores physical friction and refills the item on every retry', () => {
     const { game, harness } = setup();
     game.dismissDialogue();
     game.useItem('butter');
@@ -109,7 +109,7 @@ describe('targeted butter spray', () => {
     const originalBlock = [...harness.bodies.values()].find((body) => body.position.x === 785)!;
     expect(originalBlock.friction).toBe(0.6);
     expect(originalBlock.customData?.slick).toBeUndefined();
-    expect(game.getSnapshot()).toMatchObject({ targetingItem: null, slickZones: [], items: { butter: 0 } });
+    expect(game.getSnapshot()).toMatchObject({ targetingItem: null, slickZones: [], items: { butter: 1 } });
     game.startCampaign();
     game.dismissDialogue();
     game.useItem('butter');
@@ -117,7 +117,7 @@ describe('targeted butter spray', () => {
     game.retryStage();
     expect(Composite.allBodies(harness.engine.world).filter((body) => body.label === 'ground')).toHaveLength(1);
     expect(game.getSnapshot().slickZones).toHaveLength(0);
-    expect(game.getSnapshot().items.butter).toBe(0);
+    expect(game.getSnapshot().items.butter).toBe(1);
     game.startCampaign();
     expect(game.getSnapshot().items.butter).toBe(1);
   });

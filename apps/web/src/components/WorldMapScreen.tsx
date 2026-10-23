@@ -3,6 +3,7 @@ import { assetUrl } from '../asset-url';
 import { CHICK_FORMS, STAGE_ORDER } from '../game/constants';
 import { STAGES } from '../game/stages';
 import type { GameStage } from '../game/types';
+import type { CampaignProgress } from '../game/progress';
 
 const NODE_POSITIONS: Readonly<Record<GameStage, { left: number; top: number }>> = {
   1: { left: 24.5, top: 76 },
@@ -15,6 +16,7 @@ const NODE_POSITIONS: Readonly<Record<GameStage, { left: number; top: number }>>
 
 export interface WorldMapScreenProps {
   completedStages: readonly GameStage[];
+  bestStars: CampaignProgress['bestStars'];
   unlockedStage: GameStage;
   onSelectStage(stage: GameStage): void;
   onBack(): void;
@@ -23,6 +25,7 @@ export interface WorldMapScreenProps {
 
 export function WorldMapScreen({
   completedStages,
+  bestStars,
   unlockedStage,
   onSelectStage,
   onBack,
@@ -65,6 +68,13 @@ export function WorldMapScreen({
             >
               <span className="map-node-crown" aria-hidden="true">{isLocked ? '◆' : isCompleted ? '★' : '♢'}</span>
               <strong>{stage}</strong>
+              <span className="map-node-stars" role="img" aria-label={`Stage ${stage} best stars ${bestStars[stage] ?? 0} of 3`}>
+                {Array.from({ length: 3 }, (_, index) => (
+                  <span key={index} className={index < (bestStars[stage] ?? 0) ? 'map-star earned' : 'map-star'} aria-hidden="true">
+                    {index < (bestStars[stage] ?? 0) ? '\u2605' : '\u2606'}
+                  </span>
+                ))}
+              </span>
               <small>{isLocked ? '잠김' : isCompleted ? '완료' : '도전'}</small>
               <em>{STAGES[stage].title}</em>
             </button>

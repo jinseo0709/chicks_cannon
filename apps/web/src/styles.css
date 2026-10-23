@@ -220,6 +220,9 @@ button:focus-visible {
 .map-level-node:hover:not(:disabled) { filter: brightness(1.08); transform: translate(-50%, calc(-50% - 4px)) scale(1.04); }
 .map-level-node strong { font-size: clamp(1.25rem, 2.8vw, 2rem); line-height: 0.9; text-shadow: 0 2px #fff3a7; }
 .map-level-node small { margin-top: -0.5rem; font-size: clamp(0.45rem, 0.8vw, 0.62rem); font-weight: 900; }
+.map-node-stars { position: absolute; bottom: 0.05rem; left: 50%; display: flex; gap: 0.02rem; padding: 0 0.16rem; color: #5b452a; background: rgb(255 248 218 / 78%); border-radius: 999px; font-size: clamp(0.48rem, 0.8vw, 0.68rem); line-height: 1.15; white-space: nowrap; transform: translateX(-50%); }
+.map-star { color: #807763; }
+.map-star.earned { color: #d4831c; text-shadow: 0 1px #fff1a4; }
 .map-level-node em {
   position: absolute;
   top: calc(100% + 0.45rem);

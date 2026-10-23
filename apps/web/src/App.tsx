@@ -13,28 +13,17 @@ import { LeaderboardClient } from './leaderboard/client';
 import { getSafeBrowserStorage } from './leaderboard/identity';
 import { useChickCannon } from './game/use-chick-cannon';
 import type { GameStage } from './game/types';
-
-const PROGRESS_KEY = 'chicks-cannon-world-progress-v1';
-const ALL_STAGES: readonly GameStage[] = [1, 2, 3, 4, 5, 6];
-
-function loadCompletedStages(): GameStage[] {
-  try {
-    const value = JSON.parse(getSafeBrowserStorage().getItem(PROGRESS_KEY) ?? '[]');
-    if (!Array.isArray(value)) return [];
-    return ALL_STAGES.filter((stage) => value.includes(stage));
-  } catch {
-    return [];
-  }
-}
+import { loadCampaignProgress, recordStageResult, saveCampaignProgress } from './game/progress';
 
 export function App(): JSX.Element {
   const [screen, setScreen] = useState<'opening' | 'home' | 'map' | 'game' | 'leaderboard'>('opening');
   const [leaderboardReturn, setLeaderboardReturn] = useState<'home' | 'map' | 'game'>('home');
-  const [completedStages, setCompletedStages] = useState<GameStage[]>(loadCompletedStages);
+  const [progress, setProgress] = useState(() => loadCampaignProgress(getSafeBrowserStorage()));
+  const completedStages = progress.completedStages;
   const [leaderboardClient] = useState(() => new LeaderboardClient());
   const controller = useChickCannon();
   const unlockedStage = useMemo<GameStage>(() => {
-    const firstIncomplete = ALL_STAGES.find((stage) => !completedStages.includes(stage));
+    const firstIncomplete = ([1, 2, 3, 4, 5, 6] as const).find((stage) => !completedStages.includes(stage));
     return firstIncomplete ?? 6;
   }, [completedStages]);
   const openLeaderboard = (returnTo: 'home' | 'map' | 'game') => {
@@ -44,10 +33,9 @@ export function App(): JSX.Element {
 
   useEffect(() => {
     if (controller.snapshot.state !== 'EVOLUTION' && controller.snapshot.state !== 'ENDING') return;
-    setCompletedStages((current) => {
-      if (current.includes(controller.snapshot.stage)) return current;
-      const next = [...current, controller.snapshot.stage].sort((a, b) => a - b);
-      getSafeBrowserStorage().setItem(PROGRESS_KEY, JSON.stringify(next));
+    setProgress((current) => {
+      const next = recordStageResult(current, controller.snapshot.stage, controller.snapshot.stageStars || 1);
+      if (next !== current) saveCampaignProgress(next, getSafeBrowserStorage());
       return next;
     });
   }, [controller.snapshot.stage, controller.snapshot.state]);
@@ -74,6 +62,7 @@ export function App(): JSX.Element {
         {screen === 'map' && (
           <WorldMapScreen
             completedStages={completedStages}
+            bestStars={progress.bestStars}
             unlockedStage={unlockedStage}
             onSelectStage={openStage}
             onBack={() => setScreen('home')}

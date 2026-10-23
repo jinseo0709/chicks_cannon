@@ -6,7 +6,7 @@ Implement the confirmed six-stage difficulty curve in the existing React and Mat
 ## Phases
 | Phase | Status | Summary | Blueprint |
 | :--- | :--- | :--- | :--- |
-| P01 | `in_progress` | Rebalance six stage definitions and implement stage-local scoring, retry resource rules, damage feedback, stars, HUD, and world-map records. | [P01](../phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/phase.md) |
+| P01 | `done` | Rebalance six stage definitions and implement stage-local scoring, retry resource rules, damage feedback, stars, HUD, and world-map records. | [P01](../phases/2026-10-22-gameplay-difficulty-curve/P01-campaign-progression/phase.md) |
 
 ## Scope
 - Stage gimmicks: 1 basic structures; 2 shielded cats; 3 fan currents; 4 moving shutters; 5 TNT chains; 6 boss plus learned gimmicks.
@@ -33,4 +33,4 @@ Implement the confirmed six-stage difficulty curve in the existing React and Mat
 4. Confirm a fresh browser profile starts with no progress, while malformed stored progress safely falls back to no completions/stars.
 
 ## Progress
-- done: 0/5 (active: P01-T01)
+- done: 5/5 (complete)
