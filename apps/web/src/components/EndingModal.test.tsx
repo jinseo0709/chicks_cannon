@@ -20,14 +20,21 @@ describe('EndingModal', () => {
     const fetcher = vi.fn<typeof fetch>();
     const onPlayAgain = vi.fn();
     const onOpenLeaderboard = vi.fn();
+    const onClaimReward = vi.fn();
     render(<EndingModal
       score={4200}
+      items={{ booster: 0, quake: 0, mega: 0, butter: 0, cushion: 0 }}
+      finalRewardClaimed={false}
+      onClaimReward={onClaimReward}
       client={new LeaderboardClient(fetcher)}
       storage={memoryStorage()}
       onPlayAgain={onPlayAgain}
       onOpenLeaderboard={onOpenLeaderboard}
     />);
     expect(screen.getByText('4,200')).toBeTruthy();
+    const chooseReward = screen.getByRole('button', { name: '알 쿠션 보상 선택, 현재 0개' });
+    fireEvent.click(chooseReward);
+    expect(onClaimReward).toHaveBeenCalledWith('cushion');
     expect(screen.getByRole('button', { name: '순위 등록' }).hasAttribute('disabled')).toBe(false);
     fireEvent.click(screen.getByRole('button', { name: '전체 순위' }));
     fireEvent.click(screen.getByRole('button', { name: '처음부터 다시' }));

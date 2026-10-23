@@ -5,6 +5,7 @@ import { ChickCannonEngine } from './engine';
 import { PointerInputController } from './pointer-input';
 import { GameCanvasRenderer } from './renderer';
 import { CHICK_FORMS, STAGE_SCORE_TARGETS } from './constants';
+import { emptyItemInventory } from './items';
 import { STAGES } from './stages';
 import type { GameSnapshot, ItemKind } from './types';
 
@@ -18,6 +19,7 @@ export interface ChickCannonController {
   continueAfterEvolution(): void;
   retryStage(): void;
   restartCampaign(): void;
+  claimFinalReward(kind: ItemKind): void;
   useItem(kind: ItemKind): void;
   toggleMute(): void;
   togglePause(): void;
@@ -34,7 +36,9 @@ const initialSnapshot: GameSnapshot = {
   ammo: STAGES[1].ammo,
   campaignComplete: false,
   state: 'DIALOGUE',
-  items: { booster: 1, quake: 1, mega: 1, butter: 1 },
+  items: emptyItemInventory(),
+  eggCushionActive: false,
+  finalRewardClaimed: false,
   targetingItem: null,
   slickZones: [],
   scorePopups: [],
@@ -179,9 +183,10 @@ export function useChickCannon(): ChickCannonController {
     void audioRef.current?.unlock();
     engineRef.current?.restartCampaign();
   }, []);
+  const claimFinalReward = useCallback((kind: ItemKind) => engineRef.current?.claimFinalReward(kind), []);
   const useItem = useCallback((kind: ItemKind) => {
     void audioRef.current?.unlock();
-    if (!engineRef.current?.useItem(kind) || kind === 'butter') return;
+    if (!engineRef.current?.useItem(kind) || kind === 'butter' || kind === 'cushion') return;
     if (kind === 'quake') audioRef.current?.playExplosion();
     else if (kind === 'booster') audioRef.current?.playSkill(2);
     else audioRef.current?.playBounce();
@@ -207,6 +212,7 @@ export function useChickCannon(): ChickCannonController {
     continueAfterEvolution,
     retryStage,
     restartCampaign,
+    claimFinalReward,
     useItem,
     toggleMute,
     togglePause,

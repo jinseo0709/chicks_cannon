@@ -10,6 +10,7 @@ import {
   type IEventCollision,
 } from 'matter-js';
 import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
+import { emptyItemInventory, MAX_ITEM_COUNT, STAGE_CLEAR_REWARDS } from './items';
 import { STAGES } from './stages';
 import type {
   BlockKind,
@@ -69,7 +70,6 @@ interface DamageContext {
 }
 interface Explosion { x: number; y: number; radius: number; forceMagnitude: number; }
 
-const initialItems = (): Record<ItemKind, number> => ({ booster: 1, quake: 1, mega: 1, butter: 1 });
 const activeStates = new Set<GameState>(['AIMING', 'FLYING', 'RESOLVING']);
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 const positive = (value: number | undefined, fallback: number): number =>
@@ -101,7 +101,11 @@ export class ChickCannonEngine {
   private replayOnly = false;
   private stageStars: 0 | 1 | 2 | 3 = 0;
   private ammo = STAGES[1].ammo;
-  private items = initialItems();
+  private items = emptyItemInventory();
+  private stageEntryItems = emptyItemInventory();
+  private eggCushionActive = false;
+  private stageEntryEggCushionActive = false;
+  private finalRewardClaimed = false;
   private targetingItem: 'butter' | null = null;
   private slickZones: SlickZone[] = [];
   private scorePopups: Array<{ id: number; x: number; y: number; value: number; label?: string; expiresAtMs: number }> = [];
@@ -137,7 +141,11 @@ export class ChickCannonEngine {
     this.stageScore = 0;
     this.stageEntryCampaignScore = 0;
     this.replayOnly = false;
-    this.items = initialItems();
+    this.items = emptyItemInventory();
+    this.stageEntryItems = { ...this.items };
+    this.eggCushionActive = false;
+    this.stageEntryEggCushionActive = false;
+    this.finalRewardClaimed = false;
     this.megaNext = false;
     this.loadStage(1);
     this.publish();
@@ -149,6 +157,8 @@ export class ChickCannonEngine {
     this.stageEntryCampaignScore = this.score;
     this.stageScore = 0;
     this.replayOnly = replay;
+    this.stageEntryItems = { ...this.items };
+    this.stageEntryEggCushionActive = this.eggCushionActive;
     this.loadStage(stage);
     this.publish();
   }
@@ -248,6 +258,13 @@ export class ChickCannonEngine {
 
   useItem(kind: ItemKind): boolean {
     if (!this.alive || !activeStates.has(this.state) || !this.items[kind]) return false;
+    if (kind === 'cushion') {
+      if (this.eggCushionActive) return false;
+      this.eggCushionActive = true;
+      this.items = { ...this.items, cushion: this.items.cushion - 1 };
+      this.publish();
+      return true;
+    }
     if (kind === 'butter') {
       this.targetingItem = this.targetingItem === 'butter' ? null : 'butter';
       this.aimPosition = null;
@@ -357,6 +374,8 @@ export class ChickCannonEngine {
     this.stageEntryCampaignScore = this.score;
     this.stageScore = 0;
     this.replayOnly = false;
+    this.stageEntryItems = { ...this.items };
+    this.stageEntryEggCushionActive = this.eggCushionActive;
     this.loadStage(this.stage);
     this.publish();
   }
@@ -365,13 +384,23 @@ export class ChickCannonEngine {
     if (!this.alive) return;
     this.score = this.stageEntryCampaignScore;
     this.stageScore = 0;
-    this.items = initialItems();
+    this.items = { ...this.stageEntryItems };
+    this.eggCushionActive = this.stageEntryEggCushionActive;
     this.loadStage(this.stage);
     this.publish();
   }
 
   restartCampaign(): void {
     this.startCampaign();
+  }
+
+  claimFinalReward(kind: ItemKind): boolean {
+    if (!this.alive || this.state !== 'ENDING' || this.stage !== LAST_STAGE || this.finalRewardClaimed ||
+      this.items[kind] >= MAX_ITEM_COUNT) return false;
+    this.items = { ...this.items, [kind]: this.items[kind] + 1 };
+    this.finalRewardClaimed = true;
+    this.publish();
+    return true;
   }
 
   step(deltaMs: number): void {
@@ -396,7 +425,16 @@ export class ChickCannonEngine {
     }
     if (this.state === 'WON') {
       this.winFrames += 1;
-      if (this.winFrames >= 42) this.state = this.stage === LAST_STAGE ? 'ENDING' : 'EVOLUTION';
+      if (this.winFrames >= 42) {
+        if (this.stage === LAST_STAGE) {
+          this.finalRewardClaimed = false;
+          this.state = 'ENDING';
+        } else {
+          const reward = STAGE_CLEAR_REWARDS[this.stage];
+          if (reward) this.grantItem(reward);
+          this.state = 'EVOLUTION';
+        }
+      }
     } else {
       this.checkTurnSettlement();
     }
@@ -427,7 +465,7 @@ export class ChickCannonEngine {
     this.skillUsed = false;
     this.megaNext = false;
     this.ammo = STAGES[stage].ammo;
-    this.items = initialItems();
+    if (stage === LAST_STAGE) this.finalRewardClaimed = false;
     this.stageStars = 0;
     this.targetingItem = null;
     this.slickZones = [];
@@ -715,7 +753,8 @@ export class ChickCannonEngine {
     if (body.label === 'hostageEgg') {
       if (data.hp <= 0 || body.position.y > 685) {
         data.alive = false;
-        this.applyStagePenalty(500, body.position.x, body.position.y, '알 파손');
+        if (this.eggCushionActive) this.eggCushionActive = false;
+        else this.applyStagePenalty(500, body.position.x, body.position.y, '알 파손');
         this.removeBody(body);
       }
     } else if (data.hp <= 0 && body.label === 'enemy') {
@@ -897,6 +936,11 @@ export class ChickCannonEngine {
     return 1;
   }
 
+  private grantItem(kind: ItemKind): void {
+    if (this.items[kind] >= MAX_ITEM_COUNT) return;
+    this.items = { ...this.items, [kind]: this.items[kind] + 1 };
+  }
+
   private createSnapshot(): GameSnapshot {
     const entities: GameEntityView[] = [];
     for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
@@ -959,6 +1003,8 @@ export class ChickCannonEngine {
       campaignComplete: this.state === 'ENDING',
       state: this.state,
       items: { ...this.items } satisfies ItemCounts,
+      eggCushionActive: this.eggCushionActive,
+      finalRewardClaimed: this.finalRewardClaimed,
       targetingItem: this.targetingItem,
       slickZones: this.slickZones.map((zone) => ({ ...zone })),
       scorePopups: this.scorePopups.map((popup) => ({

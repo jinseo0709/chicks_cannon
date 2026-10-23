@@ -903,6 +903,50 @@ h2 {
 
 .item-label { white-space: nowrap; }
 .item-button.selected { border-color: #ffc544; background: #fff0a3; outline: 3px solid #ad7534; }
+.item-button.selected[aria-pressed="true"] { background: linear-gradient(180deg, #fff1b9, #ffe19a); }
+
+.item-reward-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(100%, 22rem);
+  margin: 0.75rem auto;
+  padding: 0.7rem 1rem;
+  color: #694a30;
+  text-align: left;
+  background: linear-gradient(135deg, #fff4cf, #ffe5c4);
+  border: 2px solid #fffdf2;
+  border-radius: 1.15rem;
+  box-shadow: 0 3px 0 #d8a65f;
+}
+.item-reward-icon { font-size: 2rem; }
+.item-reward-card small { color: #8b7257; font-weight: 800; }
+.final-item-reward {
+  margin: 0.75rem 0;
+  padding: 0.8rem;
+  background: #fff5dc;
+  border: 2px solid #ffdda1;
+  border-radius: 1rem;
+}
+.final-item-reward h3 { margin: 0 0 0.3rem; color: #805130; font-size: 1rem; }
+.final-item-reward > p { margin: 0 0 0.55rem; color: #79664e; font-size: 0.8rem; }
+.final-item-choices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.35rem; }
+.final-item-choices button {
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0.45rem 0.2rem;
+  color: #61482f;
+  cursor: pointer;
+  background: #fffdf3;
+  border: 1px solid #f2d7a8;
+  border-radius: 0.7rem;
+}
+.final-item-choices button:disabled { opacity: 0.45; cursor: not-allowed; }
+.final-item-choices button > span { font-size: 1.35rem; }
+.final-item-choices button strong { font-size: 0.58rem; }
+.final-item-choices button small { color: #8a765d; font-size: 0.6rem; }
 .game-canvas.targeting { cursor: crosshair; }
 .targeting-hint {
   position: absolute;

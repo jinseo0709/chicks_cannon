@@ -8,7 +8,8 @@ import type { GameSnapshot } from '../game/types';
 const makeSnapshot = (state: GameSnapshot['state'] = 'AIMING'): GameSnapshot => ({
   screen: 'game', stage: 1, score: 1200, stageScore: 1200, scoreTarget: 3600, stageAmmo: 6, stageStars: 0,
   ammo: 2, campaignComplete: false, state,
-  items: { booster: 1, quake: 1, mega: 1, butter: 1 }, muted: false, entities: [], aimPosition: null,
+  items: { booster: 1, quake: 1, mega: 1, butter: 1, cushion: 1 }, eggCushionActive: false, finalRewardClaimed: false,
+  muted: false, entities: [], aimPosition: null,
   targetingItem: null, slickZones: [],
   defeatCause: null, story: STAGES[1].story, form: CHICK_FORMS[1], evolvedForm: null,
 });
@@ -27,7 +28,7 @@ describe('GameHud', () => {
     expect(screen.getByLabelText('사용 아이템').className).toBe('item-tray');
     expect(screen.getByRole('button', { name: '달걀 지진, 남은 1개' }).textContent).toContain('1');
     expect(screen.getByRole('button', { name: '치즈 로켓, 남은 1개' }).hasAttribute('disabled')).toBe(false);
-    expect(screen.getByRole('button', { name: '거대화, 남은 1개' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByLabelText('거대화 망치, 남은 1개').hasAttribute('disabled')).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: '소리 끄기' }));
     fireEvent.click(screen.getByRole('button', { name: '일시정지' }));
     fireEvent.click(screen.getByRole('button', { name: '현재 챕터 다시 시작' }));
@@ -51,20 +52,21 @@ describe('GameHud', () => {
     expect(onTogglePause).not.toHaveBeenCalled();
   });
 
-  it('separates the top chapter, ammunition and controls from the bottom four items', () => {
+  it('separates the top chapter, ammunition and controls from the bottom five items', () => {
     const { container } = render(<GameHud snapshot={makeSnapshot('FLYING')} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} />);
     const hud = container.querySelector('.game-hud');
     expect([...hud!.children].map((child) => child.id)).toEqual(['top-bar', 'item-bar']);
     const topline = container.querySelector('#top-bar');
     expect([...topline!.children].map((child) => child.className)).toEqual(['hud-card chapter-card', 'hud-card score-card', 'hud-card ammo-card', 'hud-actions']);
-    expect(container.querySelector('#item-bar')?.querySelectorAll('button')).toHaveLength(4);
+    expect(container.querySelector('#item-bar')?.querySelectorAll('button')).toHaveLength(5);
     expect(container.querySelector('[aria-label="치즈 로켓, 남은 1개"]')).toBeTruthy();
     expect(container.querySelector('[aria-label="달걀 지진, 남은 1개"]')).toBeTruthy();
-    expect(container.querySelector('[aria-label="거대화, 남은 1개"]')).toBeTruthy();
+    expect(container.querySelector('[aria-label="거대화 망치, 남은 1개"]')).toBeTruthy();
+    expect(container.querySelector('[aria-label="알 쿠션, 남은 1개"]')).toBeTruthy();
     expect(container.querySelector('[aria-label="소리 끄기"]')).toBeTruthy();
     expect(container.querySelector('[aria-label="일시정지"]')).toBeTruthy();
     expect(container.querySelector('[aria-label="현재 챕터 다시 시작"]')).toBeTruthy();
-    expect(container.querySelectorAll('.item-label')).toHaveLength(4);
+    expect(container.querySelectorAll('.item-label')).toHaveLength(5);
   });
 
   it('shows stage score progress prominently and keeps campaign total secondary', () => {
@@ -82,12 +84,20 @@ describe('GameHud', () => {
     expect(container.querySelector('.stage-score-value')?.textContent).toBe('5,000점');
   });
 
+  it('shows an armed egg cushion and keeps its effect one-use', () => {
+    const snapshot = { ...makeSnapshot(), eggCushionActive: true, items: { ...makeSnapshot().items, cushion: 0 } };
+    const { container } = render(<GameHud snapshot={snapshot} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={vi.fn()} onTogglePause={vi.fn()} />);
+    const cushion = container.querySelector<HTMLButtonElement>('[aria-pressed="true"][aria-label^="알 쿠션"]');
+    expect(cushion?.getAttribute('aria-label')).toBe('알 쿠션, 남은 0개, 알 보호 중');
+    expect(cushion?.disabled).toBe(true);
+  });
+
   it('labels the selected butter item and allows the aiming mega action', () => {
     const onUseItem = vi.fn();
     const snapshot = { ...makeSnapshot(), targetingItem: 'butter' as const };
     const { rerender } = render(<GameHud snapshot={snapshot} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={onUseItem} onTogglePause={vi.fn()} />);
     expect(screen.getByRole('button', { name: '버터 스프레이, 남은 1개' }).getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(screen.getByRole('button', { name: '거대화, 남은 1개' }));
+    fireEvent.click(screen.getByRole('button', { name: '거대화 망치, 남은 1개' }));
     expect(onUseItem).toHaveBeenCalledWith('mega');
     rerender(<GameHud snapshot={{ ...snapshot, targetingItem: null, items: { ...snapshot.items, butter: 0 } }} onRestart={vi.fn()} onMute={vi.fn()} onUseItem={onUseItem} onTogglePause={vi.fn()} />);
     expect(screen.getByRole('button', { name: '버터 스프레이, 남은 0개' }).hasAttribute('disabled')).toBe(true);

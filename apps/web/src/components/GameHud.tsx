@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { assetUrl } from '../asset-url';
 import type { GameSnapshot, ItemKind } from '../game/types';
 import { STAGES } from '../game/stages';
+import { ITEM_INFO } from '../game/items';
 
 export interface GameHudProps {
   snapshot: GameSnapshot;
@@ -19,11 +20,12 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
   const targetProgress = snapshot.scoreTarget > 0
     ? Math.max(0, Math.min(100, Math.floor((snapshot.stageScore / snapshot.scoreTarget) * 100)))
     : 0;
-  const items: { kind: ItemKind; label: string; icon: string; available: boolean }[] = [
-    { kind: 'booster', label: '치즈 로켓', icon: '🚀', available: snapshot.state === 'FLYING' },
-    { kind: 'quake', label: '달걀 지진', icon: '🥚', available: active },
-    { kind: 'mega', label: '거대화', icon: '🔨', available: snapshot.state === 'AIMING' },
-    { kind: 'butter', label: '버터 스프레이', icon: '🧈', available: active },
+  const items: { kind: ItemKind; available: boolean }[] = [
+    { kind: 'mega', available: snapshot.state === 'AIMING' },
+    { kind: 'booster', available: snapshot.state === 'FLYING' },
+    { kind: 'quake', available: active },
+    { kind: 'butter', available: active },
+    { kind: 'cushion', available: active },
   ];
   return (
     <div className="game-hud" role="region" aria-label="게임 정보" inert={!active} aria-hidden={!active}>
@@ -64,15 +66,19 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
         </div>
       </div>
       <div id="item-bar" className="item-tray" aria-label="사용 아이템">
-        {items.map((item) => (
-          <button key={item.kind} className={`item-button${snapshot.targetingItem === item.kind ? ' selected' : ''}`}
-            aria-label={`${item.label}, 남은 ${snapshot.items[item.kind]}개`}
-            aria-pressed={item.kind === 'butter' ? snapshot.targetingItem === 'butter' : undefined}
-            disabled={!active || !item.available || !snapshot.items[item.kind]}
-            onClick={() => onUseItem(item.kind)}>
-            <span aria-hidden="true">{item.icon}</span><span className="item-label">{item.label}</span><b>{snapshot.items[item.kind]}</b>
-          </button>
-        ))}
+        {items.map(({ kind, available }) => {
+          const item = ITEM_INFO[kind];
+          const selected = kind === 'butter' ? snapshot.targetingItem === 'butter'
+            : kind === 'cushion' && snapshot.eggCushionActive;
+          return <button key={kind} className={`item-button${selected ? ' selected' : ''}`}
+            title={item.description}
+            aria-label={`${item.label}, 남은 ${snapshot.items[kind]}개${kind === 'cushion' && snapshot.eggCushionActive ? ', 알 보호 중' : ''}`}
+            aria-pressed={kind === 'butter' || kind === 'cushion' ? selected : undefined}
+            disabled={!active || !available || !snapshot.items[kind]}
+            onClick={() => onUseItem(kind)}>
+            <span aria-hidden="true">{item.icon}</span><span className="item-label">{item.label}</span><b>{snapshot.items[kind]}</b>
+          </button>;
+        })}
       </div>
     </div>
   );

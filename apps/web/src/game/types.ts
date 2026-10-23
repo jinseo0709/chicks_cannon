@@ -18,7 +18,7 @@ export type GameState =
 
 export type BlockKind = 'wood' | 'stone' | 'glass' | 'steel' | 'rubber' | 'tnt';
 export type GimmickKind = 'fan' | 'trampoline' | 'boulder' | 'shutter' | 'tire' | 'gear' | 'chandelier';
-export type ItemKind = 'booster' | 'quake' | 'mega' | 'butter';
+export type ItemKind = 'booster' | 'quake' | 'mega' | 'butter' | 'cushion';
 
 export interface SlickZone { id: number; x: number; width: number; }
 export interface ScorePopup { id: number; x: number; y: number; value: number; label?: string; remainingMs: number; }
@@ -120,6 +120,8 @@ export interface GameSnapshot {
   campaignComplete: boolean;
   state: GameState;
   items: ItemCounts;
+  eggCushionActive: boolean;
+  finalRewardClaimed: boolean;
   targetingItem: 'butter' | null;
   slickZones: readonly SlickZone[];
   scorePopups?: readonly ScorePopup[];

@@ -21,7 +21,7 @@ const context = {
 const snapshot: GameSnapshot = {
   screen: 'game', stage: 1, score: 0, stageScore: 0, scoreTarget: 3600, stageAmmo: 6, stageStars: 0,
   ammo: 3, campaignComplete: false,
-  state: 'AIMING', items: { booster: 1, quake: 1, mega: 1, butter: 1 }, muted: false,
+  state: 'AIMING', items: { booster: 0, quake: 0, mega: 0, butter: 0, cushion: 0 }, eggCushionActive: false, finalRewardClaimed: false, muted: false,
   targetingItem: null, slickZones: [],
   entities: [], aimPosition: null,
   defeatCause: null, story: STAGES[1].story, form: CHICK_FORMS[1], evolvedForm: null,

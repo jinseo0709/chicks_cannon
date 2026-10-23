@@ -90,8 +90,11 @@ export function App(): JSX.Element {
             {controller.snapshot.state === 'ENDING' ? (
               <EndingModal
                 score={controller.snapshot.score}
+                items={controller.snapshot.items}
+                finalRewardClaimed={controller.snapshot.finalRewardClaimed}
                 client={leaderboardClient}
                 storage={getSafeBrowserStorage()}
+                onClaimReward={controller.claimFinalReward}
                 onPlayAgain={() => controller.restartCampaign()}
                 onOpenLeaderboard={() => openLeaderboard('game')}
                 onReturnToMap={() => setScreen('map')}

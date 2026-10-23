@@ -7,3 +7,4 @@
 - [T04 고양이 낙하와 요새 실루엣 개선](./T04-cat-fall-and-fort-silhouette.md) - done
 - [T05 점수 HUD 한국어·아기자기한 표현](./T05-score-hud-korean-and-cute.md) - done
 - [T06 새로고침 시 점수·월드맵 기록 초기화](./T06-refresh-campaign-reset.md) - done
+- [T07 레벨 클리어 아이템 보상](./T07-clear-item-rewards.md) - done

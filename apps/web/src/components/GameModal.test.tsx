@@ -11,7 +11,8 @@ function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['d
   return {
     screen: 'game', stage: 3, score: 4200, stageScore: 4200, scoreTarget: 6000, stageAmmo: 5, stageStars: stars,
     ammo: 0, campaignComplete: state === 'ENDING', state,
-    items: { booster: 0, quake: 1, mega: 0, butter: 1 }, muted: false, entities: [], aimPosition: null,
+    items: { booster: 0, quake: 1, mega: 0, butter: 1, cushion: 0 }, eggCushionActive: false, finalRewardClaimed: false,
+    muted: false, entities: [], aimPosition: null,
     targetingItem: null, slickZones: [],
     defeatCause, story: STAGES[3].story, form: CHICK_FORMS[3],
     evolvedForm: state === 'EVOLUTION' ? CHICK_FORMS[4] : null,
@@ -43,6 +44,7 @@ describe('GameModal', () => {
     const props = { onRetry: vi.fn(), onNextStage, onWorldMap };
     const { rerender } = render(<GameModal snapshot={makeSnapshot('EVOLUTION')} {...props} />);
     expect(screen.getByRole('heading', { name: '다음 길이 열렸어요!' })).toBeTruthy();
+    expect(screen.getByText('달걀 지진 1개 획득!')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '다음 스테이지' }));
     fireEvent.click(screen.getByRole('button', { name: '월드맵' }));
     rerender(<GameModal snapshot={makeSnapshot('ENDING')} {...props} />);

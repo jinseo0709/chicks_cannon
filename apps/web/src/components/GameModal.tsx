@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { assetUrl } from '../asset-url';
 import type { GameSnapshot } from '../game/types';
+import { ITEM_INFO, MAX_ITEM_COUNT, STAGE_CLEAR_REWARDS } from '../game/items';
 
 export interface GameModalProps {
   snapshot: GameSnapshot;
@@ -35,6 +36,8 @@ export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameMo
   if (snapshot.state === 'EVOLUTION') {
     const form = snapshot.evolvedForm;
     const evolved = form?.formId !== snapshot.form.formId;
+    const rewardKind = STAGE_CLEAR_REWARDS[snapshot.stage];
+    const reward = rewardKind ? ITEM_INFO[rewardKind] : null;
     return (
       <div className="overlay-backdrop">
         <section className="modal-card evolution-modal" role="dialog" aria-modal="true" aria-labelledby="evolution-title">
@@ -43,6 +46,10 @@ export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameMo
           <h2 id="evolution-title">{evolved ? '새로운 모습으로 진화!' : '다음 길이 열렸어요!'}</h2>
           <h3>{form?.name}</h3>
           <p><strong>{form?.skillName}</strong> · {form?.skillDesc}</p>
+          {reward && rewardKind && <div className="item-reward-card" role="status">
+            <span className="item-reward-icon" aria-hidden="true">{reward.icon}</span>
+            <span><strong>스테이지 클리어 보상</strong><br />{reward.label} 1개 획득! <small>가방 {snapshot.items[rewardKind]}/{MAX_ITEM_COUNT}</small></span>
+          </div>}
           <div className="clear-actions">
             <button className="button button-primary" onClick={onNextStage}>다음 스테이지</button>
             <button className="button button-secondary" onClick={onWorldMap}>월드맵</button>

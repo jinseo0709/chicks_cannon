@@ -13,6 +13,7 @@ type FixtureBody = Matter.Body & {
 };
 interface Harness {
   engine: Engine;
+  releaseCats(): void;
   bodies: Map<number, FixtureBody>;
   chandelierConstraints: Map<number, Matter.Constraint>;
   pendingVelocities: Map<number, unknown>;
@@ -28,7 +29,7 @@ interface Harness {
 const engines: ChickCannonEngine[] = [];
 afterEach(() => engines.splice(0).forEach((engine) => engine.dispose()));
 
-function setup() {
+function setup(releaseCatsAtStart = true) {
   const game = new ChickCannonEngine(() => undefined);
   engines.push(game);
   const harness = game as unknown as Harness;
@@ -36,6 +37,7 @@ function setup() {
   harness.bodies.clear();
   harness.engine.gravity.y = 0;
   game.dismissDialogue();
+  if (releaseCatsAtStart) harness.releaseCats();
   const spawn = (spec: SpawnSpec): FixtureBody => {
     const before = new Set(harness.bodies.keys());
     harness.spawn(spec);
@@ -162,9 +164,10 @@ describe('interactive obstacle physics', () => {
   });
 
   it('chains each TNT once and shares damage and single-defeat scoring across explosions', () => {
-    const { game, harness, spawn } = setup();
+    const { game, harness, spawn } = setup(false);
     const charges = [300, 360, 420].map((x) => spawn({ kind: 'block', x, y: 300, w: 32, h: 32, material: 'tnt' }));
     const cat = spawn({ kind: 'cat', x: 480, y: 300 });
+    harness.releaseCats();
     const context = { source: 'block' as const, point: { x: 300, y: 300 }, direction: { x: 1, y: 0 }, frontal: false };
     harness.damageBody(charges[0], 100, context);
     harness.damageBody(charges[0], 100, context);

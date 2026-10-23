@@ -12,6 +12,9 @@ interface CampaignHarness {
   stageScore: number;
   ammo: number;
   items: Record<string, number>;
+  stageEntryItems: Record<string, number>;
+  eggCushionActive: boolean;
+  finalRewardClaimed: boolean;
   replayOnly: boolean;
   engine: Matter.Engine;
   bodies: Map<number, TestBody>;
@@ -19,6 +22,7 @@ interface CampaignHarness {
   loadStage(stage: GameStage): void;
   awardScore(value: number, x: number, y: number, label?: string): void;
   applyStagePenalty(value: number, x: number, y: number, label: string): void;
+  damageBody(body: TestBody, amount: number, context: { source: 'chick'; point: { x: number; y: number }; direction: { x: number; y: number }; frontal: boolean }): void;
   calculateStageStars(): 1 | 2 | 3;
   spawn(spec: SpawnSpec): void;
   publish(): void;
@@ -156,6 +160,7 @@ describe('ChickCannonEngine', () => {
 
   it('progresses through all six levels and opens the ending only after the last one', () => {
     const { engine, harness, snapshot } = createEngine();
+    const rewards = ['mega', 'booster', 'quake', 'butter', 'cushion'] as const;
     for (const stage of STAGE_ORDER) {
       expect(snapshot().stage).toBe(stage);
       expect(snapshot().campaignComplete).toBe(false);
@@ -174,10 +179,15 @@ describe('ChickCannonEngine', () => {
       expect(snapshot().state).toBe(stage === 6 ? 'ENDING' : 'EVOLUTION');
       expect(snapshot().campaignComplete).toBe(stage === 6);
       if (stage < 6) {
+        expect(snapshot().items[rewards[stage - 1]]).toBe(1);
         expect(snapshot().evolvedForm?.stage).toBe(stage + 1);
         engine.continueAfterEvolution();
+        expect(snapshot().items[rewards[stage - 1]]).toBe(1);
       }
     }
+    expect(engine.claimFinalReward('butter')).toBe(true);
+    expect(snapshot()).toMatchObject({ items: { butter: 2 }, finalRewardClaimed: true });
+    expect(engine.claimFinalReward('quake')).toBe(false);
     engine.continueAfterEvolution();
     expect(snapshot().stage).toBe(6);
   });
@@ -217,10 +227,13 @@ describe('ChickCannonEngine', () => {
   });
 
   it('enforces item state and quantity gates, and restarts the campaign cleanly', () => {
-    const { engine, snapshot } = createEngine();
+    const { engine, snapshot, harness } = createEngine();
+    expect(snapshot().items).toEqual({ booster: 0, quake: 0, mega: 0, butter: 0, cushion: 0 });
+    harness.items = { booster: 1, quake: 1, mega: 1, butter: 1, cushion: 1 };
+    harness.publish();
     engine.useItem('booster');
     engine.useItem('mega');
-    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1 });
+    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1, cushion: 1 });
     engine.dismissDialogue();
     engine.useItem('mega');
     expect(snapshot().items.mega).toBe(0);
@@ -230,13 +243,14 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().stage).toBe(1);
     expect(snapshot().state).toBe('DIALOGUE');
     expect(snapshot().score).toBe(0);
-    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1 });
+    expect(snapshot().items).toEqual({ booster: 0, quake: 0, mega: 0, butter: 0, cushion: 0 });
     engine.dispose();
   });
 
   it('restores stage-entry score, ammo and all item charges on retry', () => {
     const { engine, snapshot, harness } = createEngine();
     harness.score = 3400;
+    harness.items = { booster: 1, quake: 2, mega: 0, butter: 1, cushion: 1 };
     engine.selectStage(2);
     harness.awardScore(1500, 850, 500, 'test');
     engine.dismissDialogue();
@@ -245,7 +259,22 @@ describe('ChickCannonEngine', () => {
     engine.releaseAim();
     engine.retryStage();
     expect(snapshot()).toMatchObject({ stage: 2, score: 3400, stageScore: 0, ammo: 6 });
-    expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1 });
+    expect(snapshot().items).toEqual({ booster: 1, quake: 2, mega: 0, butter: 1, cushion: 1 });
+    engine.dispose();
+  });
+
+  it('uses an egg cushion once to prevent the cracked egg score penalty', () => {
+    const { engine, harness, snapshot } = createEngine();
+    engine.dismissDialogue();
+    harness.items.cushion = 1;
+    harness.spawn({ kind: 'egg', x: 1180, y: 620 });
+    const egg = [...harness.bodies.values()].find((body) => body.label === 'hostageEgg')!;
+    expect(engine.useItem('cushion')).toBe(true);
+    expect(snapshot().eggCushionActive).toBe(true);
+    harness.damageBody(egg, 20, { source: 'chick', point: egg.position, direction: { x: 1, y: 0 }, frontal: false });
+    harness.publish();
+    expect(snapshot()).toMatchObject({ stageScore: 0, score: 0, eggCushionActive: false, items: { cushion: 0 } });
+    expect(harness.bodies.has(egg.id)).toBe(false);
     engine.dispose();
   });
 
@@ -295,7 +324,9 @@ describe('ChickCannonEngine', () => {
   });
 
   it('freezes the simulation and restores the prior active state on resume', () => {
-    const { engine, snapshot, onSnapshot } = createEngine();
+    const { engine, snapshot, onSnapshot, harness } = createEngine();
+    harness.items.quake = 1;
+    harness.publish();
     engine.dismissDialogue();
     engine.setAim({ x: 80, y: 500 });
     engine.releaseAim();

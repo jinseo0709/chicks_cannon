@@ -3,7 +3,14 @@ import { Body, Composite } from 'matter-js';
 import { ChickCannonEngine } from './engine';
 
 type ButterBody = Matter.Body & { customData?: { slick?: boolean; hp?: number } };
-interface ButterHarness { engine: Matter.Engine; bodies: Map<number, ButterBody>; state: string; }
+interface ButterHarness {
+  engine: Matter.Engine;
+  bodies: Map<number, ButterBody>;
+  state: string;
+  items: Record<string, number>;
+  stageEntryItems: Record<string, number>;
+  publish(): void;
+}
 const games: ChickCannonEngine[] = [];
 afterEach(() => games.splice(0).forEach((game) => game.dispose()));
 
@@ -12,6 +19,9 @@ function setup() {
   const game = new ChickCannonEngine(onSnapshot);
   games.push(game);
   const harness = game as unknown as ButterHarness;
+  harness.items = { booster: 1, quake: 1, mega: 1, butter: 1, cushion: 1 };
+  harness.stageEntryItems = { ...harness.items };
+  harness.publish();
   return { game, harness, onSnapshot };
 }
 
@@ -19,9 +29,9 @@ describe('targeted butter spray', () => {
   it('rejects every item outside active play without publishing or consuming stock', () => {
     const { game, onSnapshot } = setup();
     const count = onSnapshot.mock.calls.length;
-    for (const kind of ['booster', 'quake', 'mega', 'butter'] as const) expect(game.useItem(kind)).toBe(false);
+    for (const kind of ['booster', 'quake', 'mega', 'butter', 'cushion'] as const) expect(game.useItem(kind)).toBe(false);
     expect(onSnapshot).toHaveBeenCalledTimes(count);
-    expect(game.getSnapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1 });
+    expect(game.getSnapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1, cushion: 1 });
   });
 
   it('selects and cancels without consuming a use or firing an existing aim', () => {
@@ -100,7 +110,7 @@ describe('targeted butter spray', () => {
     }
   });
 
-  it('restores physical friction and refills the item on every retry', () => {
+  it('restores physical friction and restores the stage-entry item stock on retry', () => {
     const { game, harness } = setup();
     game.dismissDialogue();
     game.useItem('butter');
@@ -111,6 +121,9 @@ describe('targeted butter spray', () => {
     expect(originalBlock.customData?.slick).toBeUndefined();
     expect(game.getSnapshot()).toMatchObject({ targetingItem: null, slickZones: [], items: { butter: 1 } });
     game.startCampaign();
+    harness.items.butter = 1;
+    harness.stageEntryItems = { ...harness.items };
+    harness.publish();
     game.dismissDialogue();
     game.useItem('butter');
     game.applyTargetedItem({ x: 900, y: 700 });
@@ -119,7 +132,7 @@ describe('targeted butter spray', () => {
     expect(game.getSnapshot().slickZones).toHaveLength(0);
     expect(game.getSnapshot().items.butter).toBe(1);
     game.startCampaign();
-    expect(game.getSnapshot().items.butter).toBe(1);
+    expect(game.getSnapshot().items.butter).toBe(0);
   });
 
   it('keeps flying target taps from activating a skill and cancels targeting on another valid item', () => {
