@@ -12,6 +12,16 @@ describe('campaign stage data', () => {
     expect(STAGE_ORDER.map((stage) => CHICK_FORMS[stage].formId)).toEqual(['baby', 'baby', 'breeze', 'breeze', 'fighter', 'golden']);
   });
 
+  it('increases the block puzzle in the opening and final combo stages without reducing the existing ammo curve', () => {
+    const blockCounts = STAGE_ORDER.map((stage) => STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block').length);
+    expect(blockCounts).toEqual([12, 14, 18, 10, 23, 25]);
+    expect(blockCounts[1]).toBeGreaterThan(blockCounts[0]);
+    expect(blockCounts[2]).toBeGreaterThan(blockCounts[1]);
+    expect(blockCounts[4]).toBeGreaterThan(blockCounts[2]);
+    expect(blockCounts[5]).toBeGreaterThan(blockCounts[4]);
+    expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([6, 6, 5, 5, 4, 5]);
+  });
+
   it('keeps all required special objects and protected targets in the campaign', () => {
     const allSpawns = Object.values(STAGES).flatMap((stage) => stage.spawns);
     expect(allSpawns.some((spawn) => spawn.kind === 'fan')).toBe(true);
