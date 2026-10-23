@@ -5,10 +5,11 @@ import type { GameSnapshot } from '../game/types';
 export interface GameModalProps {
   snapshot: GameSnapshot;
   onRetry(): void;
-  onContinue(): void;
+  onNextStage(): void;
+  onWorldMap(): void;
 }
 
-export function GameModal({ snapshot, onRetry, onContinue }: GameModalProps): JSX.Element | null {
+export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameModalProps): JSX.Element | null {
   if (snapshot.state === 'WON') {
     return (
       <div className="overlay-backdrop clear-backdrop" role="status">
@@ -42,7 +43,10 @@ export function GameModal({ snapshot, onRetry, onContinue }: GameModalProps): JS
           <h2 id="evolution-title">{evolved ? '새로운 모습으로 진화!' : '다음 길이 열렸어요!'}</h2>
           <h3>{form?.name}</h3>
           <p><strong>{form?.skillName}</strong> · {form?.skillDesc}</p>
-          <button className="button button-primary" onClick={onContinue}>월드맵에서 확인</button>
+          <div className="clear-actions">
+            <button className="button button-primary" onClick={onNextStage}>다음 스테이지</button>
+            <button className="button button-secondary" onClick={onWorldMap}>월드맵</button>
+          </div>
         </section>
       </div>
     );

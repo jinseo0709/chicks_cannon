@@ -1106,6 +1106,8 @@ h2 {
 .clear-star { color: rgb(255 255 255 / 55%); font-size: clamp(1.8rem, 5vw, 3.2rem); line-height: 1; }
 .clear-star.earned { color: #ffd84f; filter: drop-shadow(0 2px 0 #8e5b25); }
 .clear-result { font-weight: 900; }
+.clear-actions { display: flex; justify-content: center; gap: 0.7rem; margin-top: 0.65rem; }
+.clear-actions .button { min-width: 10rem; }
 
 .leaderboard-screen {
   position: absolute;

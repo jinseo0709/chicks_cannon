@@ -20,7 +20,7 @@ function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['d
 
 describe('GameModal', () => {
   it.each([1, 2, 3] as const)('shows the engine-calculated %s-star clear rating and stage score', (stars) => {
-    const { container } = render(<GameModal snapshot={makeSnapshot('WON', null, stars)} onRetry={vi.fn()} onContinue={vi.fn()} />);
+    const { container } = render(<GameModal snapshot={makeSnapshot('WON', null, stars)} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
     expect(screen.getByRole('img', { name: `Stage stars ${stars} of 3` })).toBeTruthy();
     expect(container.querySelectorAll('.clear-star.earned')).toHaveLength(stars);
     expect(container.querySelector('.clear-result')?.textContent).toBe('Stage score 4,200 / target 6,000');
@@ -28,7 +28,7 @@ describe('GameModal', () => {
 
   it('distinguishes an egg failure and an ammo failure and retries', () => {
     const onRetry = vi.fn();
-    const props = { onRetry, onContinue: vi.fn() };
+    const props = { onRetry, onNextStage: vi.fn(), onWorldMap: vi.fn() };
     const { rerender } = render(<GameModal snapshot={makeSnapshot('LOST', 'hostage')} {...props} />);
     expect(screen.getByRole('heading', { name: '인질 달걀이 깨졌어요' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '챕터 다시 도전' }));
@@ -38,13 +38,16 @@ describe('GameModal', () => {
   });
 
   it('shows evolution and final score actions for campaign completion', () => {
-    const onContinue = vi.fn();
-    const props = { onRetry: vi.fn(), onContinue };
+    const onNextStage = vi.fn();
+    const onWorldMap = vi.fn();
+    const props = { onRetry: vi.fn(), onNextStage, onWorldMap };
     const { rerender } = render(<GameModal snapshot={makeSnapshot('EVOLUTION')} {...props} />);
     expect(screen.getByRole('heading', { name: '다음 길이 열렸어요!' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '월드맵에서 확인' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음 스테이지' }));
+    fireEvent.click(screen.getByRole('button', { name: '월드맵' }));
     rerender(<GameModal snapshot={makeSnapshot('ENDING')} {...props} />);
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(onContinue).toHaveBeenCalledOnce();
+    expect(onNextStage).toHaveBeenCalledOnce();
+    expect(onWorldMap).toHaveBeenCalledOnce();
   });
 });

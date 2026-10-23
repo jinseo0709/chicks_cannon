@@ -101,7 +101,8 @@ export function App(): JSX.Element {
               <GameModal
                 snapshot={controller.snapshot}
                 onRetry={controller.retryStage}
-                onContinue={() => setScreen('map')}
+                onNextStage={() => controller.continueAfterEvolution()}
+                onWorldMap={() => setScreen('map')}
               />
             )}
           </div>
