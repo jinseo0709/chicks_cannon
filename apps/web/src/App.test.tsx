@@ -18,6 +18,7 @@ describe('App navigation and campaign entry', () => {
       version: 2,
       completedStages: [1, 2],
       bestStars: { 1: 2, 2: 3 },
+      challengeBadges: [2],
     }));
     const firstMount = render(<App />);
     expect(localStorage.getItem('chicks-cannon-world-progress-v1')).toBeNull();

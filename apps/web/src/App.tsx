@@ -36,8 +36,8 @@ export function App(): JSX.Element {
 
   useEffect(() => {
     if (controller.snapshot.state !== 'EVOLUTION' && controller.snapshot.state !== 'ENDING') return;
-    setProgress((current) => recordStageResult(current, controller.snapshot.stage, controller.snapshot.stageStars || 1));
-  }, [controller.snapshot.stage, controller.snapshot.state]);
+    setProgress((current) => recordStageResult(current, controller.snapshot.stage, controller.snapshot.stageStars || 1, controller.snapshot.bonusChallengeStatus === 'success'));
+  }, [controller.snapshot.stage, controller.snapshot.state, controller.snapshot.bonusChallengeStatus]);
 
   const openStage = (stage: GameStage) => {
     if (stage > unlockedStage) return;
@@ -62,6 +62,7 @@ export function App(): JSX.Element {
           <WorldMapScreen
             completedStages={completedStages}
             bestStars={progress.bestStars}
+            challengeBadges={progress.challengeBadges}
             unlockedStage={unlockedStage}
             onSelectStage={openStage}
             onBack={() => setScreen('home')}

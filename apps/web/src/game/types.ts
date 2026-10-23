@@ -77,6 +77,7 @@ export interface StageDefinition {
   theme: SceneTheme;
   title: string;
   ammo: number;
+  bonusChallenge: { timeLimitMs: number; bonusScore: number; badge: string };
   attackRoutes: readonly [AttackRoute, AttackRoute];
   story: {
     speaker: string;
@@ -123,6 +124,8 @@ export interface GameSnapshot {
   scoreTarget: number;
   stageAmmo: number;
   stageStars: 0 | 1 | 2 | 3;
+  bonusChallengeRemainingMs: number;
+  bonusChallengeStatus: 'ready' | 'running' | 'expired' | 'success';
   ammo: number;
   campaignComplete: boolean;
   state: GameState;

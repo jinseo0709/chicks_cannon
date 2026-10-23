@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['defeatCause'] = null, stars: GameSnapshot['stageStars'] = 0): GameSnapshot {
   return {
-    screen: 'game', stage: 3, score: 4200, stageScore: 4200, scoreTarget: 6000, stageAmmo: 5, stageStars: stars,
+    screen: 'game', stage: 3, score: 4200, stageScore: 4200, scoreTarget: 6000, stageAmmo: 5, stageStars: stars, bonusChallengeRemainingMs: 80000, bonusChallengeStatus: 'ready',
     ammo: 0, campaignComplete: state === 'ENDING', state,
     items: { booster: 0, quake: 1, mega: 0, butter: 1, cushion: 0 }, eggCushionActive: false, finalRewardClaimed: false,
     muted: false, entities: [], aimPosition: null,
@@ -20,6 +20,13 @@ function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['d
 }
 
 describe('GameModal', () => {
+  it('shows the stage badge when the timed bonus challenge succeeds', () => {
+    const snapshot = { ...makeSnapshot('WON', null, 2), bonusChallengeStatus: 'success' as const };
+    render(<GameModal snapshot={snapshot} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
+    expect(document.querySelector('.challenge-badge')?.textContent).toContain(STAGES[3].bonusChallenge.badge);
+    expect(document.querySelector('.challenge-badge')?.textContent).toContain('+700점');
+  });
+
   it.each([1, 2, 3] as const)('shows the engine-calculated %s-star clear rating and stage score', (stars) => {
     const { container } = render(<GameModal snapshot={makeSnapshot('WON', null, stars)} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
     expect(screen.getByRole('img', { name: `Stage stars ${stars} of 3` })).toBeTruthy();

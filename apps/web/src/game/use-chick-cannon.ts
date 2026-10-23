@@ -33,6 +33,8 @@ const initialSnapshot: GameSnapshot = {
   scoreTarget: STAGE_SCORE_TARGETS[1],
   stageAmmo: STAGES[1].ammo,
   stageStars: 0,
+  bonusChallengeRemainingMs: STAGES[1].bonusChallenge.timeLimitMs,
+  bonusChallengeStatus: 'ready',
   ammo: STAGES[1].ammo,
   campaignComplete: false,
   state: 'DIALOGUE',

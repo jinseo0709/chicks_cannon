@@ -20,7 +20,7 @@ function memoryStorage(): Storage {
 
 describe('session campaign progress', () => {
   it('starts empty and clears progress saved by earlier versions', () => {
-    const empty = { version: 2, completedStages: [], bestStars: {} };
+    const empty = { version: 3, completedStages: [], bestStars: {}, challengeBadges: [] };
     const storage = memoryStorage();
     storage.setItem(WORLD_PROGRESS_KEY, JSON.stringify({ completedStages: [1, 2], bestStars: { 1: 3, 2: 2 } }));
     clearSavedCampaignProgress(storage);
@@ -32,7 +32,13 @@ describe('session campaign progress', () => {
     const first = recordStageResult(createEmptyCampaignProgress(), 2, 2);
     expect(recordStageResult(first, 2, 1)).toBe(first);
     const improved = recordStageResult(first, 2, 3);
-    expect(improved).toEqual({ version: 2, completedStages: [2], bestStars: { 2: 3 } });
+    expect(improved).toEqual({ version: 3, completedStages: [2], bestStars: { 2: 3 }, challengeBadges: [] });
+  });
+
+  it('records a stage challenge badge once and retains it when stars are replayed', () => {
+    const first = recordStageResult(createEmptyCampaignProgress(), 2, 2, true);
+    expect(first.challengeBadges).toEqual([2]);
+    expect(recordStageResult(first, 2, 1)).toBe(first);
   });
 
   it('keeps working when browser storage removal throws', () => {

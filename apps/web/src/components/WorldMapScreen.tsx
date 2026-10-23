@@ -17,6 +17,7 @@ const NODE_POSITIONS: Readonly<Record<GameStage, { left: number; top: number }>>
 export interface WorldMapScreenProps {
   completedStages: readonly GameStage[];
   bestStars: CampaignProgress['bestStars'];
+  challengeBadges: readonly GameStage[];
   unlockedStage: GameStage;
   onSelectStage(stage: GameStage): void;
   onBack(): void;
@@ -26,6 +27,7 @@ export interface WorldMapScreenProps {
 export function WorldMapScreen({
   completedStages,
   bestStars,
+  challengeBadges,
   unlockedStage,
   onSelectStage,
   onBack,
@@ -68,6 +70,7 @@ export function WorldMapScreen({
             >
               <span className="map-node-crown" aria-hidden="true">{isLocked ? '◆' : isCompleted ? '★' : '♢'}</span>
               <strong>{stage}</strong>
+              {challengeBadges.includes(stage) && <span className="map-challenge-badge" aria-label={`${STAGES[stage].bonusChallenge.badge} 배지 획득`}>🏅</span>}
               <span className="map-node-stars" role="img" aria-label={`Stage ${stage} best stars ${bestStars[stage] ?? 0} of 3`}>
                 {Array.from({ length: 3 }, (_, index) => (
                   <span key={index} className={index < (bestStars[stage] ?? 0) ? 'map-star earned' : 'map-star'} aria-hidden="true">

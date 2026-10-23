@@ -743,6 +743,10 @@ h2 {
 .score-target-label { color: #fff0c9; text-shadow: 0 1px 2px rgb(68 35 17 / 72%); }
 .score-target-label > span, .campaign-score > span { margin-right: 0.2rem; }
 .campaign-score { color: #f4d49c; font-size: 0.62rem; text-shadow: 0 1px 2px rgb(68 35 17 / 72%); }
+.bonus-timer { color: #fff4b0; font-size: 0.62rem; font-weight: 900; text-shadow: 0 1px 2px rgb(68 35 17 / 80%); }
+.bonus-timer.expired { color: #ffd5ab; }
+.bonus-timer.success { color: #caff9e; }
+.challenge-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.75rem; color: #74421e; font-weight: 900; background: linear-gradient(#fff2bd, #f5c960); border: 2px solid #d99b38; border-radius: 999px; box-shadow: inset 0 2px #fff8d9, 0 3px 0 #95612b; }
 .score-target-track { height: 9px; overflow: hidden; background: #744323; border: 1px solid #edc47a; border-radius: 999px; box-shadow: inset 0 2px 3px rgb(52 28 15 / 45%); }
 .score-target-track > span { display: block; height: 100%; background: linear-gradient(90deg, #f3c544, #ff9c62 58%, #f27487); border-radius: inherit; transition: width 180ms ease-out; }
 
@@ -1477,3 +1481,5 @@ h2 {
     transition-duration: 0.01ms !important;
   }
 }
+
+.map-challenge-badge { position: absolute; top: -0.6rem; right: -0.45rem; z-index: 2; font-size: 1.2rem; filter: drop-shadow(0 2px 1px rgb(70 39 17 / 55%)); }

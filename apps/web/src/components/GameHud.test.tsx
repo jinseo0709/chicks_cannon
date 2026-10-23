@@ -6,7 +6,7 @@ import { STAGES } from '../game/stages';
 import type { GameSnapshot } from '../game/types';
 
 const makeSnapshot = (state: GameSnapshot['state'] = 'AIMING'): GameSnapshot => ({
-  screen: 'game', stage: 1, score: 1200, stageScore: 1200, scoreTarget: 3600, stageAmmo: 6, stageStars: 0,
+  screen: 'game', stage: 1, score: 1200, stageScore: 1200, scoreTarget: 3600, stageAmmo: 6, stageStars: 0, bonusChallengeRemainingMs: 65000, bonusChallengeStatus: 'ready',
   ammo: 2, campaignComplete: false, state,
   items: { booster: 1, quake: 1, mega: 1, butter: 1, cushion: 1 }, eggCushionActive: false, finalRewardClaimed: false,
   muted: false, entities: [], aimPosition: null,

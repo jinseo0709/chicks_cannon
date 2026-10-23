@@ -48,6 +48,20 @@ function createEngine(stage: GameStage = 1) {
 }
 
 describe('ChickCannonEngine', () => {
+  it('starts the optional bonus timer after dialogue and pauses it with the game', () => {
+    const { engine, snapshot } = createEngine();
+    expect(snapshot().bonusChallengeStatus).toBe('ready');
+    engine.dismissDialogue();
+    expect(snapshot().bonusChallengeStatus).toBe('running');
+    const remaining = snapshot().bonusChallengeRemainingMs;
+    engine.step(33.333);
+    const afterTick = snapshot().bonusChallengeRemainingMs;
+    expect(afterTick).toBeLessThan(remaining);
+    engine.pause();
+    engine.step(33.333);
+    expect(snapshot().bonusChallengeRemainingMs).toBe(afterTick);
+  });
+
   it.each(STAGE_ORDER)('keeps level %s cats fixed until the chick hits an obstacle', (stage) => {
     const { engine, harness, snapshot } = createEngine(stage);
     const cats = [...harness.bodies.values()].filter((body) => body.label === 'enemy');

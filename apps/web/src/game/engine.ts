@@ -100,6 +100,8 @@ export class ChickCannonEngine {
   private stageEntryCampaignScore = 0;
   private replayOnly = false;
   private stageStars: 0 | 1 | 2 | 3 = 0;
+  private bonusChallengeElapsedMs = 0;
+  private bonusChallengeStatus: GameSnapshot['bonusChallengeStatus'] = 'ready';
   private ammo = STAGES[1].ammo;
   private items = emptyItemInventory();
   private stageEntryItems = emptyItemInventory();
@@ -165,6 +167,8 @@ export class ChickCannonEngine {
 
   dismissDialogue(): void {
     if (this.state !== 'DIALOGUE') return;
+    this.bonusChallengeElapsedMs = 0;
+    this.bonusChallengeStatus = 'running';
     this.state = 'AIMING';
     this.publish();
   }
@@ -406,6 +410,10 @@ export class ChickCannonEngine {
   step(deltaMs: number): void {
     if (!this.alive || this.state === 'PAUSED') return;
     const delta = clamp(Number.isFinite(deltaMs) ? deltaMs : 16.667, 1, 33.333);
+    if (this.bonusChallengeStatus === 'running' && activeStates.has(this.state)) {
+      this.bonusChallengeElapsedMs += delta;
+      if (this.bonusChallengeElapsedMs >= STAGES[this.stage].bonusChallenge.timeLimitMs) this.bonusChallengeStatus = 'expired';
+    }
     Engine.update(this.engine, delta);
     for (const { body, velocity } of this.pendingVelocities.values()) {
       if (body.customData?.alive !== false) Body.setVelocity(body, velocity);
@@ -467,6 +475,8 @@ export class ChickCannonEngine {
     this.ammo = STAGES[stage].ammo;
     if (stage === LAST_STAGE) this.finalRewardClaimed = false;
     this.stageStars = 0;
+    this.bonusChallengeElapsedMs = 0;
+    this.bonusChallengeStatus = 'ready';
     this.targetingItem = null;
     this.slickZones = [];
     this.scorePopups = [];
@@ -898,6 +908,12 @@ export class ChickCannonEngine {
     if (!catsAlive) {
       this.state = 'WON';
       this.stageStars = this.calculateStageStars();
+      if (this.bonusChallengeStatus === 'running' && this.bonusChallengeElapsedMs <= STAGES[this.stage].bonusChallenge.timeLimitMs) {
+        this.bonusChallengeStatus = 'success';
+        this.awardScore(STAGES[this.stage].bonusChallenge.bonusScore, 640, 120, '시간 도전 성공');
+      } else if (this.bonusChallengeStatus === 'running') {
+        this.bonusChallengeStatus = 'expired';
+      }
       this.winFrames = 0;
     } else if (this.ammo <= 0) {
       this.state = 'LOST';
@@ -999,6 +1015,8 @@ export class ChickCannonEngine {
       scoreTarget: STAGE_SCORE_TARGETS[this.stage],
       stageAmmo: STAGES[this.stage].ammo,
       stageStars: this.stageStars,
+      bonusChallengeRemainingMs: Math.max(0, STAGES[this.stage].bonusChallenge.timeLimitMs - this.bonusChallengeElapsedMs),
+      bonusChallengeStatus: this.bonusChallengeStatus,
       ammo: this.ammo,
       campaignComplete: this.state === 'ENDING',
       state: this.state,
