@@ -48,6 +48,19 @@ function createEngine(stage: GameStage = 1) {
 }
 
 describe('ChickCannonEngine', () => {
+  it('pushes a chick upward when it crosses a fan field', () => {
+    const { engine, harness } = createEngine();
+    harness.engine.gravity.y = 0;
+    harness.spawn({ kind: 'fan', x: 200, y: 200, w: 240, h: 300, forceX: 0.004, forceY: -0.04 });
+    const chick = Bodies.circle(200, 200, 18, { density: 0.003, label: 'chick' }) as TestBody;
+    Composite.add(harness.engine.world, chick);
+
+    for (let frame = 0; frame < 8; frame += 1) engine.step(16.667);
+
+    expect(chick.velocity.y).toBeLessThan(-0.1);
+    expect(chick.velocity.x).toBeGreaterThan(0);
+  });
+
   it('starts the optional bonus timer after dialogue and pauses it with the game', () => {
     const { engine, snapshot } = createEngine();
     expect(snapshot().bonusChallengeStatus).toBe('ready');
