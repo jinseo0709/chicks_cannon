@@ -17,11 +17,12 @@ export type GameState =
   | 'ENDING';
 
 export type BlockKind = 'wood' | 'stone' | 'glass' | 'steel' | 'rubber' | 'tnt';
-export type GimmickKind = 'fan' | 'trampoline' | 'boulder' | 'shutter' | 'tire' | 'gear' | 'chandelier';
+export type GimmickKind = 'fan' | 'trampoline' | 'boulder' | 'shutter' | 'tire' | 'gear' | 'chandelier' | 'seesaw';
 export type ItemKind = 'booster' | 'quake' | 'mega' | 'butter' | 'cushion';
 
 export interface SlickZone { id: number; x: number; width: number; }
 export interface ScorePopup { id: number; x: number; y: number; value: number; label?: string; remainingMs: number; }
+export interface BossDamagePopup { id: number; x: number; y: number; damage: number; remainingMs: number; }
 
 export interface Point {
   x: number;
@@ -64,6 +65,7 @@ export interface SpawnSpec {
   speed?: number;
   forceX?: number;
   forceY?: number;
+  armed?: boolean;
 }
 
 export interface AttackRoute {
@@ -135,10 +137,19 @@ export interface GameSnapshot {
   targetingItem: 'butter' | null;
   slickZones: readonly SlickZone[];
   scorePopups?: readonly ScorePopup[];
+  bossHp?: number;
+  bossMaxHp?: number;
+  bossHitRemainingMs?: number;
+  bossShockwaveRemainingMs?: number;
+  bossDamagePopups?: readonly BossDamagePopup[];
+  winElapsedMs?: number;
   muted: boolean;
   entities: readonly GameEntityView[];
   aimPosition: Point | null;
   megaNext: boolean;
+  boosterNext?: boolean;
+  quakeNext?: boolean;
+  skillCooldownRemainingMs?: number;
   defeatCause: 'ammo' | 'hostage' | 'timer' | null;
   story: StageDefinition['story'];
   form: ChickForm;

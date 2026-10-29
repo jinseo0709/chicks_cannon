@@ -1,6 +1,6 @@
 # Task: T03 상·하단 HUD 분리와 버터 스프레이
 
-## Status: pending
+## Status: failed
 
 ## Goal
 상단 정보/탄환/제어와 하단 4종 도크를 분리하고, 버터 선택→Canvas 대상 지정→마찰0·약한 밀침→수량 소모/취소를 실제 사용 흐름으로 완성한다.
@@ -99,3 +99,11 @@ Task: T03-hud-and-butter
 - [ ] 구현 완료
 - [ ] 검증 통과
 - commit: pending
+
+## Execution Failure — 2026-10-21
+- 사용자 지시대로 지정 검증 실패 시점에 T03에서 중단했다. 이후 Task와 T03 커밋은 진행하지 않았다.
+- 지정 테스트 결과: 49개 중 46개 통과, 3개 실패. 실패는 `engine-butter.test.ts`의 바닥180px 패치 3개 위치(x=0/900/1280) 케이스다.
+- 실패 지점: 생성된 ground 중 `friction===0`인 본체가 없어 patch가 undefined가 된다.
+- 원인 확인: Matter.js 0.19.0 `Body.setStatic`은 정적 본체 생성 시 `part.friction=1`로 덮어쓴다. `Bodies.rectangle(...,{isStatic:true,friction:0})` 옵션만으로는 미끄럼 패치가 만들어지지 않는다. 블록은 동적 본체여서 직접 마찰 설정 테스트가 통과했다.
+- 다음 조치: 바닥 본체를 생성한 뒤 patch의 friction/frictionStatic을 명시적으로 설정하고 지정 검증 전체를 다시 실행한다. node_modules를 수정하거나 검증을 약화하지 않는다.
+- 빌드와 최종 diff check는 아직 실행하지 않았다. 현재 구현은 작업 트리에 보존되어 있고 검증 완료 상태가 아니다.

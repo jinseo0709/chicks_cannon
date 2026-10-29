@@ -5,7 +5,7 @@
 | :--- | :--- | :--- | :--- |
 | T01 | `done` | 실제 장애물 물리·방패 계층·TNT 연쇄 | [T01](./T01-gimmick-physics.md) |
 | T02 | `done` | 6단계 데이터·형태/스킬 분리·진행/엔딩 확장 | [T02](./T02-six-level-campaign.md) |
-| T03 | `in_progress` | 상·하단 HUD 분리와 버터 스프레이 전체 동작 | [T03](./T03-hud-and-butter.md) |
+| T03 | `failed` | 바닥 버터 패치 테스트 3개 실패로 중단 — 정적 본체 마찰 덮어쓰기 확인 | [T03](./T03-hud-and-butter.md) |
 | T04 | `pending` | 타격 이벤트·시간·히트 스톱·오디오 | [T04](./T04-impact-events-and-clock.md) |
 | T05 | `pending` | Canvas 캐릭터·파티클·타격 텍스트·처치 연출 | [T05](./T05-characters-and-effects.md) |
 | T06 | `pending` | 여섯 배경·장애물·접지 디테일 | [T06](./T06-scenes-and-props.md) |
@@ -14,4 +14,5 @@
 
 ## Progress
 - done: 2/8 (active: T03)
+- T03 검증 실패로 연속 실행 중단. T04~T08 미착수.
 - 다음 Task는 현재 Task 검증 통과와 커밋 후에만 활성화한다.

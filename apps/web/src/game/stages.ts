@@ -7,7 +7,7 @@ const cat = (x: number, y: number, radius: number, shieldLayers = 0, boss = fals
 
 export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   1: {
-    stage: 1, title: '골목길 입구', theme: 'alley-day', ammo: 6, bonusChallenge: { timeLimitMs: 65000, bonusScore: 500, badge: '첫 돌파' },
+    stage: 1, title: '골목길 입구', theme: 'alley-day', ammo: 6, bonusChallenge: { timeLimitMs: 50000, bonusScore: 500, badge: '첫 돌파' },
     attackRoutes: [
       { name: '낮은 목재 받침', hint: '왼쪽 받침을 끊어 아래층부터 무너뜨리기', target: { x: 785, y: 620 } },
       { name: '오른쪽 유리 선반', hint: '높은 유리 선반을 깨서 위층을 떨어뜨리기', target: { x: 1050, y: 574 } },
@@ -19,17 +19,21 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     },
     spawns: [
       block(785, 620, 26, 100, 'wood'), block(925, 620, 26, 100, 'wood'),
-      block(855, 558, 190, 22, 'wood'), cat(810, 524, 22), cat(900, 524, 22),
+      block(855, 558, 230, 22, 'wood'), cat(780, 524, 22), cat(930, 524, 22),
       block(815, 510, 24, 74, 'wood'), block(895, 510, 24, 74, 'wood'),
-      block(855, 466, 122, 20, 'glass'), cat(855, 432, 22),
+      block(855, 466, 122, 20, 'glass'),
+      block(825, 411, 24, 90, 'wood'), block(885, 411, 24, 90, 'wood'),
+      block(855, 356, 122, 20, 'wood'), cat(855, 322, 22),
+      block(800, 338, 56, 16, 'glass'), block(910, 338, 56, 16, 'glass'),
       block(710, 646, 48, 48, 'wood'), block(710, 608, 64, 18, 'glass'),
       block(1000, 625, 26, 90, 'wood'), block(1100, 625, 26, 90, 'wood'),
       block(1050, 574, 142, 22, 'wood'), cat(1050, 540, 22),
-      block(965, 642, 44, 54, 'glass'),
+      block(1018, 513, 22, 100, 'wood'), block(1082, 513, 22, 100, 'wood'),
+      block(1050, 466, 118, 20, 'glass'), cat(1050, 432, 22),
     ],
   },
   2: {
-    stage: 2, title: '도둑고양이 담장', theme: 'wall-afternoon', ammo: 6, bonusChallenge: { timeLimitMs: 75000, bonusScore: 600, badge: '방패 무력화' },
+    stage: 2, title: '도둑고양이 담장', theme: 'wall-afternoon', ammo: 6, bonusChallenge: { timeLimitMs: 60000, bonusScore: 600, badge: '방패 무력화' },
     attackRoutes: [
       { name: '왼쪽 계단 탑', hint: '계단 탑을 타고 방패 뒤쪽을 노리기', target: { x: 630, y: 570 } },
       { name: '요새 윗층', hint: '윗층 목재 받침을 끊어 방패 고양이에게 낙하시키기', target: { x: 700, y: 358 } },
@@ -47,15 +51,17 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       // Three connected terraces rise into the main shield fort.
       block(560, 620, 24, 100, 'stone'), block(560, 558, 120, 20, 'wood'), cat(560, 524, 22),
       block(630, 570, 24, 200, 'steel'), block(630, 458, 120, 22, 'rubber'),
-      block(700, 520, 24, 300, 'stone'), block(700, 358, 120, 22, 'wood'), cat(700, 322, 23, 1),
-      block(595, 484, 18, 76, 'glass'), block(665, 414, 18, 88, 'wood'),
+      block(700, 620, 24, 100, 'stone'), block(700, 520, 24, 100, 'stone'), block(700, 420, 24, 100, 'stone'),
+      block(837.5, 358, 345, 22, 'wood'), cat(700, 322, 23, 1),
+      block(1010, 458, 20, 178, 'wood'),
+      block(595, 484, 18, 76, 'glass'), block(665, 409, 18, 78, 'wood'),
       block(965, 620, 28, 100, 'wood'), block(1105, 620, 28, 100, 'stone'),
       block(1035, 558, 184, 22, 'wood'), cat(1000, 523, 24), cat(1070, 523, 24, 1),
       block(1035, 514, 72, 58, 'glass'),
     ],
   },
   3: {
-    stage: 3, title: '바람 부는 고층 옥상', theme: 'rooftop-sunset', ammo: 5, bonusChallenge: { timeLimitMs: 80000, bonusScore: 700, badge: '바람 타기' },
+    stage: 3, title: '바람 부는 고층 옥상', theme: 'rooftop-sunset', ammo: 5, bonusChallenge: { timeLimitMs: 65000, bonusScore: 700, badge: '바람 타기' },
     attackRoutes: [
       { name: '선풍기 바람길', hint: '상승 바람으로 왼쪽 계단 위를 덮치기', target: { x: 470, y: 420 } },
       { name: '오른쪽 목재 지지대', hint: '오른쪽 받침을 끊어 본채를 옆으로 무너뜨리기', target: { x: 985, y: 620 } },
@@ -67,13 +73,15 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     },
     spawns: [
       { kind: 'fan', x: 490, y: 420, w: 220, h: 460, forceX: 0.001, forceY: -0.012 },
+      { kind: 'seesaw', x: 735, y: 650, w: 180, h: 14 }, { kind: 'boulder', x: 795, y: 620, radius: 23, armed: true },
       block(780, 620, 28, 100, 'stone'), block(920, 620, 28, 100, 'wood'),
       block(850, 558, 190, 22, 'stone'), cat(805, 522, 24), cat(890, 522, 24, 1),
       block(805, 505, 24, 84, 'glass'), block(890, 505, 24, 84, 'wood'),
       block(848, 454, 132, 20, 'glass'), cat(848, 420, 24, 1),
       block(580, 620, 24, 100, 'steel'), block(580, 558, 90, 24, 'rubber'),
       block(645, 570, 24, 200, 'wood'), block(645, 458, 90, 24, 'steel'),
-      block(710, 520, 24, 300, 'stone'), block(710, 358, 90, 24, 'rubber'),
+      block(710, 620, 24, 100, 'stone'), block(710, 520, 24, 100, 'stone'), block(710, 420, 24, 100, 'stone'),
+      block(710, 358, 90, 24, 'rubber'),
       block(985, 620, 28, 100, 'stone'), block(1120, 620, 28, 100, 'stone'),
       block(1052, 558, 182, 22, 'wood'), cat(1015, 522, 24), cat(1090, 522, 24),
       block(1018, 510, 24, 74, 'wood'), block(1088, 510, 24, 74, 'glass'),
@@ -81,7 +89,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     ],
   },
   4: {
-    stage: 4, title: '위험천만 시계탑', theme: 'clock-twilight', ammo: 5, bonusChallenge: { timeLimitMs: 90000, bonusScore: 800, badge: '셔터 통과' },
+    stage: 4, title: '위험천만 시계탑', theme: 'clock-twilight', ammo: 5, bonusChallenge: { timeLimitMs: 70000, bonusScore: 800, badge: '셔터 통과' },
     attackRoutes: [
       { name: '움직이는 셔터', hint: '셔터가 열릴 때 안쪽 기둥을 직접 맞히기', target: { x: 750, y: 390 } },
       { name: '오른쪽 계단 탑', hint: '높은 계단 탑을 무너뜨려 측면에서 덮치기', target: { x: 1240, y: 458 } },
@@ -112,7 +120,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     ],
   },
   5: {
-    stage: 5, title: '보스의 폐공장 벙커', theme: 'factory-night', ammo: 4, bonusChallenge: { timeLimitMs: 100000, bonusScore: 900, badge: '연쇄 폭발' },
+    stage: 5, title: '보스의 폐공장 벙커', theme: 'factory-night', ammo: 4, bonusChallenge: { timeLimitMs: 80000, bonusScore: 900, badge: '연쇄 폭발' },
     attackRoutes: [
       { name: '왼쪽 TNT 연쇄', hint: '낮은 폭약 두 개를 연쇄시켜 벙커를 흔들기', target: { x: 716, y: 646 } },
       { name: '오른쪽 상단 TNT', hint: '높은 폭약을 떨어뜨려 위층부터 폭파하기', target: { x: 1270, y: 334 } },
@@ -135,7 +143,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       block(1030, 620, 30, 100, 'stone'), block(1160, 620, 30, 100, 'stone'),
       block(1095, 558, 178, 24, 'stone'), cat(1060, 520, 24, 2), cat(1130, 520, 24),
       block(1060, 505, 26, 82, 'wood'), block(1130, 505, 26, 82, 'wood'),
-      block(1095, 456, 120, 20, 'stone'), block(1095, 424, 44, 44, 'tnt'),
+      block(1095, 456, 120, 20, 'stone'),
       // Offset decks and cross braces make the late TNT route a stepped, interlocked fort.
       block(1190, 620, 26, 100, 'steel'), block(1190, 558, 110, 22, 'stone'), cat(1190, 522, 24, 1),
       block(1245, 570, 24, 200, 'wood'), block(1245, 458, 112, 22, 'rubber'),
@@ -144,7 +152,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     ],
   },
   6: {
-    stage: 6, title: '둥지 탈환 대축제', theme: 'meadow-gold', ammo: 5, bonusChallenge: { timeLimitMs: 120000, bonusScore: 1200, badge: '요새 정복' },
+    stage: 6, title: '둥지 탈환 대축제', theme: 'meadow-gold', ammo: 5, bonusChallenge: { timeLimitMs: 90000, bonusScore: 1200, badge: '요새 정복' },
     attackRoutes: [
       { name: '왼쪽 TNT 다리', hint: '낮은 TNT 다리를 끊어 보스 요새를 흔들기', target: { x: 756, y: 646 } },
       { name: '선풍기와 높은 받침', hint: '바람을 타고 높은 보스 받침을 직접 노리기', target: { x: 910, y: 398 } },
@@ -177,7 +185,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       block(860, 646, 44, 48, 'wood'), block(860, 610, 60, 18, 'glass'),
       block(920, 646, 44, 48, 'stone'), block(920, 610, 60, 18, 'wood'),
       block(1150, 646, 44, 48, 'tnt'), block(1115, 620, 30, 100, 'glass'),
-      cat(965, 298, 38, 0, true, 150), { kind: 'egg', x: 1220, y: 650 },
+      cat(965, 298, 38, 0, true, 500), { kind: 'egg', x: 1220, y: 650 },
     ],
   },
 };

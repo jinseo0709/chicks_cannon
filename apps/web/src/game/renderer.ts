@@ -12,6 +12,11 @@ export class GameCanvasRenderer {
   private offsetX = 0;
   private offsetY = 0;
   private disposed = false;
+  private previousCats = new Map<number, { hp: number; x: number; y: number }>();
+  private catImpactEffects: { id: number; x: number; y: number; startMs: number; label: 'POW!' | 'CRASH!' }[] = [];
+  private catShakeUntilMs = 0;
+  private catShakeStrength = 0;
+  private lastBoss: GameEntityView | null = null;
 
   constructor(private readonly canvas: HTMLCanvasElement, private readonly assets: SvgAssetCache) {
     const context = canvas.getContext('2d');
@@ -32,6 +37,7 @@ export class GameCanvasRenderer {
 
   render(snapshot: GameSnapshot, sceneTime: number): void {
     if (this.disposed) return;
+    this.updateCatImpacts(snapshot, sceneTime);
     const ctx = this.context;
     ctx.save();
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -43,28 +49,274 @@ export class GameCanvasRenderer {
     this.drawBackground(snapshot.stage, sceneTime);
 
     ctx.save();
-    const shake = snapshot.state === 'LOST' || snapshot.state === 'WON' ? Math.sin(sceneTime / 24) * 2 : 0;
-    ctx.translate(shake, 0);
+    const endShake = snapshot.state === 'LOST' || snapshot.state === 'WON' ? Math.sin(sceneTime / 24) * 2 : 0;
+    const hitProgress = Math.max(0, this.catShakeUntilMs - sceneTime);
+    const hitShake = hitProgress > 0 ? this.catShakeStrength * (hitProgress / 110) : 0;
+    const bossHitProgress = Math.max(0, (snapshot.bossHitRemainingMs ?? 0) / 200);
+    const bossShake = snapshot.stage === 6 && bossHitProgress > 0 ? Math.sin(sceneTime / 7) * 10 * bossHitProgress : 0;
+    ctx.translate(endShake + Math.sin(sceneTime / 9) * hitShake + bossShake,
+      Math.cos(sceneTime / 11) * hitShake * 0.42 + Math.cos(sceneTime / 8) * bossShake * 0.55);
     this.drawGround(snapshot.stage);
     this.drawSlickZones(snapshot.slickZones, sceneTime);
     snapshot.entities.forEach((entity) => this.drawEntityShadow(entity));
     this.drawProp('nest', WORLD.nest.x, WORLD.nest.y, 130, 80);
+    ctx.save();
+    ctx.translate(WORLD.cannon.x, WORLD.cannon.y);
+    ctx.scale(1.15, 1.15);
+    ctx.translate(-WORLD.cannon.x, -WORLD.cannon.y);
     this.drawSlingshotBase(WORLD.cannon.x, WORLD.cannon.y + 20);
     this.drawSlingshotBand(snapshot, false);
-    this.drawProp('slingshot', WORLD.cannon.x, WORLD.cannon.y + 20, 78, 136);
+    this.drawProp('slingshot', WORLD.cannon.x, WORLD.cannon.y + 20, 90, 156);
+    ctx.restore();
     this.drawAimCancelZone(snapshot);
     this.drawAimGuide(snapshot);
     this.drawLoadedChick(snapshot, sceneTime);
     this.drawSlingshotBand(snapshot, true);
     snapshot.entities.forEach((entity) => this.drawEntity(entity, snapshot.stage, sceneTime));
+    this.drawStructuralLinks(snapshot.entities);
+    this.drawBossAura(snapshot, sceneTime);
+    this.drawBossShockwave(snapshot, sceneTime);
+    this.drawCatImpactEffects(sceneTime);
     if (snapshot.state === 'AIMING' && snapshot.ammo > 0) this.drawAttackRouteMarkers(snapshot.stage, sceneTime);
     this.drawScorePopups(snapshot.scorePopups ?? []);
+    this.drawBossDamagePopups(snapshot);
+    this.drawBossHitVignette(snapshot, bossHitProgress);
+    this.drawBossVictory(snapshot, sceneTime);
+    this.drawBossConfetti(snapshot, sceneTime);
+    this.drawAimKeyboardTip(snapshot);
     ctx.restore();
     ctx.restore();
   }
 
   dispose(): void {
     this.disposed = true;
+    this.previousCats.clear();
+    this.catImpactEffects = [];
+    this.lastBoss = null;
+  }
+
+  private updateCatImpacts(snapshot: GameSnapshot, nowMs: number): void {
+    const currentCats = new Map<number, { hp: number; x: number; y: number }>();
+    for (const entity of snapshot.entities) {
+      if (entity.kind !== 'cat' || entity.hp === undefined) continue;
+      if (entity.boss) this.lastBoss = { ...entity };
+      currentCats.set(entity.id, { hp: entity.hp, x: entity.x, y: entity.y });
+      const previous = this.previousCats.get(entity.id);
+      if (previous && entity.hp < previous.hp) {
+        const damage = previous.hp - entity.hp;
+        this.catImpactEffects.push({
+          id: entity.id,
+          x: entity.x,
+          y: entity.y,
+          startMs: nowMs,
+          label: damage >= 12 ? 'CRASH!' : 'POW!',
+        });
+        this.catShakeUntilMs = nowMs + 110;
+        this.catShakeStrength = Math.min(3.2, 1.15 + damage * 0.055);
+      }
+    }
+    if (snapshot.state === 'FLYING' || snapshot.state === 'RESOLVING') {
+      for (const [id, previous] of this.previousCats) {
+        if (currentCats.has(id)) continue;
+        this.catImpactEffects.push({ id, x: previous.x, y: previous.y, startMs: nowMs, label: 'CRASH!' });
+        this.catShakeUntilMs = nowMs + 110;
+        this.catShakeStrength = 3.2;
+      }
+    }
+    this.previousCats = currentCats;
+    this.catImpactEffects = this.catImpactEffects.filter((effect) => nowMs - effect.startMs < 760);
+  }
+
+  private drawBossAura(snapshot: GameSnapshot, nowMs: number): void {
+    if (snapshot.stage !== 6 || (snapshot.bossHp ?? 0) <= 0 || (snapshot.bossHp ?? 0) > (snapshot.bossMaxHp ?? 500) / 2) return;
+    const boss = snapshot.entities.find((entity) => entity.kind === 'cat' && entity.boss);
+    if (!boss) return;
+    const ctx = this.context;
+    ctx.save();
+    for (let index = 0; index < 18; index += 1) {
+      const phase = nowMs / 280 + index * (Math.PI * 2 / 18);
+      const radius = 78 + 15 * Math.sin(phase * 1.7);
+      const x = boss.x + Math.cos(phase) * radius;
+      const y = boss.y + Math.sin(phase) * radius * 0.68;
+      const size = 2.5 + (Math.sin(phase * 2.3) + 1) * 2;
+      ctx.globalAlpha = 0.48 + (Math.sin(phase) + 1) * 0.24;
+      ctx.fillStyle = index % 3 === 0 ? '#ffe777' : '#ff654e';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  private drawBossShockwave(snapshot: GameSnapshot, nowMs: number): void {
+    const remaining = snapshot.bossShockwaveRemainingMs ?? 0;
+    if (snapshot.stage !== 6 || remaining <= 0) return;
+    const boss = snapshot.entities.find((entity) => entity.kind === 'cat' && entity.boss) ?? this.lastBoss;
+    if (!boss) return;
+    const progress = 1 - remaining / 900;
+    const ctx = this.context;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, (1 - progress) * 0.72);
+    ctx.strokeStyle = '#ffb34f';
+    ctx.shadowColor = '#ff563d';
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 7 - progress * 3;
+    ctx.beginPath();
+    ctx.arc(boss.x, boss.y, 45 + progress * 390, Math.PI * 0.62, Math.PI * 1.38);
+    ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(boss.x, boss.y, 62 + progress * 390, Math.PI * 0.62, Math.PI * 1.38);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  private drawBossDamagePopups(snapshot: GameSnapshot): void {
+    const ctx = this.context;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const popup of snapshot.bossDamagePopups ?? []) {
+      const progress = 1 - Math.min(1, popup.remainingMs / 1050);
+      ctx.globalAlpha = Math.min(1, popup.remainingMs / 220);
+      ctx.font = '1000 32px "Jua", sans-serif';
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#531c1c';
+      ctx.strokeText(`-${popup.damage}`, popup.x, popup.y - progress * 52);
+      ctx.fillStyle = '#ff514a';
+      ctx.fillText(`-${popup.damage}`, popup.x, popup.y - progress * 52);
+    }
+    ctx.restore();
+  }
+
+  private drawBossHitVignette(snapshot: GameSnapshot, progress: number): void {
+    if (snapshot.stage !== 6 || progress <= 0) return;
+    const ctx = this.context;
+    const gradient = ctx.createRadialGradient(WORLD.width / 2, WORLD.height / 2, 130, WORLD.width / 2, WORLD.height / 2, 720);
+    gradient.addColorStop(0, 'rgba(230, 35, 38, 0)');
+    gradient.addColorStop(0.62, 'rgba(230, 35, 38, 0.02)');
+    gradient.addColorStop(1, `rgba(205, 21, 35, ${0.62 * progress})`);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+  }
+
+  private drawBossVictory(snapshot: GameSnapshot, nowMs: number): void {
+    if (snapshot.stage !== 6 || snapshot.state !== 'WON' || !this.lastBoss) return;
+    const elapsed = snapshot.winElapsedMs ?? 0;
+    const progress = Math.min(1, elapsed / 2200);
+    const alpha = Math.max(0, 1 - Math.max(0, progress - 0.68) / 0.32);
+    this.context.save();
+    this.context.globalAlpha = alpha;
+    this.drawSprite({ ...this.lastBoss, x: this.lastBoss.x + progress * 500, y: this.lastBoss.y - progress * 520,
+      angle: this.lastBoss.angle + progress * Math.PI * 10, alive: true }, 6, nowMs);
+    this.context.restore();
+  }
+
+  private drawBossConfetti(snapshot: GameSnapshot, nowMs: number): void {
+    if (snapshot.stage !== 6 || snapshot.state !== 'WON' || (snapshot.winElapsedMs ?? 0) >= 2600) return;
+    const ctx = this.context;
+    ctx.save();
+    for (let index = 0; index < 110; index += 1) {
+      const phase = nowMs / 430 + index * 1.73;
+      const x = ((index * 127 + Math.sin(phase) * 32) % WORLD.width + WORLD.width) % WORLD.width;
+      const y = ((nowMs * (0.07 + (index % 5) * 0.012) + index * 67) % (WORLD.height + 50)) - 25;
+      const size = 3 + (index % 4);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(phase);
+      ctx.fillStyle = ['#ffe66d', '#ffc247', '#fff2ae', '#f6a93c'][index % 4];
+      ctx.shadowColor = '#ffce56';
+      ctx.shadowBlur = index % 3 === 0 ? 10 : 3;
+      if (index % 4 === 0) {
+        ctx.beginPath();
+        ctx.arc(0, 0, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff7ca';
+        ctx.beginPath();
+        ctx.arc(size * 1.35, 0, size * 0.72, 0, Math.PI * 2);
+        ctx.arc(-size * 1.35, 0, size * 0.72, 0, Math.PI * 2);
+        ctx.arc(0, size * 1.35, size * 0.72, 0, Math.PI * 2);
+        ctx.arc(0, -size * 1.35, size * 0.72, 0, Math.PI * 2);
+        ctx.fill();
+      } else ctx.fillRect(-size / 2, -size / 2, size, size * 1.8);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  private drawCatImpactEffects(nowMs: number): void {
+    const ctx = this.context;
+    for (const effect of this.catImpactEffects) {
+      const age = nowMs - effect.startMs;
+      const progress = Math.max(0, Math.min(1, age / 620));
+      const alpha = Math.max(0, 1 - progress);
+      const scale = 0.75 + Math.min(0.32, age / 240);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      for (let index = 0; index < 8; index += 1) {
+        const angle = (Math.PI * 2 * index) / 8 + effect.id * 0.31;
+        const inner = 17 + progress * 15;
+        const outer = inner + 7 + (index % 3) * 3;
+        ctx.strokeStyle = index % 2 ? '#ff9e28' : '#fff05c';
+        ctx.lineWidth = index % 3 === 0 ? 4 : 2.5;
+        ctx.beginPath();
+        ctx.moveTo(effect.x + Math.cos(angle) * inner, effect.y + Math.sin(angle) * inner);
+        ctx.lineTo(effect.x + Math.cos(angle) * outer, effect.y + Math.sin(angle) * outer);
+        ctx.stroke();
+      }
+      for (let index = 0; index < 4; index += 1) {
+        const angle = (Math.PI * 2 * index) / 4 + effect.id;
+        ctx.fillStyle = 'rgba(219, 190, 145, 0.72)';
+        ctx.beginPath();
+        ctx.ellipse(effect.x + Math.cos(angle) * (12 + progress * 26), effect.y + 12 + Math.sin(angle) * 10,
+          5 + progress * 5, 3 + progress * 2, angle, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.translate(effect.x, effect.y - 31 - progress * 36);
+      ctx.scale(scale, scale);
+      ctx.rotate(Math.sin(effect.id) * 0.06);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '1000 25px "Jua", sans-serif';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = '#fff7df';
+      ctx.strokeText(effect.label, 0, 0);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = effect.label === 'CRASH!' ? '#76234d' : '#135383';
+      ctx.strokeText(effect.label, 0, 0);
+      ctx.fillStyle = effect.label === 'CRASH!' ? '#ff4f9a' : '#39dfff';
+      ctx.fillText(effect.label, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  private drawAimKeyboardTip(snapshot: GameSnapshot): void {
+    if (snapshot.state !== 'AIMING' || snapshot.ammo <= 0) return;
+    const ctx = this.context;
+    const x = 18;
+    const y = WORLD.cannon.y - 96;
+    const width = 242;
+    const height = 26;
+    ctx.save();
+    ctx.fillStyle = 'rgba(69, 43, 27, .68)';
+    ctx.strokeStyle = 'rgba(243, 210, 140, .72)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, height, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 12px "Jua", sans-serif';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(38, 24, 16, .75)';
+    ctx.strokeText('Space 스킬 · W/S 파워 미세 조절', x + width / 2, y + height / 2 + 1);
+    ctx.fillStyle = '#fff0c6';
+    ctx.fillText('Space 스킬 · W/S 파워 미세 조절', x + width / 2, y + height / 2 + 1);
+    ctx.restore();
   }
 
   private drawSlickZones(zones: GameSnapshot['slickZones'], sceneTime: number): void {
@@ -575,7 +827,7 @@ export class GameCanvasRenderer {
       kind: 'chick',
       x: position.x,
       y: position.y,
-      radius: snapshot.form.radius * (snapshot.megaNext ? 1.8 : 1),
+      radius: snapshot.form.radius * 1.15 * (snapshot.megaNext ? 1.8 : 1),
       angle: 0,
       alive: true,
     }, snapshot.stage, nowMs);
@@ -588,8 +840,8 @@ export class GameCanvasRenderer {
     const distance = Math.hypot(center.x - pouch.x, center.y - pouch.y);
     const strength = Math.min(1, distance / WORLD.maxDrag);
     const anchor = front
-      ? { x: WORLD.cannon.x + 23, y: WORLD.cannon.y - 42 }
-      : { x: WORLD.cannon.x - 23, y: WORLD.cannon.y - 42 };
+      ? { x: WORLD.cannon.x + 26.45, y: WORLD.cannon.y - 48.3 }
+      : { x: WORLD.cannon.x - 26.45, y: WORLD.cannon.y - 48.3 };
     ctx.save();
     ctx.strokeStyle = front ? '#7a261f' : '#4f1717';
     ctx.lineWidth = 6.5 - strength * 1.5;
@@ -601,7 +853,7 @@ export class GameCanvasRenderer {
     ctx.lineTo(pouch.x, pouch.y);
     ctx.stroke();
     if (front && snapshot.state === 'AIMING' && snapshot.ammo > 0) {
-      const radius = snapshot.form.radius;
+      const radius = snapshot.form.radius * 1.15;
       ctx.strokeStyle = '#9b3e2c';
       ctx.lineWidth = Math.max(7, radius * 0.42);
       ctx.beginPath();
@@ -617,10 +869,15 @@ export class GameCanvasRenderer {
     const width = entity.width ?? (entity.radius ?? 24) * 2;
     const height = entity.height ?? (entity.radius ?? 24) * 2;
     const shadowY = Math.min(WORLD.height - 8, entity.y + height * 0.5 + 7);
+    const groundedStone = entity.kind === 'block' && entity.material === 'stone' && entity.y + height / 2 >= WORLD.height - 95;
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.fillStyle = groundedStone ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.25)';
+    if (groundedStone) {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 12;
+    }
     ctx.beginPath();
-    ctx.ellipse(entity.x + 5, shadowY, Math.max(9, width * 0.45), Math.max(4, Math.min(14, height * 0.12)), 0, 0, Math.PI * 2);
+    ctx.ellipse(entity.x + 5, shadowY, Math.max(groundedStone ? 18 : 9, width * (groundedStone ? 0.8 : 0.45)), Math.max(4, Math.min(groundedStone ? 10 : 14, height * 0.12)), 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -634,6 +891,7 @@ export class GameCanvasRenderer {
     }
     if (entity.kind === 'cat' || entity.kind === 'egg' || entity.kind === 'chick') {
       this.drawSprite(entity, stage, nowMs);
+      if (entity.kind === 'cat') this.drawCatHitFace(entity, nowMs);
       return;
     }
     if (entity.kind === 'shutter') this.drawShutterSupport(entity);
@@ -648,10 +906,37 @@ export class GameCanvasRenderer {
     else if (entity.kind === 'chandelier') this.drawChandelier(entity);
     else if (entity.kind === 'trampoline') this.drawTrampoline(entity);
     else if (entity.kind === 'boulder') this.drawBoulder(entity);
+    else if (entity.kind === 'seesaw') this.drawSeesaw(entity);
     if (entity.kind === 'block' && entity.slick) {
       ctx.strokeStyle = 'rgba(255, 239, 139, .9)';
       ctx.lineWidth = 3;
       ctx.strokeRect(-(entity.width ?? 24) / 2, -(entity.height ?? 24) / 2, entity.width ?? 24, entity.height ?? 24);
+    }
+    ctx.restore();
+  }
+
+  private drawCatHitFace(entity: GameEntityView, nowMs: number): void {
+    const impact = [...this.catImpactEffects].reverse().find((effect) => effect.id === entity.id);
+    if (!impact || nowMs - impact.startMs > 185) return;
+    const age = nowMs - impact.startMs;
+    const alpha = 1 - age / 185;
+    const radius = entity.radius ?? 24;
+    const eyeOffset = radius * 0.31;
+    const eyeY = entity.y - radius * 0.12;
+    const crossRadius = Math.max(4, radius * 0.19);
+    const ctx = this.context;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = '#442d27';
+    ctx.lineWidth = Math.max(2.5, radius * 0.13);
+    ctx.lineCap = 'round';
+    for (const x of [entity.x - eyeOffset, entity.x + eyeOffset]) {
+      ctx.beginPath();
+      ctx.moveTo(x - crossRadius, eyeY - crossRadius);
+      ctx.lineTo(x + crossRadius, eyeY + crossRadius);
+      ctx.moveTo(x + crossRadius, eyeY - crossRadius);
+      ctx.lineTo(x - crossRadius, eyeY + crossRadius);
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -1123,26 +1408,134 @@ export class GameCanvasRenderer {
     ctx.stroke();
   }
 
+  private drawSeesaw(entity: GameEntityView): void {
+    const ctx = this.context;
+    const width = entity.width ?? 180;
+    const height = entity.height ?? 14;
+    ctx.fillStyle = '#79502e';
+    ctx.strokeStyle = '#3d2b20';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, height * 0.35);
+    ctx.lineTo(-17, height + 22);
+    ctx.lineTo(17, height + 22);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#dca45a';
+    ctx.strokeStyle = '#714327';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(-width / 2, -height / 2, width, height, 6);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#f4d193';
+    ctx.fillRect(-width / 2 + 8, -height / 2 + 2, width - 16, 2);
+    for (const x of [-width / 2 + 14, width / 2 - 14]) {
+      ctx.fillStyle = '#4f6470';
+      ctx.beginPath();
+      ctx.arc(x, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  private drawStructuralLinks(entities: readonly GameEntityView[]): void {
+    const blocks = entities.filter((entity) => entity.alive && entity.kind === 'block');
+    const links: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+    for (let i = 0; i < blocks.length && links.length < 22; i++) {
+      const a = blocks[i];
+      const aw = (a.width ?? 24) / 2;
+      const ah = (a.height ?? 24) / 2;
+      for (let j = i + 1; j < blocks.length && links.length < 22; j++) {
+        const b = blocks[j];
+        const bw = (b.width ?? 24) / 2;
+        const bh = (b.height ?? 24) / 2;
+        const dy = Math.abs(a.y - b.y);
+        const dx = Math.abs(a.x - b.x);
+        if (dy < 18 && dx > Math.max(aw, bw) && dx - aw - bw >= -5 && dx - aw - bw <= 36) {
+          const direction = Math.sign(b.x - a.x);
+          links.push({ x1: a.x + direction * aw, y1: (a.y + b.y) / 2, x2: b.x - direction * bw, y2: (a.y + b.y) / 2 });
+        } else if (dx < 18 && dy > Math.max(ah, bh) && dy - ah - bh >= -5 && dy - ah - bh <= 28) {
+          const direction = Math.sign(b.y - a.y);
+          links.push({ x1: (a.x + b.x) / 2, y1: a.y + direction * ah, x2: (a.x + b.x) / 2, y2: b.y - direction * bh });
+        }
+      }
+    }
+    const ctx = this.context;
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (const link of links) {
+      const horizontal = Math.abs(link.x2 - link.x1) >= Math.abs(link.y2 - link.y1);
+      if (horizontal) {
+        ctx.strokeStyle = 'rgba(53, 37, 27, .8)';
+        ctx.lineWidth = 10;
+        ctx.beginPath(); ctx.moveTo(link.x1, link.y1); ctx.lineTo(link.x2, link.y2); ctx.stroke();
+        ctx.strokeStyle = '#b77b43';
+        ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(link.x1, link.y1); ctx.lineTo(link.x2, link.y2); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255, 220, 157, .8)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(link.x1, link.y1 - 2); ctx.lineTo(link.x2, link.y2 - 2); ctx.stroke();
+      } else {
+        ctx.strokeStyle = '#394b54';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(link.x1, link.y1); ctx.lineTo(link.x2, link.y2); ctx.stroke();
+        const length = Math.abs(link.y2 - link.y1);
+        for (let t = 6; t < length; t += 11) {
+          const y = link.y1 + Math.sign(link.y2 - link.y1) * t;
+          ctx.strokeStyle = '#c1c8bd';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.ellipse(link.x1, y, 3.5, 5, 0, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+      for (const [x, y] of [[link.x1, link.y1], [link.x2, link.y2]]) {
+        ctx.fillStyle = '#e6bd79';
+        ctx.beginPath(); ctx.arc(x, y, 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#68452d'; ctx.lineWidth = 1.3; ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   private drawFan(entity: GameEntityView, nowMs: number): void {
     const ctx = this.context;
     ctx.save();
-    ctx.fillStyle = 'rgba(134, 220, 235, .12)';
-    ctx.fillRect(entity.x - (entity.width ?? 0) / 2, entity.y - (entity.height ?? 0) / 2, entity.width ?? 0, entity.height ?? 0);
-    ctx.strokeStyle = 'rgba(226,250,255,.5)';
-    ctx.setLineDash([9, 13]);
-    ctx.lineWidth = 3;
-    const offset = (nowMs / 35) % 22;
-    for (let y = entity.y - (entity.height ?? 0) / 2 + offset; y < entity.y + (entity.height ?? 0) / 2; y += 28) {
+    const width = entity.width ?? 220;
+    const height = entity.height ?? 460;
+    const bottom = entity.y + height / 2 - 66;
+    const top = entity.y - height / 2 + 20;
+    const pulse = 0.72 + Math.sin(nowMs / 430) * 0.12;
+    ctx.lineCap = 'round';
+    for (const lane of [-1, 0, 1]) {
+      const startX = entity.x + lane * width * 0.2;
+      const endX = entity.x + lane * width * 0.34;
       ctx.beginPath();
-      ctx.moveTo(entity.x - (entity.width ?? 0) / 2, y);
-      ctx.lineTo(entity.x + (entity.width ?? 0) / 2, y - 18);
+      ctx.moveTo(startX, bottom);
+      ctx.bezierCurveTo(startX - lane * width * 0.1, bottom - height * 0.28,
+        endX + lane * width * 0.14, top + height * 0.28, endX, top);
+      ctx.strokeStyle = `rgba(142, 232, 247, ${0.16 * pulse})`;
+      ctx.lineWidth = lane === 0 ? 30 : 22;
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(225, 250, 255, ${0.45 * pulse})`;
+      ctx.lineWidth = lane === 0 ? 3 : 2;
       ctx.stroke();
     }
-    ctx.setLineDash([]);
+    for (let i = 0; i < 20; i++) {
+      const t = (nowMs * 0.00022 + i * 0.173) % 1;
+      const y = bottom - t * (bottom - top);
+      const sway = Math.sin(nowMs * 0.0014 + i * 2.1) * width * 0.06;
+      const spread = (0.15 + t * 0.34) * width;
+      const x = entity.x + sway + Math.sin(i * 4.7) * spread;
+      const radius = 1.8 + ((i * 7) % 4) * 0.55;
+      ctx.fillStyle = `rgba(231, 251, 255, ${0.28 + (1 - t) * 0.42})`;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
     const sprite = this.assets.get('fan');
     if (sprite) {
-      const size = Math.min(104, Math.max(74, (entity.width ?? 100) * 0.72));
-      ctx.drawImage(sprite, entity.x - size / 2, entity.y + (entity.height ?? 0) / 2 - size, size, size);
+      const size = Math.min(104, Math.max(74, width * 0.72));
+      ctx.drawImage(sprite, entity.x - size / 2, entity.y + height / 2 - size, size, size);
     }
     ctx.restore();
   }

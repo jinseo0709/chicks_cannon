@@ -4,6 +4,7 @@ import type { LeaderboardClient } from '../leaderboard/client';
 import type { ItemCounts, ItemKind } from '../game/types';
 import { ITEM_INFO, MAX_ITEM_COUNT } from '../game/items';
 import { ScoreSubmissionPanel } from './ScoreSubmissionPanel';
+import { ItemIcon } from './ItemIcon';
 
 export interface EndingModalProps {
   score: number;
@@ -35,7 +36,7 @@ export function EndingModal({ score, client, storage, items, finalRewardClaimed,
                 const full = items[kind] >= MAX_ITEM_COUNT;
                 return <button key={kind} type="button" disabled={full} onClick={() => onClaimReward(kind)}
                   aria-label={`${item.label} 보상 선택, 현재 ${items[kind]}개${full ? ', 가득 참' : ''}`}>
-                  <span aria-hidden="true">{item.icon}</span><strong>{item.label}</strong><small>{items[kind]}/{MAX_ITEM_COUNT}</small>
+                  <span aria-hidden="true"><ItemIcon kind={kind} /></span><strong>{item.label}</strong><small>{items[kind]}/{MAX_ITEM_COUNT}</small>
                 </button>;
               })}
             </div>

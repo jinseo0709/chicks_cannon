@@ -73,7 +73,7 @@ export function App(): JSX.Element {
         {screen === 'game' && (
           <div className="play-screen">
             <GameCanvas controller={controller} />
-            {controller.snapshot.state !== 'ENDING' && (
+            {controller.snapshot.state !== 'ENDING' && !(controller.snapshot.state === 'WON' && controller.snapshot.stage === 6) && (
               <GameHud
                 snapshot={controller.snapshot}
                 onRestart={controller.retryStage}

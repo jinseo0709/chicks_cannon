@@ -25,6 +25,10 @@ import type {
   SlickZone,
 } from './types';
 
+const STAGE_CLEAR_DISPLAY_MS = 2600;
+const CHICK_SKILL_COOLDOWN_MS = 15000;
+const BOSS_MAX_HP = 500;
+
 type GameBody = Matter.Body & {
   customData?: {
     hp?: number;
@@ -36,6 +40,7 @@ type GameBody = Matter.Body & {
     height?: number;
     boss?: boolean;
     shield?: boolean;
+    shieldBroken?: boolean;
     shieldLayers?: number;
     anchor?: Point;
     attached?: boolean;
@@ -49,6 +54,12 @@ type GameBody = Matter.Body & {
     projectile?: 'shell' | 'feather';
     expiresAtMs?: number;
     slick?: boolean;
+    chandelierId?: number;
+    ropeId?: number;
+    seesawTriggered?: boolean;
+    armed?: boolean;
+    weakpointArmed?: boolean;
+    weakpointHit?: boolean;
   };
 };
 
@@ -111,15 +122,22 @@ export class ChickCannonEngine {
   private targetingItem: 'butter' | null = null;
   private slickZones: SlickZone[] = [];
   private scorePopups: Array<{ id: number; x: number; y: number; value: number; label?: string; expiresAtMs: number }> = [];
+  private bossDamagePopups: Array<{ id: number; x: number; y: number; damage: number; expiresAtMs: number }> = [];
+  private bossHp = 0;
+  private bossHitRemainingMs = 0;
+  private bossRageElapsedMs = 0;
+  private bossShockwaveRemainingMs = 0;
   private nextScorePopupId = 0;
   private nextSlickId = 0;
   private muted = false;
   private aimPosition: Point | null = null;
   private activeChick: GameBody | null = null;
-  private skillUsed = false;
+  private skillCooldownRemainingMs = 0;
   private megaNext = false;
+  private boosterNext = false;
+  private quakeNext = false;
   private settleFrames = 0;
-  private winFrames = 0;
+  private winElapsedMs = 0;
   private defeatCause: 'ammo' | 'hostage' | 'timer' | null = null;
   private alive = true;
   private snapshot: GameSnapshot;
@@ -149,6 +167,8 @@ export class ChickCannonEngine {
     this.stageEntryEggCushionActive = false;
     this.finalRewardClaimed = false;
     this.megaNext = false;
+    this.boosterNext = false;
+    this.quakeNext = false;
     this.loadStage(1);
     this.publish();
   }
@@ -207,11 +227,20 @@ export class ChickCannonEngine {
     this.track(chick, { radius, hp: 1, maxHp: 1, alive: true });
     const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * form.launchPower * 1.2;
     const angle = Math.atan2(dy, dx);
-    Body.setVelocity(chick, { x: Math.cos(angle) * power, y: Math.sin(angle) * power });
+    let launchVelocity = { x: Math.cos(angle) * power, y: Math.sin(angle) * power };
+    if (this.boosterNext) launchVelocity = { x: Math.max(launchVelocity.x * 1.8, 30), y: launchVelocity.y * 0.2 };
+    Body.setVelocity(chick, launchVelocity);
     Composite.add(this.engine.world, chick);
     this.activeChick = chick;
-    this.skillUsed = false;
     this.megaNext = false;
+    if (this.boosterNext) this.items = { ...this.items, booster: this.items.booster - 1 };
+    if (this.quakeNext) {
+      this.items = { ...this.items, quake: this.items.quake - 1 };
+      this.applyQuake();
+    }
+    this.boosterNext = false;
+    this.quakeNext = false;
+    if (this.items.mega > 0 && radius > form.radius) this.items = { ...this.items, mega: this.items.mega - 1 };
     this.ammo -= 1;
     this.state = 'FLYING';
     this.aimPosition = null;
@@ -221,8 +250,8 @@ export class ChickCannonEngine {
 
   activateSkill(): void {
     const chick = this.activeChick;
-    if (!chick || this.state !== 'FLYING' || this.targetingItem || this.skillUsed) return;
-    this.skillUsed = true;
+    if (!chick || this.state !== 'FLYING' || this.targetingItem || this.skillCooldownRemainingMs > 0) return;
+    this.skillCooldownRemainingMs = CHICK_SKILL_COOLDOWN_MS;
     const { x, y } = chick.position;
     const skillKind = CHICK_FORMS[this.stage].skillKind;
     if (skillKind === 'shell') {
@@ -276,6 +305,11 @@ export class ChickCannonEngine {
       return true;
     }
     if (kind === 'booster') {
+      if (this.state === 'AIMING') {
+        this.boosterNext = !this.boosterNext;
+        this.publish();
+        return true;
+      }
       if (this.state !== 'FLYING' || !this.activeChick) return false;
       Body.setVelocity(this.activeChick, {
         x: Math.max(this.activeChick.velocity.x * 1.8, 30),
@@ -283,7 +317,13 @@ export class ChickCannonEngine {
       });
     } else if (kind === 'mega') {
       if (this.state !== 'AIMING') return false;
-      this.megaNext = true;
+      this.megaNext = !this.megaNext;
+      this.publish();
+      return true;
+    } else if (kind === 'quake' && this.state === 'AIMING') {
+      this.quakeNext = !this.quakeNext;
+      this.publish();
+      return true;
     } else {
       this.applyQuake();
     }
@@ -410,6 +450,16 @@ export class ChickCannonEngine {
   step(deltaMs: number): void {
     if (!this.alive || this.state === 'PAUSED') return;
     const delta = clamp(Number.isFinite(deltaMs) ? deltaMs : 16.667, 1, 33.333);
+    this.skillCooldownRemainingMs = Math.max(0, this.skillCooldownRemainingMs - delta);
+    this.bossHitRemainingMs = Math.max(0, this.bossHitRemainingMs - delta);
+    this.bossShockwaveRemainingMs = Math.max(0, this.bossShockwaveRemainingMs - delta);
+    if (this.stage === LAST_STAGE && this.bossHp > 0 && this.bossHp <= BOSS_MAX_HP / 2 && activeStates.has(this.state)) {
+      this.bossRageElapsedMs += delta;
+      if (this.bossRageElapsedMs >= 5000) {
+        this.bossRageElapsedMs -= 5000;
+        this.triggerBossShockwave();
+      }
+    }
     if (this.bonusChallengeStatus === 'running' && activeStates.has(this.state)) {
       this.bonusChallengeElapsedMs += delta;
       if (this.bonusChallengeElapsedMs >= STAGES[this.stage].bonusChallenge.timeLimitMs) {
@@ -419,12 +469,14 @@ export class ChickCannonEngine {
       }
     }
     Engine.update(this.engine, delta);
+    this.wakeUnsupportedObstacles();
     if (this.catsReleased) this.dropUnsupportedCats();
     for (const { body, velocity } of this.pendingVelocities.values()) {
       if (body.customData?.alive !== false) Body.setVelocity(body, velocity);
     }
     this.pendingVelocities.clear();
     this.scorePopups = this.scorePopups.filter((popup) => popup.expiresAtMs > this.engine.timing.timestamp);
+    this.bossDamagePopups = this.bossDamagePopups.filter((popup) => popup.expiresAtMs > this.engine.timing.timestamp);
     this.advanceGimmicks(delta);
     this.applyFans();
     for (const body of this.bodies.values()) {
@@ -433,12 +485,20 @@ export class ChickCannonEngine {
         continue;
       }
       if (body.label === 'enemy' && (body.position.y > WORLD.height + 60 || body.position.x > WORLD.width + 150)) {
-        this.defeatCat(body, { source: 'fall', point: { ...body.position }, direction: { x: 1, y: 0 }, frontal: false });
+        if (body.customData?.boss && (body.customData.hp ?? 0) > 0) {
+          Body.setPosition(body, {
+            x: clamp(body.position.x, 50, WORLD.width - 50),
+            y: clamp(body.position.y, 80, WORLD.height - (body.customData.radius ?? 38) - 50),
+          });
+          Body.setVelocity(body, { x: 0, y: 0 });
+        } else {
+          this.defeatCat(body, { source: 'fall', point: { ...body.position }, direction: { x: 1, y: 0 }, frontal: false });
+        }
       }
     }
     if (this.state === 'WON') {
-      this.winFrames += 1;
-      if (this.winFrames >= 42) {
+      this.winElapsedMs += delta;
+      if (this.winElapsedMs >= STAGE_CLEAR_DISPLAY_MS) {
         if (this.stage === LAST_STAGE) {
           this.finalRewardClaimed = false;
           this.state = 'ENDING';
@@ -475,8 +535,15 @@ export class ChickCannonEngine {
     this.clearGimmickState();
     this.fans = [];
     this.activeChick = null;
-    this.skillUsed = false;
+    this.bossHp = 0;
+    this.bossHitRemainingMs = 0;
+    this.bossRageElapsedMs = 0;
+    this.bossShockwaveRemainingMs = 0;
+    this.bossDamagePopups = [];
+    this.skillCooldownRemainingMs = 0;
     this.megaNext = false;
+    this.boosterNext = false;
+    this.quakeNext = false;
     this.ammo = STAGES[stage].ammo;
     if (stage === LAST_STAGE) this.finalRewardClaimed = false;
     this.stageStars = 0;
@@ -487,7 +554,7 @@ export class ChickCannonEngine {
     this.scorePopups = [];
     this.aimPosition = null;
     this.settleFrames = 0;
-    this.winFrames = 0;
+    this.winElapsedMs = 0;
     this.defeatCause = null;
     this.stateBeforePause = null;
     this.catsReleased = false;
@@ -587,6 +654,26 @@ export class ChickCannonEngine {
         label: 'bouncePad',
       }) as GameBody;
       customData = { width: spec.w ?? 110, height: spec.h ?? 25, alive: true };
+    } else if (spec.kind === 'seesaw') {
+      const width = positive(spec.w, 180);
+      const height = positive(spec.h, 14);
+      body = Bodies.rectangle(spec.x, spec.y, width, height, {
+        isStatic: true,
+        density: 0.004,
+        friction: 0.72,
+        restitution: 0.22,
+        label: 'seesaw',
+      }) as GameBody;
+      const pivot = Constraint.create({
+        pointA: { x: spec.x, y: spec.y + height },
+        bodyB: body,
+        pointB: { x: 0, y: height / 2 },
+        length: 0,
+        stiffness: 0.92,
+        damping: 0.04,
+      });
+      Composite.add(this.engine.world, pivot);
+      customData = { width, height, alive: true, seesawTriggered: false };
     } else if (spec.kind === 'tire' || spec.kind === 'gear') {
       const radius = positive(spec.radius, spec.kind === 'tire' ? 40 : 44);
       body = Bodies.circle(spec.x, spec.y, radius, {
@@ -620,15 +707,27 @@ export class ChickCannonEngine {
     } else {
       const radius = positive(spec.radius, 30);
       body = Bodies.circle(spec.x, spec.y, radius, {
+        isStatic: Boolean(spec.armed),
         density: 0.015,
         friction: 0.05,
         restitution: 0.1,
         label: 'boulder',
       }) as GameBody;
-      customData = { radius, alive: true };
+      customData = { radius, alive: true, armed: Boolean(spec.armed) };
     }
     this.track(body, customData);
     Composite.add(this.engine.world, body);
+    if (spec.kind === 'cat' && customData.boss) this.bossHp = customData.hp ?? BOSS_MAX_HP;
+    if (spec.kind === 'chandelier' && this.stage === LAST_STAGE) {
+      const anchor = customData.anchor ?? { x: body.position.x, y: body.position.y - 140 };
+      const ropeLength = Math.hypot(body.position.x - anchor.x, body.position.y - anchor.y);
+      const rope = Bodies.rectangle((body.position.x + anchor.x) / 2, (body.position.y + anchor.y) / 2, 8, ropeLength, {
+        isStatic: true, isSensor: true, label: 'chandelierRope',
+      }) as GameBody;
+      this.track(rope, { chandelierId: body.id, alive: true });
+      customData.ropeId = rope.id;
+      Composite.add(this.engine.world, rope);
+    }
   }
 
   private track(body: GameBody, customData: NonNullable<GameBody['customData']>): void {
@@ -650,6 +749,25 @@ export class ChickCannonEngine {
     Composite.remove(this.engine.world, constraint);
     this.chandelierConstraints.delete(body.id);
     if (body.customData) body.customData.attached = false;
+    const ropeId = body.customData?.ropeId;
+    if (ropeId !== undefined) {
+      const ropeBody = this.bodies.get(ropeId);
+      if (ropeBody) {
+        Composite.remove(this.engine.world, ropeBody);
+        this.bodies.delete(ropeId);
+      }
+      if (body.customData) body.customData.ropeId = undefined;
+    }
+  }
+
+  private startBossChandelierSwing(chandelier: GameBody, chick: GameBody): void {
+    const data = chandelier.customData;
+    if (!data?.attached || data.weakpointArmed) return;
+    data.weakpointArmed = true;
+    const direction = chick.position.x <= chandelier.position.x ? 1 : -1;
+    const speed = Math.min(19, Math.max(12, Math.abs(chick.velocity.x) * 0.65));
+    Body.setVelocity(chandelier, { x: direction * speed, y: Math.min(-2, chandelier.velocity.y) });
+    Body.setAngularVelocity(chandelier, direction * 0.14);
   }
 
   private removeBody(body: GameBody): void {
@@ -688,11 +806,39 @@ export class ChickCannonEngine {
       const b = bodyB as GameBody;
       if (a.customData?.alive === false || b.customData?.alive === false) continue;
       const involvesChick = a.label === 'chick' || b.label === 'chick';
+      const rope = a.label === 'chandelierRope' ? a : b.label === 'chandelierRope' ? b : null;
+      if (rope) {
+        const chick = a.label === 'chick' ? a : b.label === 'chick' ? b : null;
+        const chandelier = rope.customData?.chandelierId !== undefined
+          ? this.bodies.get(rope.customData.chandelierId) : undefined;
+        if (chick && chandelier && this.stage === LAST_STAGE) this.startBossChandelierSwing(chandelier, chick);
+        if (chick) this.releaseCats();
+        continue;
+      }
       if (!this.catsReleased && !involvesChick) continue;
+      const seesaw = a.label === 'seesaw' ? a : b.label === 'seesaw' ? b : null;
+      const chickAtSeesaw = seesaw && involvesChick ? (a.label === 'chick' ? a : b) : null;
+      if (seesaw && chickAtSeesaw && !seesaw.customData?.seesawTriggered) {
+        seesaw.customData!.seesawTriggered = true;
+        const launchesRight = chickAtSeesaw.position.x <= seesaw.position.x;
+        if (seesaw.isStatic) Body.setStatic(seesaw, false);
+        Body.setAngularVelocity(seesaw, launchesRight ? -0.24 : 0.24);
+        const ball = [...this.bodies.values()].find((candidate) => candidate.label === 'boulder' &&
+          Math.abs(candidate.position.x - seesaw.position.x) <= (seesaw.customData?.width ?? 180) * 0.6 &&
+          Math.abs(candidate.position.y - seesaw.position.y) <= 70);
+        if (ball) {
+          if (ball.isStatic) Body.setStatic(ball, false);
+          if (ball.customData) ball.customData.armed = false;
+          Body.setVelocity(ball, { x: launchesRight ? 5.2 : -5.2, y: -18 });
+          Body.setAngularVelocity(ball, launchesRight ? 0.18 : -0.18);
+        }
+      }
       if (involvesChick && [a.label, b.label].some((label) =>
-        ['block', 'tnt', 'enemy', 'tire', 'gear', 'shutter', 'bouncePad', 'boulder', 'chandelier'].includes(label))) {
+        ['block', 'tnt', 'enemy', 'tire', 'gear', 'shutter', 'bouncePad', 'boulder', 'seesaw', 'chandelier', 'chandelierRope'].includes(label))) {
         this.releaseCats();
       }
+      const chandelier = a.label === 'chandelier' ? a : b.label === 'chandelier' ? b : null;
+      const fortTarget = chandelier === a ? b : chandelier === b ? a : null;
       if (a.label === 'tire' || b.label === 'tire') {
         const tire = a.label === 'tire' ? a : b;
         const dynamic = tire === a ? b : a;
@@ -730,16 +876,29 @@ export class ChickCannonEngine {
       const point = contact && Number.isFinite(contact.x) && Number.isFinite(contact.y)
         ? { x: contact.x, y: contact.y }
         : { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 };
+      if (this.stage === LAST_STAGE && chandelier?.customData?.weakpointArmed && !chandelier.customData.weakpointHit && fortTarget) {
+        const hitsBoss = fortTarget.label === 'enemy' && fortTarget.customData?.boss;
+        const hitsFortress = (fortTarget.label === 'block' || fortTarget.label === 'tnt') &&
+          fortTarget.position.x >= 850 && fortTarget.position.x <= 1100 && fortTarget.position.y <= 570;
+        if (hitsBoss || hitsFortress) {
+          chandelier.customData.weakpointHit = true;
+          this.detachChandelier(chandelier);
+          const boss = [...this.bodies.values()].find((candidate) => candidate.customData?.boss && candidate.customData.alive !== false);
+          if (boss) this.damageBody(boss, 250, {
+            source: 'chandelier', point, direction: { x: 1, y: 0 }, frontal: false,
+          });
+          this.awardScore(800, point.x, point.y - 20, '약점 명중');
+        }
+      }
       for (const body of [a, b]) {
         const data = body.customData;
         if (!data || data.alive === false) continue;
         const other = body === a ? b : a;
-        if (body.label === 'chandelier' && relativeSpeed * 3.5 >= (data.breakImpact ?? 18)) this.detachChandelier(body);
         const dx = body.position.x - other.position.x;
         const dy = body.position.y - other.position.y;
         const distance = Math.hypot(dx, dy);
         const source: DamageSource = other.label === 'chick' ? 'chick'
-          : other.label === 'block' || other.label === 'tnt' || other.label === 'boulder' ? 'block'
+          : other.label === 'block' || other.label === 'tnt' || other.label === 'boulder' || other.label === 'seesaw' ? 'block'
             : other.label === 'chandelier' ? 'chandelier' : 'other';
         const context: DamageContext = {
           source, point,
@@ -747,10 +906,21 @@ export class ChickCannonEngine {
           frontal: other.label === 'chick' && other.position.x < body.position.x - 5 &&
             !(other.position.y < body.position.y - 15 && Math.abs(other.velocity.y) > 3),
         };
-        if (body.label === 'enemy' && impact > 4.5 && context.frontal && (data.shieldLayers ?? 0) > 0) {
-          data.shieldLayers! -= 1;
+        if (body.label === 'chandelier' && relativeSpeed * 3.5 >= (data.breakImpact ?? 18)) {
+          if (this.stage === LAST_STAGE && other.label === 'chick' && data.attached && !data.weakpointArmed) {
+            this.startBossChandelierSwing(body, other);
+          } else if (!(this.stage === LAST_STAGE && data.weakpointArmed && !data.weakpointHit)) {
+            this.detachChandelier(body);
+          }
+        }
+        if (body.label === 'enemy' && data.boss && other.label === 'chandelier' && other.customData?.weakpointHit) continue;
+        if (body.label === 'enemy' && impact > 4.5 && (data.shieldLayers ?? 0) > 0) {
+          data.shieldLayers = 0;
+          data.shield = false;
+          data.shieldBroken = true;
           this.awardScore(500, body.position.x, body.position.y - 30, '방패 파괴');
-          Body.setVelocity(other, { x: -Math.abs(other.velocity.x) * 0.7, y: -4 });
+          if (context.frontal) Body.setVelocity(other, { x: -Math.abs(other.velocity.x) * 0.7, y: -4 });
+          else this.damageBody(body, impact, context);
         } else if (body.label === 'hostageEgg') {
           this.damageBody(body, impact > 3.2 ? impact : 0, context);
         } else if ((body.label === 'enemy' && impact > 4.5) ||
@@ -764,7 +934,19 @@ export class ChickCannonEngine {
   private damageBody(body: GameBody, amount: number, context: DamageContext): void {
     const data = body.customData;
     if (!data || data.alive === false || data.hp === undefined) return;
-    data.hp -= Math.max(0, amount);
+    const damage = Math.min(data.hp, Math.max(0, amount));
+    data.hp = Math.max(0, data.hp - damage);
+    if (data.boss) {
+      this.bossHp = data.hp;
+      this.bossHitRemainingMs = 200;
+      if (damage > 0) this.bossDamagePopups.push({
+        id: ++this.nextScorePopupId,
+        x: body.position.x,
+        y: body.position.y - (data.radius ?? 38) - 16,
+        damage: Math.round(damage),
+        expiresAtMs: this.engine.timing.timestamp + 1050,
+      });
+    }
     if (body.label === 'hostageEgg') {
       if (data.hp <= 0 || body.position.y > 685) {
         if (this.stage >= 4 && this.eggCushionActive) {
@@ -792,8 +974,9 @@ export class ChickCannonEngine {
   private defeatCat(body: GameBody, _context: DamageContext): void {
     const data = body.customData;
     if (!data || data.alive === false) return;
+    if (data.boss && (data.hp ?? 0) > 0) return;
     data.alive = false;
-    const reward = data.boss ? 3000 : data.shield ? 2000 : 1200;
+    const reward = data.boss ? 3000 : data.shield || data.shieldBroken ? 2000 : 1200;
     this.awardScore(reward, body.position.x, body.position.y - 24, data.boss ? '보스 격파' : '고양이 격파');
     this.removeBody(body);
   }
@@ -837,7 +1020,7 @@ export class ChickCannonEngine {
 
   private dropUnsupportedCats(): void {
     const bodies = Composite.allBodies(this.engine.world) as GameBody[];
-    const supports = bodies.filter((body) => ['ground', 'block', 'tnt', 'shutter', 'bouncePad', 'boulder', 'tire', 'gear', 'chandelier'].includes(body.label));
+    const supports = bodies.filter((body) => ['ground', 'block', 'tnt', 'shutter', 'bouncePad', 'boulder', 'tire', 'gear', 'seesaw', 'chandelier'].includes(body.label));
     for (const cat of this.bodies.values()) {
       if (cat.label !== 'enemy' || cat.customData?.alive === false || (!cat.isStatic && !cat.isSleeping)) continue;
       const radius = cat.customData?.radius ?? 22;
@@ -849,6 +1032,18 @@ export class ChickCannonEngine {
       if (cat.isStatic) Body.setStatic(cat, false);
       Sleeping.set(cat, false);
       Body.setVelocity(cat, { x: cat.velocity.x, y: Math.max(cat.velocity.y, 2.2) });
+    }
+  }
+
+  private wakeUnsupportedObstacles(): void {
+    const bodies = Composite.allBodies(this.engine.world) as GameBody[];
+    const supports = bodies.filter((body) => ['ground', 'block', 'tnt', 'shutter', 'bouncePad', 'boulder', 'tire', 'gear', 'seesaw'].includes(body.label));
+    for (const body of bodies) {
+      if (body.isStatic || !body.isSleeping || body.label === 'chick' || body.label === 'enemy' || body.label === 'seesaw' || body.label === 'chandelierRope') continue;
+      const resting = supports.some((support) => support !== body && support.customData?.alive !== false &&
+        body.bounds.max.x > support.bounds.min.x + 2 && body.bounds.min.x < support.bounds.max.x - 2 &&
+        Math.abs(body.bounds.max.y - support.bounds.min.y) <= 7);
+      if (!resting) Sleeping.set(body, false);
     }
   }
 
@@ -941,6 +1136,13 @@ export class ChickCannonEngine {
     }
   }
 
+  private triggerBossShockwave(): void {
+    this.bossShockwaveRemainingMs = 900;
+    const chick = this.activeChick;
+    if (this.state !== 'FLYING' || !chick || chick.position.x > 1000) return;
+    Body.setVelocity(chick, { x: chick.velocity.x * 0.62, y: chick.velocity.y * 0.72 });
+  }
+
   private checkTurnSettlement(): void {
     if (this.state !== 'FLYING' && this.state !== 'RESOLVING') return;
     const chick = this.activeChick;
@@ -954,7 +1156,8 @@ export class ChickCannonEngine {
     const catsAlive = [...this.bodies.values()].some(
       (body) => body.label === 'enemy' && body.customData?.alive !== false && body.position.y < WORLD.height + 20,
     );
-    if (!catsAlive) {
+    const bossDefeated = this.stage !== LAST_STAGE || this.bossHp <= 0;
+    if (!catsAlive && bossDefeated) {
       this.state = 'WON';
       this.stageStars = this.calculateStageStars();
       if (this.bonusChallengeStatus === 'running' && this.bonusChallengeElapsedMs <= STAGES[this.stage].bonusChallenge.timeLimitMs) {
@@ -963,7 +1166,7 @@ export class ChickCannonEngine {
       } else if (this.bonusChallengeStatus === 'running') {
         this.bonusChallengeStatus = 'expired';
       }
-      this.winFrames = 0;
+      this.winElapsedMs = 0;
     } else if (this.ammo <= 0) {
       this.state = 'LOST';
       this.defeatCause = 'ammo';
@@ -972,7 +1175,6 @@ export class ChickCannonEngine {
         this.removeBody(chick);
       }
       this.activeChick = null;
-      this.skillUsed = false;
       this.aimPosition = null;
       this.state = 'AIMING';
     }
@@ -1010,7 +1212,7 @@ export class ChickCannonEngine {
     const entities: GameEntityView[] = [];
     for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
       const data = body.customData;
-      if (!['block', 'tnt', 'enemy', 'hostageEgg', 'shutter', 'bouncePad', 'boulder', 'chick', 'tire', 'gear', 'chandelier'].includes(body.label)) continue;
+      if (!['block', 'tnt', 'enemy', 'hostageEgg', 'shutter', 'bouncePad', 'boulder', 'seesaw', 'chick', 'tire', 'gear', 'chandelier'].includes(body.label)) continue;
       const kind: GameEntityView['kind'] = body.label === 'enemy'
         ? 'cat'
         : body.label === 'hostageEgg'
@@ -1074,6 +1276,18 @@ export class ChickCannonEngine {
       finalRewardClaimed: this.finalRewardClaimed,
       targetingItem: this.targetingItem,
       slickZones: this.slickZones.map((zone) => ({ ...zone })),
+      bossHp: this.stage === LAST_STAGE ? this.bossHp : 0,
+      bossMaxHp: this.stage === LAST_STAGE ? BOSS_MAX_HP : 0,
+      bossHitRemainingMs: this.bossHitRemainingMs,
+      bossShockwaveRemainingMs: this.bossShockwaveRemainingMs,
+      bossDamagePopups: this.bossDamagePopups.map((popup) => ({
+        id: popup.id,
+        x: popup.x,
+        y: popup.y,
+        damage: popup.damage,
+        remainingMs: Math.max(0, popup.expiresAtMs - this.engine.timing.timestamp),
+      })),
+      winElapsedMs: this.winElapsedMs,
       scorePopups: this.scorePopups.map((popup) => ({
         id: popup.id,
         x: popup.x,
@@ -1086,6 +1300,9 @@ export class ChickCannonEngine {
       entities,
       aimPosition: this.aimPosition ? { ...this.aimPosition } : null,
       megaNext: this.megaNext,
+      boosterNext: this.boosterNext,
+      quakeNext: this.quakeNext,
+      skillCooldownRemainingMs: this.skillCooldownRemainingMs,
       defeatCause: this.defeatCause,
       story: STAGES[this.stage].story,
       form: CHICK_FORMS[this.stage],

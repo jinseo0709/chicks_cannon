@@ -3,6 +3,7 @@ import { assetUrl } from '../asset-url';
 import type { GameSnapshot } from '../game/types';
 import { ITEM_INFO, MAX_ITEM_COUNT, STAGE_CLEAR_REWARDS } from '../game/items';
 import { STAGES } from '../game/stages';
+import { ItemIcon } from './ItemIcon';
 
 export interface GameModalProps {
   snapshot: GameSnapshot;
@@ -13,6 +14,7 @@ export interface GameModalProps {
 
 export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameModalProps): JSX.Element | null {
   if (snapshot.state === 'WON') {
+    if (snapshot.stage === 6) return null;
     return (
       <div className="overlay-backdrop clear-backdrop" role="status">
         <section className="clear-card">
@@ -49,7 +51,7 @@ export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameMo
           <h3>{form?.name}</h3>
           <p><strong>{form?.skillName}</strong> · {form?.skillDesc}</p>
           {reward && rewardKind && <div className="item-reward-card" role="status">
-            <span className="item-reward-icon" aria-hidden="true">{reward.icon}</span>
+            <span className="item-reward-icon" aria-hidden="true"><ItemIcon kind={rewardKind} /></span>
             <span><strong>스테이지 클리어 보상</strong><br />{reward.label} 1개 획득! <small>가방 {snapshot.items[rewardKind]}/{MAX_ITEM_COUNT}</small></span>
           </div>}
           <div className="clear-actions">

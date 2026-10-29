@@ -48,6 +48,9 @@ const initialSnapshot: GameSnapshot = {
   entities: [],
   aimPosition: null,
   megaNext: false,
+  boosterNext: false,
+  quakeNext: false,
+  skillCooldownRemainingMs: 0,
   defeatCause: null,
   story: STAGES[1].story,
   form: CHICK_FORMS[1],
@@ -87,6 +90,18 @@ export function useChickCannon(): ChickCannonController {
         engine.activateSkill();
         audioRef.current?.playSkill(engine.getSnapshot().stage);
       },
+      onUseItem: (kind) => {
+        void audioRef.current?.unlock();
+        if (!engine.useItem(kind)) return;
+        if (kind === 'quake') audioRef.current?.playExplosion();
+        else if (kind === 'booster') audioRef.current?.playSkill(2);
+        else if (kind === 'mega') audioRef.current?.playBounce();
+      },
+      onQuickRestart: () => {
+        void audioRef.current?.unlock();
+        engine.retryStage();
+        engine.dismissDialogue();
+      },
     });
     inputRef.current = input;
     input.setMode(engine.getSnapshot().state, engine.getSnapshot().targetingItem);
@@ -104,6 +119,7 @@ export function useChickCannon(): ChickCannonController {
     let sceneTime = 0;
     let lastState = engine.getSnapshot().state;
     let lastScore = engine.getSnapshot().score;
+    let lastBossDamageId = 0;
     const animate = (time: number) => {
       const delta = previousTime === 0 ? 16.667 : Math.min(time - previousTime, 33.333);
       previousTime = time;
@@ -113,9 +129,16 @@ export function useChickCannon(): ChickCannonController {
       input.setMode(current.state, current.targetingItem);
       if (current.state !== lastState) {
         if (current.state === 'FLYING') audioRef.current?.playLaunch();
-        if (current.state === 'EVOLUTION' || current.state === 'ENDING') audioRef.current?.playEvolution();
+        if (current.state === 'WON' && current.stage === 6) audioRef.current?.playVictoryFanfare();
+        if (current.state === 'EVOLUTION' || (current.state === 'ENDING' && current.stage !== 6)) audioRef.current?.playEvolution();
         if (current.state === 'LOST') audioRef.current?.playExplosion();
         lastState = current.state;
+      }
+      const damagePopups = current.bossDamagePopups ?? [];
+      const latestBossDamage = damagePopups[damagePopups.length - 1];
+      if (latestBossDamage && latestBossDamage.id > lastBossDamageId) {
+        audioRef.current?.playBossHit();
+        lastBossDamageId = latestBossDamage.id;
       }
       if (current.score > lastScore) audioRef.current?.playImpact(Math.min(8, current.score - lastScore));
       lastScore = current.score;

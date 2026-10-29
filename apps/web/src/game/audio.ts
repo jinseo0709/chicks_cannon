@@ -28,6 +28,13 @@ export class WebAudioSynth {
   playBounce(): void { this.tone(440, 0.12, 'sine', 0.08); }
   playSkill(stage: number): void { this.sweep(260, 720 + stage * 55, 0.23, 'triangle', 0.1); }
   playCatDefeat(): void { this.sweep(340, 120, 0.24, 'sine', 0.08); }
+  playBossHit(): void { this.sweep(125, 62, 0.19, 'sawtooth', 0.16); }
+  playVictoryFanfare(): void {
+    [659.25, 783.99, 987.77, 1318.51].forEach((frequency, index) => {
+      this.tone(frequency, 0.42, index === 3 ? 'triangle' : 'sine', 0.1, index * 0.14);
+    });
+    this.tone(523.25, 0.72, 'triangle', 0.055, 0.48);
+  }
   playEvolution(): void {
     [523.25, 659.25, 783.99].forEach((frequency, index) => {
       this.tone(frequency, 0.28, 'sine', 0.07, index * 0.12);
