@@ -1,6 +1,6 @@
 # Task: T02 Synthesized Game BGM
 
-## Status: pending
+## Status: done
 
 ## Goal
 Add a quiet, original looping background arrangement that evokes a warm, playful adventure and follows existing Web Audio unlock, mute, pause, and disposal behavior.
@@ -48,11 +48,11 @@ Add a quiet, original looping background arrangement that evokes a warm, playful
 - Check the code paths: no audio before unlock; one loop after unlock; mute and pause stop new music notes; unmute/resume do not duplicate the timer; disposal prevents any later scheduling.
 
 ## Acceptance Criteria
-- [ ] A warm, playful synthesized BGM loop starts on the first existing audio-unlock gesture.
-- [ ] Music remains quieter than game effects and loops without gaps or timer duplication.
-- [ ] Mute silences music and effects; pause silences music until resume.
-- [ ] No dependency or external music asset is introduced.
-- [ ] Production web build succeeds.
+- [x] A warm, playful synthesized BGM loop starts on the first existing audio-unlock gesture.
+- [x] Music remains quieter than game effects and loops without gaps or timer duplication.
+- [x] Mute silences music and effects; pause silences music until resume.
+- [x] No dependency or external music asset is introduced.
+- [x] Production web build succeeds.
 
 ## Validation
 - `npm.cmd run build --workspace @chicks-cannon/web` — must complete without TypeScript or Vite errors.
@@ -70,6 +70,6 @@ Task: T02-synthesized-game-bgm
 ```
 
 ## Progress
-- [ ] 구현 완료
-- [ ] 검증 통과
+- [x] 구현 완료
+- [x] 검증 통과
 - commit: pending

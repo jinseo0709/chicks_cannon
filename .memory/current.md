@@ -7,10 +7,10 @@
 [P01 Pull Feedback and Music](./phases/2026-10-29-pull-face-and-bgm/P01-pull-feedback-and-music/phase.md)
 
 ## Active Task
-[T02 Synthesized Game BGM](./phases/2026-10-29-pull-face-and-bgm/P01-pull-feedback-and-music/T02-synthesized-game-bgm.md)
+None. All tasks in this plan are complete.
 
 ## Status
-- T01 당김 표정 구현과 웹 빌드 검증이 완료되었습니다.
+- T01 당김 표정과 T02 배경음 구현 및 웹 빌드 검증이 완료되었습니다.
 
 ## Next Step (IMPORTANT)
-T02 청사진을 읽고 `apps/web/src/game/audio.ts`와 `apps/web/src/game/use-chick-cannon.ts`에 배경음 스케줄러와 음소거·일시정지 연결을 구현합니다.
+완료된 계획입니다. 다음 작업은 새 사용자 요청에 따라 결정합니다.

@@ -125,6 +125,7 @@ export function useChickCannon(): ChickCannonController {
       previousTime = time;
       engine.step(delta);
       const current = engine.getSnapshot();
+      audioRef.current?.setMusicPaused(current.state === 'PAUSED');
       if (current.state !== 'PAUSED') sceneTime = time;
       input.setMode(current.state, current.targetingItem);
       if (current.state !== lastState) {

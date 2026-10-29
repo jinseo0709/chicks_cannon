@@ -6,4 +6,4 @@ Make the loaded chick visibly strain as the player pulls the slingshot, then add
 ## Phases
 | Phase | Status | Summary | Blueprint |
 | :--- | :--- | :--- | :--- |
-| P01 | `in_progress` | Pull expression and synthesized background music | [P01](../phases/2026-10-29-pull-face-and-bgm/P01-pull-feedback-and-music/phase.md) |
+| P01 | `done` | Pull expression and synthesized background music | [P01](../phases/2026-10-29-pull-face-and-bgm/P01-pull-feedback-and-music/phase.md) |
