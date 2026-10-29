@@ -22,8 +22,8 @@ Show the loaded chick gradually squinting and blushing as the player pulls farth
 - Compute `pullStrength = snapshot.aimPosition ? Math.min(1, Math.hypot(position.x - center.x, position.y - center.y) / WORLD.maxDrag) : 0`.
 - Preserve the existing loaded chick `GameEntityView` and sprite size. Pass `pullStrength` as an optional argument to `drawSprite(entity, stage, nowMs, pullStrength)`; do not add it to the shared entity model.
 - Extend `drawSprite` with `pullStrength = 0`. Draw the current authored image/fallback first. When `entity.id === -1 && pullStrength > 0`, draw an effort face in the same translated/rotated local coordinate space before restoring the context.
-- Base face layout on the stage-1 SVG's `viewBox="-48 -48 96 96"`: eye centers at x = ±10 units and y = 2 units; beak center at y = 14 units. Convert SVG units to canvas units with `width / 96`.
-- Draw two curved closed-eye lines, scaling line curvature/weight smoothly with `pullStrength`; add a subtle warm pink cheek circle on each side with alpha proportional to pull strength. Keep the beak visible and do not cover the chick silhouette. Clamp all opacity and geometry for small chick sizes.
+- The game uses the full-bleed PNG art, so use positions measured against each PNG rather than the old SVG reference. When `assetVariant === 1` and `pullStrength > 0.12`, use the already-loaded `chick-1-blink` sprite as the pulling expression. For variants 2–4, map the face to a 96-unit square (`scale = width / 96`) and use these eye centers: variant 2 `[0, 27]` at y `-6`; variant 3 `[8, 24]` at y `-1`; variant 4 `[5, 29]` at y `-3`. Use variant-specific cheek centers `[−8, 28]` at y `5`, `[−4, 34]` at y `7`, and `[−7, 34]` at y `5`, respectively.
+- For variants 2–4, draw clearly visible curved closed-eye strokes over those centers and strengthen the cheeks with pink circles. Scale eye curvature, stroke weight, and cheek opacity with `pullStrength`; keep the beak visible and do not cover the chick silhouette. Clamp opacity and geometry for small chick sizes.
 - Other chicks, eggs, cats, and idle loaded chicks must retain their current appearance.
 
 ### I02. Verify the implementation

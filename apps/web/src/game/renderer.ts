@@ -994,7 +994,8 @@ export class GameCanvasRenderer {
     let id: Parameters<SvgAssetCache['get']>[0];
     const blinkPhase = (nowMs / 1000 + Math.abs(entity.id) * 0.37) % 4.2;
     const blinking = entity.kind === 'chick' && CHICK_FORMS[stage].assetVariant === 1 && blinkPhase > 4.02;
-    if (entity.kind === 'chick') id = blinking ? 'chick-1-blink' : `chick-${CHICK_FORMS[stage].assetVariant}`;
+    const pulledBabyFace = entity.kind === 'chick' && entity.id === -1 && pullStrength > 0.12 && CHICK_FORMS[stage].assetVariant === 1;
+    if (entity.kind === 'chick') id = blinking || pulledBabyFace ? 'chick-1-blink' : `chick-${CHICK_FORMS[stage].assetVariant}`;
     else if (entity.kind === 'egg') id = 'egg';
     else id = entity.boss ? 'cat-boss' : entity.shield ? 'cat-shield' : 'cat-normal';
     const image = this.assets.get(id);
@@ -1021,36 +1022,43 @@ export class GameCanvasRenderer {
       ctx.arc(radius * 0.35, -radius * 0.12, Math.max(2, radius * 0.12), 0, Math.PI * 2);
       ctx.fill();
     }
-    if (entity.kind === 'chick' && entity.id === -1 && pullStrength > 0) {
-      this.drawPullFace(pullStrength, width);
+    if (entity.kind === 'chick' && entity.id === -1 && pullStrength > 0 && !pulledBabyFace) {
+      this.drawPullFace(pullStrength, width, CHICK_FORMS[stage].assetVariant);
     }
     ctx.restore();
   }
 
-  private drawPullFace(strength: number, spriteWidth: number): void {
+  private drawPullFace(strength: number, spriteWidth: number, variant: number): void {
     if (strength < 0.06) return;
     const ctx = this.context;
     const scale = spriteWidth / 96;
     const intensity = Math.max(0, Math.min(1, strength));
+    const face = variant === 2
+      ? { eyes: [0, 27], eyeY: -6, cheeks: [-8, 28], cheekY: 5 }
+      : variant === 3
+        ? { eyes: [8, 24], eyeY: -1, cheeks: [-4, 34], cheekY: 7 }
+        : { eyes: [5, 29], eyeY: -3, cheeks: [-7, 34], cheekY: 5 };
     ctx.save();
     ctx.scale(scale, scale);
 
     ctx.strokeStyle = '#49332e';
-    ctx.lineWidth = 2.4 + intensity * 1.5;
+    ctx.lineWidth = 4.5 + intensity * 2.4;
     ctx.lineCap = 'round';
-    for (const eyeX of [-10, 11]) {
-      const squeeze = 2.5 + intensity * 2.2;
+    for (const [index, eyeX] of face.eyes.entries()) {
+      const halfWidth = index === 0 ? 7 : 5;
+      const squeeze = 3 + intensity * 3;
       ctx.beginPath();
-      ctx.moveTo(eyeX - 4.2, 2.8);
-      ctx.bezierCurveTo(eyeX - 2.7, 2.8 - squeeze, eyeX + 2.7, 2.8 - squeeze, eyeX + 4.2, 2.8);
+      ctx.moveTo(eyeX - halfWidth, face.eyeY + 2);
+      ctx.bezierCurveTo(eyeX - halfWidth * 0.55, face.eyeY + 2 - squeeze,
+        eyeX + halfWidth * 0.55, face.eyeY + 2 - squeeze, eyeX + halfWidth, face.eyeY + 2);
       ctx.stroke();
     }
 
-    ctx.globalAlpha = intensity * 0.3;
+    ctx.globalAlpha = intensity * 0.5;
     ctx.fillStyle = '#ef8290';
-    for (const cheekX of [-20, 21]) {
+    for (const cheekX of face.cheeks) {
       ctx.beginPath();
-      ctx.ellipse(cheekX, 12, 4 + intensity, 2.7 + intensity * 0.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(cheekX, face.cheekY, 5 + intensity * 1.4, 3.5 + intensity, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
