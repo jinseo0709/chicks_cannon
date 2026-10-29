@@ -1022,8 +1022,10 @@ export class GameCanvasRenderer {
       ctx.arc(radius * 0.35, -radius * 0.12, Math.max(2, radius * 0.12), 0, Math.PI * 2);
       ctx.fill();
     }
-    if (entity.kind === 'chick' && entity.id === -1 && pullStrength > 0 && !pulledBabyFace) {
-      this.drawPullFace(pullStrength, width, CHICK_FORMS[stage].assetVariant);
+    if (entity.kind === 'chick' && entity.id === -1 && pullStrength > 0) {
+      const variant = CHICK_FORMS[stage].assetVariant;
+      this.drawPullBlush(pullStrength, width, variant);
+      if (!pulledBabyFace) this.drawPullFace(pullStrength, width, variant);
     }
     ctx.restore();
   }
@@ -1034,10 +1036,10 @@ export class GameCanvasRenderer {
     const scale = spriteWidth / 96;
     const intensity = Math.max(0, Math.min(1, strength));
     const face = variant === 2
-      ? { eyes: [0, 27], eyeY: -6, cheeks: [-8, 28], cheekY: 5 }
+      ? { eyes: [0, 27], eyeY: -6 }
       : variant === 3
-        ? { eyes: [8, 24], eyeY: -1, cheeks: [-4, 34], cheekY: 7 }
-        : { eyes: [5, 29], eyeY: -3, cheeks: [-7, 34], cheekY: 5 };
+        ? { eyes: [8, 24], eyeY: -1 }
+        : { eyes: [5, 29], eyeY: -3 };
     ctx.save();
     ctx.scale(scale, scale);
 
@@ -1054,11 +1056,30 @@ export class GameCanvasRenderer {
       ctx.stroke();
     }
 
-    ctx.globalAlpha = intensity * 0.5;
-    ctx.fillStyle = '#ef8290';
-    for (const cheekX of face.cheeks) {
+    ctx.restore();
+  }
+
+  private drawPullBlush(strength: number, spriteWidth: number, variant: number): void {
+    if (strength < 0.06) return;
+    const ctx = this.context;
+    const scale = spriteWidth / 96;
+    const intensity = Math.max(0, Math.min(1, strength));
+    const blush = variant === 1
+      ? { cheeks: [-8, 36], y: 9, radiusX: 10, radiusY: 6 }
+      : variant === 2
+        ? { cheeks: [-8, 28], y: 5, radiusX: 7, radiusY: 4.5 }
+        : variant === 3
+          ? { cheeks: [-4, 34], y: 7, radiusX: 7, radiusY: 4.5 }
+          : { cheeks: [-7, 34], y: 5, radiusX: 7, radiusY: 4.5 };
+    ctx.save();
+    ctx.scale(scale, scale);
+    for (const cheekX of blush.cheeks) {
+      const cheek = ctx.createRadialGradient(cheekX, blush.y, 0, cheekX, blush.y, blush.radiusX);
+      cheek.addColorStop(0, `rgba(255, 61, 91, ${intensity * 0.72})`);
+      cheek.addColorStop(1, 'rgba(255, 61, 91, 0)');
+      ctx.fillStyle = cheek;
       ctx.beginPath();
-      ctx.ellipse(cheekX, face.cheekY, 5 + intensity * 1.4, 3.5 + intensity, 0, 0, Math.PI * 2);
+      ctx.ellipse(cheekX, blush.y, blush.radiusX, blush.radiusY, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
