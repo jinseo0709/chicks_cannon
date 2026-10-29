@@ -1,11 +1,16 @@
 # Current Context
 
 ## Active Plan
-[보너스 도전과 대체 공략 경로](./plans/2026-10-23-bonus-challenges-and-routes.md)
+[Pulling Chick Expression and Game BGM](./plans/2026-10-29-pull-face-and-bgm.md)
+
+## Active Phase
+[P01 Pull Feedback and Music](./phases/2026-10-29-pull-face-and-bgm/P01-pull-feedback-and-music/phase.md)
+
+## Active Task
+[T02 Synthesized Game BGM](./phases/2026-10-29-pull-face-and-bgm/P01-pull-feedback-and-music/T02-synthesized-game-bgm.md)
 
 ## Status
-- 완료: 두 갈래 공략 안내와 선택형 시간 보너스 도전 구현 및 검증 완료
+- T01 당김 표정 구현과 웹 빌드 검증이 완료되었습니다.
 
-## Completed Tasks
-- [T01 두 갈래 약점 구조와 경로 안내](./phases/2026-10-23-bonus-challenges-and-routes/P01-timed-challenges-and-routes/T01-alternate-routes.md)
-- [T02 선택형 시간 보너스 도전](./phases/2026-10-23-bonus-challenges-and-routes/P01-timed-challenges-and-routes/T02-bonus-timer-and-badge.md)
+## Next Step (IMPORTANT)
+T02 청사진을 읽고 `apps/web/src/game/audio.ts`와 `apps/web/src/game/use-chick-cannon.ts`에 배경음 스케줄러와 음소거·일시정지 연결을 구현합니다.

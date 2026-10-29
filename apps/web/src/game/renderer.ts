@@ -821,7 +821,11 @@ export class GameCanvasRenderer {
 
   private drawLoadedChick(snapshot: GameSnapshot, nowMs: number): void {
     if (snapshot.state !== 'AIMING' || snapshot.ammo <= 0) return;
-    const position = snapshot.aimPosition ?? WORLD.cannon;
+    const center = WORLD.cannon;
+    const position = snapshot.aimPosition ?? center;
+    const pullStrength = snapshot.aimPosition
+      ? Math.min(1, Math.hypot(position.x - center.x, position.y - center.y) / WORLD.maxDrag)
+      : 0;
     this.drawSprite({
       id: -1,
       kind: 'chick',
@@ -830,7 +834,7 @@ export class GameCanvasRenderer {
       radius: snapshot.form.radius * 1.15 * (snapshot.megaNext ? 1.8 : 1),
       angle: 0,
       alive: true,
-    }, snapshot.stage, nowMs);
+    }, snapshot.stage, nowMs, pullStrength);
   }
 
   private drawSlingshotBand(snapshot: GameSnapshot, front: boolean): void {
@@ -981,7 +985,7 @@ export class GameCanvasRenderer {
     ctx.restore();
   }
 
-  private drawSprite(entity: GameEntityView, stage: GameSnapshot['stage'], nowMs: number): void {
+  private drawSprite(entity: GameEntityView, stage: GameSnapshot['stage'], nowMs: number, pullStrength = 0): void {
     const ctx = this.context;
     const radius = entity.radius ?? 24;
     const scale = entity.kind === 'cat' ? (entity.boss ? 3.6 : 3.25) : entity.kind === 'chick' ? 3.2 : 3;
@@ -1015,6 +1019,38 @@ export class GameCanvasRenderer {
       ctx.beginPath();
       ctx.arc(-radius * 0.35, -radius * 0.12, Math.max(2, radius * 0.12), 0, Math.PI * 2);
       ctx.arc(radius * 0.35, -radius * 0.12, Math.max(2, radius * 0.12), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (entity.kind === 'chick' && entity.id === -1 && pullStrength > 0) {
+      this.drawPullFace(pullStrength, width);
+    }
+    ctx.restore();
+  }
+
+  private drawPullFace(strength: number, spriteWidth: number): void {
+    if (strength < 0.06) return;
+    const ctx = this.context;
+    const scale = spriteWidth / 96;
+    const intensity = Math.max(0, Math.min(1, strength));
+    ctx.save();
+    ctx.scale(scale, scale);
+
+    ctx.strokeStyle = '#49332e';
+    ctx.lineWidth = 2.4 + intensity * 1.5;
+    ctx.lineCap = 'round';
+    for (const eyeX of [-10, 11]) {
+      const squeeze = 2.5 + intensity * 2.2;
+      ctx.beginPath();
+      ctx.moveTo(eyeX - 4.2, 2.8);
+      ctx.bezierCurveTo(eyeX - 2.7, 2.8 - squeeze, eyeX + 2.7, 2.8 - squeeze, eyeX + 4.2, 2.8);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = intensity * 0.3;
+    ctx.fillStyle = '#ef8290';
+    for (const cheekX of [-20, 21]) {
+      ctx.beginPath();
+      ctx.ellipse(cheekX, 12, 4 + intensity, 2.7 + intensity * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
