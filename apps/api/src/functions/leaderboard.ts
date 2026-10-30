@@ -3,8 +3,9 @@ import { LeaderboardService } from '../leaderboard/service';
 import { ApiError } from '../leaderboard/types';
 
 const jsonHeaders = { 'Content-Type': 'application/json; charset=utf-8' };
+export type AuthenticateRequest = (request: HttpRequest) => Promise<string>;
 
-export function createLeaderboardHandlers(service: LeaderboardService): {
+export function createLeaderboardHandlers(service: LeaderboardService, authenticate: AuthenticateRequest): {
   get(request: HttpRequest): Promise<HttpResponseInit>;
   post(request: HttpRequest): Promise<HttpResponseInit>;
 } {
@@ -18,6 +19,12 @@ export function createLeaderboardHandlers(service: LeaderboardService): {
   };
 
   const post = async (request: HttpRequest): Promise<HttpResponseInit> => {
+    let participantId: string;
+    try {
+      participantId = await authenticate(request);
+    } catch (error) {
+      return errorResponse(error);
+    }
     let input: unknown;
     try {
       input = await request.json();
@@ -29,7 +36,7 @@ export function createLeaderboardHandlers(service: LeaderboardService): {
       };
     }
     try {
-      const entry = await service.submit(input);
+      const entry = await service.submit(input, participantId);
       return { status: 200, headers: jsonHeaders, jsonBody: { entry } };
     } catch (error) {
       return errorResponse(error);

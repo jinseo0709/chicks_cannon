@@ -18,13 +18,14 @@ export class LeaderboardClient {
     return this.readResponse<LeaderboardPage>(response);
   }
 
-  async submit(input: SubmitScoreInput): Promise<ScoreSubmission> {
+  async submit(input: SubmitScoreInput, accessToken: string): Promise<ScoreSubmission> {
+    if (!accessToken.trim()) throw new LeaderboardApiError(401, 'AUTHENTICATION_REQUIRED', '회사 Microsoft 계정으로 로그인해 주세요.');
     if (input.campaignCompleted !== true) {
       throw new LeaderboardApiError(400, 'CAMPAIGN_INCOMPLETE', '캠페인 완주 후에만 점수를 등록할 수 있습니다.');
     }
     const response = await this.fetcher(this.baseUrl, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(input),
     });
     const body = await this.readResponse<{ entry: ScoreSubmission }>(response);

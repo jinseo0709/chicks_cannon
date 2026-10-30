@@ -9,6 +9,9 @@
     "sqlDatabaseSkuName": { "value": "Basic" },
     "sqlAdministratorLogin": { "value": "replace-with-entra-group-name" },
     "sqlAdministratorObjectId": { "value": "00000000-0000-0000-0000-000000000000" },
-    "sqlAdministratorTenantId": { "value": "00000000-0000-0000-0000-000000000000" }
+    "sqlAdministratorTenantId": { "value": "00000000-0000-0000-0000-000000000000" },
+    "entraTenantId": { "value": "00000000-0000-0000-0000-000000000000" },
+    "entraApiAudience": { "value": "00000000-0000-0000-0000-000000000000" },
+    "entraSpaClientId": { "value": "00000000-0000-0000-0000-000000000000" }
   }
 }

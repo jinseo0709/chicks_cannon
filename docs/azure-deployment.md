@@ -48,9 +48,12 @@ resources are created by local builds or tests.
 8. Push to `main` or run the workflows manually. The web workflow uploads the
    prebuilt Vite bundle and leaves `/api` for the linked Function App. The API
    workflow uses GitHub OIDC; neither workflow provisions infrastructure.
-9. Verify `https://<swa-host>/api/leaderboard` and submit a test score through
-   the game. Remove the test entry through an approved data maintenance
-   process if needed.
+9. Configure Microsoft Entra app registrations, Static Web App build variables,
+   and Function App token-validation settings by following
+   [Microsoft company sign-in](./microsoft-leaderboard-signin.md).
+10. Verify `https://<swa-host>/api/leaderboard` and submit a test score through
+    the game. Remove the test entry through an approved data maintenance
+    process if needed.
 
 For a staging environment, use a separate resource group, Static Web App,
 Function App, database, and GitHub environment/variables. PR preview URLs can

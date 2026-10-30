@@ -2,19 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { parsePageQuery, parseParticipantId, parseSubmitScore } from './validation';
 import { ApiError } from './types';
 
-const valid = {
-  participantId: '550e8400-e29b-41d4-a716-446655440000',
-  nickname: '유진서 9',
-  score: 50000,
-  campaignCompleted: true,
-};
+const participantId = '550e8400-e29b-41d4-a716-446655440000';
+const valid = { nickname: '유진서 9', score: 50000, campaignCompleted: true };
 
 describe('leaderboard request validation', () => {
-  it('accepts a completed campaign and normalizes the UUID and nickname', () => {
-    expect(parseSubmitScore({ ...valid, participantId: valid.participantId.toUpperCase(), nickname: '  유진서 9  ' })).toEqual({
-      ...valid,
-      nickname: '유진서 9',
-    });
+  it('accepts completed campaign data and uses the authenticated identity', () => {
+    const result = parseSubmitScore({ ...valid, participantId: 'caller-controlled-id', nickname: ' 유진서 9 ' }, participantId);
+    expect(result).toEqual({ ...valid, participantId, nickname: '유진서 9' });
   });
 
   it.each([
@@ -25,7 +19,7 @@ describe('leaderboard request validation', () => {
     [{ ...valid, campaignCompleted: false }, 'CAMPAIGN_INCOMPLETE'],
   ])('rejects invalid submission fields', (input, code) => {
     try {
-      parseSubmitScore(input);
+      parseSubmitScore(input, participantId);
       throw new Error('Expected validation to fail');
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
@@ -33,7 +27,7 @@ describe('leaderboard request validation', () => {
     }
   });
 
-  it('requires UUID v4 before the request can be tracked', () => {
+  it('requires a valid opaque UUID for the authenticated participant', () => {
     expect(() => parseParticipantId('not-an-id')).toThrowError(ApiError);
   });
 

@@ -11,6 +11,7 @@ function makeRequest(options: {
   query?: URLSearchParams;
   body?: unknown;
   malformedJson?: boolean;
+  authorization?: string;
 } = {}): HttpRequest {
   return {
     method: options.method ?? 'GET',
@@ -18,6 +19,7 @@ function makeRequest(options: {
     json: options.malformedJson
       ? async () => { throw new SyntaxError('bad json'); }
       : async () => options.body,
+    headers: new Headers(options.authorization ? { authorization: options.authorization } : {}),
   } as unknown as HttpRequest;
 }
 
@@ -27,7 +29,7 @@ function jsonBody(response: HttpResponseInit): Record<string, unknown> {
 
 describe('leaderboard HTTP handlers', () => {
   it('returns a paginated JSON GET response and 400 for invalid query', async () => {
-    const handlers = createLeaderboardHandlers(new LeaderboardService(new MemoryLeaderboardStore()));
+    const handlers = createLeaderboardHandlers(new LeaderboardService(new MemoryLeaderboardStore()), async () => participantId);
     const response = await handlers.get(makeRequest({ query: new URLSearchParams('page=1&pageSize=25') }));
     expect(response.status).toBe(200);
     expect(response.headers).toMatchObject({ 'Content-Type': 'application/json; charset=utf-8' });
@@ -36,7 +38,7 @@ describe('leaderboard HTTP handlers', () => {
   });
 
   it('accepts completed campaign submissions and returns validation errors safely', async () => {
-    const handlers = createLeaderboardHandlers(new LeaderboardService(new MemoryLeaderboardStore()));
+    const handlers = createLeaderboardHandlers(new LeaderboardService(new MemoryLeaderboardStore()), async () => participantId);
     const valid = { participantId, nickname: '새싹', score: 1000, campaignCompleted: true };
     const submitted = await handlers.post(makeRequest({ method: 'POST', body: valid }));
     expect(submitted.status).toBe(200);
@@ -50,7 +52,7 @@ describe('leaderboard HTTP handlers', () => {
   it('handles malformed JSON, rate limits, and hides unexpected exception details', async () => {
     const store = new MemoryLeaderboardStore();
     const fixed = new Date('2026-10-20T12:00:00.000Z');
-    const handlers = createLeaderboardHandlers(new LeaderboardService(store, () => new Date(fixed)));
+    const handlers = createLeaderboardHandlers(new LeaderboardService(store, () => new Date(fixed)), async () => participantId);
     const malformed = await handlers.post(makeRequest({ method: 'POST', malformedJson: true }));
     expect(malformed.status).toBe(400);
 
@@ -62,5 +64,17 @@ describe('leaderboard HTTP handlers', () => {
     expect(limited.status).toBe(429);
     expect(limited.headers).toMatchObject({ 'Retry-After': '600' });
     expect(jsonBody(limited)).toMatchObject({ error: { code: 'RATE_LIMITED' } });
+  });
+
+  it('rejects unauthenticated requests before reading or saving their submitted identity', async () => {
+    const handlers = createLeaderboardHandlers(new LeaderboardService(new MemoryLeaderboardStore()), async () => {
+      const { ApiError } = await import('../leaderboard/types');
+      throw new ApiError(401, 'AUTHENTICATION_REQUIRED', '로그인이 필요합니다.');
+    });
+    const response = await handlers.post(makeRequest({ method: 'POST', body: {
+      participantId, nickname: '테스트', score: 1000, campaignCompleted: true,
+    } }));
+    expect(response.status).toBe(401);
+    expect(jsonBody(response)).toMatchObject({ error: { code: 'AUTHENTICATION_REQUIRED' } });
   });
 });

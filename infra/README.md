@@ -41,5 +41,8 @@ actions. Do not run them as part of local validation. After deployment:
 
 5. Configure GitHub OIDC federation for the repository/workflow and set the
    repository variables described in `docs/azure-deployment.md`.
+6. Register the single-tenant leaderboard API and SPA in Microsoft Entra ID and
+   configure their IDs/scopes as described in
+   `docs/microsoft-leaderboard-signin.md`.
 
 Official references: [SWA BYO Functions](https://learn.microsoft.com/azure/static-web-apps/functions-bring-your-own), [Functions managed identity with SQL](https://learn.microsoft.com/azure/azure-functions/functions-identity-access-azure-sql-with-managed-identity).

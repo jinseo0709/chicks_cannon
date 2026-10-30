@@ -24,7 +24,6 @@ export interface ScoreSubmission {
 }
 
 export interface SubmitScoreInput {
-  participantId: string;
   nickname: string;
   score: number;
   campaignCompleted: true;

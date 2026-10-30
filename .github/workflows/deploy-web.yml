@@ -18,7 +18,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build --workspace @chicks-cannon/web
+      - name: Build web app
+        run: npm run build --workspace @chicks-cannon/web
+        env:
+          VITE_ENTRA_TENANT_ID: ${{ vars.ENTRA_TENANT_ID }}
+          VITE_ENTRA_CLIENT_ID: ${{ vars.ENTRA_SPA_CLIENT_ID }}
+          VITE_ENTRA_API_SCOPE: ${{ vars.ENTRA_API_SCOPE }}
       - name: Add Static Web Apps configuration to the bundle
         run: cp apps/web/staticwebapp.config.json apps/web/dist/staticwebapp.config.json
       - uses: Azure/static-web-apps-deploy@v1

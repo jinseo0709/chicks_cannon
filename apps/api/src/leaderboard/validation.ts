@@ -10,12 +10,11 @@ export function parseParticipantId(value: unknown): string {
   return value.toLowerCase();
 }
 
-export function parseSubmitScore(input: unknown): SubmitScoreRequest {
+export function parseSubmitScore(input: unknown, participantId: string): SubmitScoreRequest {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new ApiError(400, 'INVALID_REQUEST', '요청 본문은 JSON 객체여야 합니다.');
   }
   const value = input as Record<string, unknown>;
-  const participantId = parseParticipantId(value.participantId);
   const nickname = typeof value.nickname === 'string' ? value.nickname.trim() : '';
   const nicknameLength = [...nickname].length;
   if (nicknameLength < 2 || nicknameLength > 16 || !nicknamePattern.test(nickname)) {
@@ -28,7 +27,7 @@ export function parseSubmitScore(input: unknown): SubmitScoreRequest {
     throw new ApiError(400, 'CAMPAIGN_INCOMPLETE', '캠페인을 완주한 기록만 제출할 수 있습니다.');
   }
   return {
-    participantId,
+    participantId: parseParticipantId(participantId),
     nickname,
     score: value.score as number,
     campaignCompleted: true,
