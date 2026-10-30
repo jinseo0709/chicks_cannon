@@ -235,8 +235,8 @@ export class ChickCannonEngine {
     }
 
     const form = CHICK_FORMS[this.stage];
-    const radius = form.radius * (this.megaNext ? 1.8 : 1);
-    const density = form.density * (this.megaNext ? 3.5 : 1);
+    const radius = form.radius * (this.megaNext ? 2 : 1);
+    const density = form.density * (this.megaNext ? 4 : 1);
     const chick = Bodies.circle(WORLD.cannon.x, WORLD.cannon.y, radius, {
       density,
       restitution: 0.35,
@@ -248,7 +248,7 @@ export class ChickCannonEngine {
     const power = (Math.min(distance, WORLD.maxDrag) / WORLD.maxDrag) * form.launchPower * 1.2;
     const angle = Math.atan2(dy, dx);
     let launchVelocity = { x: Math.cos(angle) * power, y: Math.sin(angle) * power };
-    if (this.boosterNext) launchVelocity = { x: Math.max(launchVelocity.x * 1.8, 30), y: launchVelocity.y * 0.2 };
+    if (this.boosterNext) launchVelocity = { x: Math.max(launchVelocity.x * 2, 32), y: launchVelocity.y * 0.15 };
     Body.setVelocity(chick, launchVelocity);
     Composite.add(this.engine.world, chick);
     this.activeChick = chick;
@@ -324,8 +324,9 @@ export class ChickCannonEngine {
       return true;
     }
     if (kind === 'butter') {
-      this.targetingItem = this.targetingItem === 'butter' ? null : 'butter';
-      this.aimPosition = null;
+      if (this.state !== 'AIMING') return false;
+      this.ammo += 1;
+      this.items = { ...this.items, butter: this.items.butter - 1 };
       this.publish();
       return true;
     }
@@ -337,8 +338,8 @@ export class ChickCannonEngine {
       }
       if (this.state !== 'FLYING' || !this.activeChick) return false;
       Body.setVelocity(this.activeChick, {
-        x: Math.max(this.activeChick.velocity.x * 1.8, 30),
-        y: this.activeChick.velocity.y * 0.2,
+        x: Math.max(this.activeChick.velocity.x * 2, 32),
+        y: this.activeChick.velocity.y * 0.15,
       });
     } else if (kind === 'mega') {
       if (this.state !== 'AIMING') return false;
@@ -1205,8 +1206,8 @@ export class ChickCannonEngine {
     for (const body of Composite.allBodies(this.engine.world)) {
       if (body.isStatic || body.label === 'chick') continue;
       Body.applyForce(body, body.position, {
-        x: (Math.random() - 0.5) * 0.08,
-        y: -0.06 - Math.random() * 0.04,
+        x: (Math.random() - 0.5) * 0.12,
+        y: -0.09 - Math.random() * 0.06,
       });
     }
   }

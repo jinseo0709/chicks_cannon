@@ -96,6 +96,7 @@ export function useChickCannon(): ChickCannonController {
         if (kind === 'quake') audioRef.current?.playExplosion();
         else if (kind === 'booster') audioRef.current?.playSkill(2);
         else if (kind === 'mega') audioRef.current?.playBounce();
+        else if (kind === 'butter') audioRef.current?.playSkill(3);
       },
       onQuickRestart: () => {
         void audioRef.current?.unlock();
@@ -213,7 +214,7 @@ export function useChickCannon(): ChickCannonController {
   const claimFinalReward = useCallback((kind: ItemKind) => engineRef.current?.claimFinalReward(kind), []);
   const useItem = useCallback((kind: ItemKind) => {
     void audioRef.current?.unlock();
-    if (!engineRef.current?.useItem(kind) || kind === 'butter' || kind === 'cushion') return;
+    if (!engineRef.current?.useItem(kind) || kind === 'cushion') return;
     if (kind === 'quake') audioRef.current?.playExplosion();
     else if (kind === 'booster') audioRef.current?.playSkill(2);
     else audioRef.current?.playBounce();

@@ -734,8 +734,8 @@ export class GameCanvasRenderer {
     const trajectory: Point[] = [];
     const frameStep = 0.65;
     const deltaTimeSquared = (1000 / 60) ** 2;
-    const megaScale = snapshot.megaNext ? 1.8 : 1;
-    const mass = Math.PI * (snapshot.form.radius * megaScale) ** 2 * snapshot.form.density * (snapshot.megaNext ? 3.5 : 1);
+    const megaScale = snapshot.megaNext ? 2 : 1;
+    const mass = Math.PI * (snapshot.form.radius * megaScale) ** 2 * snapshot.form.density * (snapshot.megaNext ? 4 : 1);
     const fans = STAGES[snapshot.stage].spawns.filter((spawn) => spawn.kind === 'fan');
     for (let frame = 0; frame <= maxFrame; frame += frameStep) {
       for (const fan of fans) {
@@ -856,7 +856,7 @@ export class GameCanvasRenderer {
       kind: 'chick',
       x: position.x,
       y: position.y,
-      radius: snapshot.form.radius * 1.15 * (snapshot.megaNext ? 1.8 : 1),
+      radius: snapshot.form.radius * 1.15 * (snapshot.megaNext ? 2 : 1),
       angle: 0,
       alive: true,
     }, snapshot.stage, nowMs, pullStrength);

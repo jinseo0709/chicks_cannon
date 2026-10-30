@@ -49,7 +49,8 @@ export function GuideScreen({ onContinue }: GuideScreenProps): JSX.Element {
           </div>
           <ul>
             <li>비행 중 <kbd>Space</kbd> 또는 화면을 눌러 병아리 능력을 사용해요. 고양이 가까이에서만 발동해요.</li>
-            <li>아래 아이템 보드를 누르거나 숫자 <kbd>1</kbd>~<kbd>4</kbd>를 눌러 아이템을 써요.</li>
+            <li><kbd>1</kbd> 치즈 로켓은 속도, <kbd>2</kbd> 달걀 지진은 요새 흔들기, <kbd>3</kbd> 망치는 다음 병아리를 더 크고 강하게 만들어요.</li>
+            <li><kbd>4</kbd> 탄환 보충은 조준 중 쓰면 병아리 한 마리를 더 받아요. 알 쿠션은 알 파손 감점을 한 번 막아요.</li>
             <li><kbd>R</kbd>은 다시 시작, 일시정지 버튼은 잠시 멈추기예요.</li>
           </ul>
         </article>

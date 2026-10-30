@@ -33,7 +33,7 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
     { kind: 'booster', available: snapshot.state === 'AIMING' || snapshot.state === 'FLYING', shortcut: '1' },
     { kind: 'quake', available: active, shortcut: '2' },
     { kind: 'mega', available: snapshot.state === 'AIMING', shortcut: '3' },
-    { kind: 'butter', available: active, shortcut: '4' },
+    { kind: 'butter', available: snapshot.state === 'AIMING', shortcut: '4' },
   ];
   return (
     <div className="game-hud" role="region" aria-label="게임 정보" inert={!active} aria-hidden={!active}>
@@ -70,7 +70,7 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
         <div className="hud-card ammo-card" aria-label={`남은 병아리 ${snapshot.ammo}개`}>
           <span className="hud-kicker">탄환</span>
           <div className="ammo-dots" aria-hidden="true">
-            {Array.from({ length: snapshot.stageAmmo }, (_, index) => (
+            {Array.from({ length: Math.max(snapshot.stageAmmo, snapshot.ammo) }, (_, index) => (
               <span key={index} className={index < snapshot.ammo ? 'ammo-dot' : 'ammo-dot spent'}>
                 {index < snapshot.ammo
                   ? <img src={assetUrl(`assets/chicks/stage-${snapshot.form.assetVariant}.png`)} alt="" />
