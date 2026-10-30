@@ -4,6 +4,25 @@ import { ChickCannonEngine } from './engine';
 import { STAGES } from './stages';
 import type { GameStage } from './types';
 
+function coarseLayoutSignature(stage: GameStage): string {
+  const structuralSpawns = STAGES[stage].spawns.filter((spawn) => spawn.kind !== 'egg');
+  const minX = Math.min(...structuralSpawns.map(({ x }) => x));
+  const maxX = Math.max(...structuralSpawns.map(({ x }) => x));
+  const minY = Math.min(...structuralSpawns.map(({ y }) => y));
+  const maxY = Math.max(...structuralSpawns.map(({ y }) => y));
+  const bucket = (value: number, min: number, max: number) => Math.min(3, Math.floor(((value - min) / Math.max(1, max - min)) * 4));
+
+  return structuralSpawns.map((spawn) => [
+    spawn.kind,
+    spawn.material ?? '',
+    bucket(spawn.x, minX, maxX),
+    bucket(spawn.y, minY, maxY),
+    Math.round((spawn.w ?? (spawn.radius ? spawn.radius * 2 : 0)) / 40),
+    Math.round((spawn.h ?? (spawn.radius ? spawn.radius * 2 : 0)) / 40),
+    spawn.shieldLayers ?? 0,
+  ].join(':')).sort().join('|');
+}
+
 describe('campaign stage data', () => {
   it('contains twenty ordered stages grouped into four five-stage regions', () => {
     expect(Object.keys(STAGES)).toHaveLength(20);
@@ -52,7 +71,7 @@ describe('campaign stage data', () => {
     expect(catCount(20)).toBeGreaterThanOrEqual(5);
   });
 
-  it.each([5, 10, 15, 19] as const)('splits the stage %s finale targets across separate fort platforms', (stage) => {
+  it.each([10, 15, 19] as const)('splits the stage %s finale targets across separate fort platforms', (stage) => {
     const platforms = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block' && spawn.h === 22 && spawn.y === 558);
     const centers = platforms.map((platform) => platform.x).sort((a, b) => a - b);
     expect(centers.length).toBeGreaterThanOrEqual(2);
@@ -75,6 +94,15 @@ describe('campaign stage data', () => {
       expect(REGIONS[region].gimmick).toBe(gimmick);
       for (const stage of stages) expect(STAGES[stage].spawns.some((spawn) => spawn.kind === gimmick)).toBe(true);
     }
+  });
+
+  it('gives alley and wall stages five distinct coarse silhouettes', () => {
+    const regionOneStages = [1, 2, 3, 4, 5] as const;
+    expect(new Set(regionOneStages.map(coarseLayoutSignature)).size).toBe(regionOneStages.length);
+    expect(STAGES[3].spawns.some((spawn) => spawn.kind === 'trapdoor')).toBe(true);
+    expect(STAGES[4].spawns.some((spawn) => spawn.kind === 'boulder')).toBe(true);
+    expect(STAGES[5].spawns.some((spawn) => spawn.kind === 'trapdoor')).toBe(true);
+    expect(STAGES[5].spawns.some((spawn) => spawn.kind === 'shutter')).toBe(true);
   });
 
   it('contains complete authored story, routes, challenge, and in-bounds spawn data', () => {

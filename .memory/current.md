@@ -1,16 +1,16 @@
 ﻿# Current Context
 
 ## Active Plan
-[Expand the Campaign to 20 Stages](./plans/2026-10-29-expand-campaign-to-20-stages.md)
+[Redesign Stage Variety](./plans/2026-10-30-stage-variety-redesign.md)
 
 ## Active Phase
-[P04 Integration and Validation](./phases/2026-10-29-expand-campaign-to-20-stages/P04-integration-and-validation/phase.md)
+[P01 Alley and Rooftop Layouts](./phases/2026-10-30-stage-variety-redesign/P01-alley-and-rooftop/phase.md)
 
 ## Active Task
-[T01 Integrate and Validate the Campaign](./phases/2026-10-29-expand-campaign-to-20-stages/P04-integration-and-validation/T01-integrate-and-validate-campaign.md)
+[T02 Redesign Rooftop and Clocktower Stages](./phases/2026-10-30-stage-variety-redesign/P01-alley-and-rooftop/T02-redesign-rooftop-stages.md)
 
 ## Status
-- P01 complete: `12922ac`, `b64aa09`. P02 complete with T01 `67462c9`, T02 `dce5364`, and T03 `cf47bf5`. P03 complete with regional map `8c07e19` and saved-resume integration `e4c9e5b`. Gameplay skill tuning `cf47bf5`; bonus timer tuning `404f1ec`.
+- T01 complete: stage-data tests (30 passed), web build passed. Commit: see recent Korean commit in Git history.
 
 ## Next Step (IMPORTANT)
-Read the P04-T01 blueprint and audit the complete 20-stage campaign for residual six-stage assumptions, then run the full web suite and build.
+Read P01-T02 and author distinct layouts for stages 6–10 while preserving the stage-6 mid-boss and campaign progression. Validate and commit in Korean before advancing to P02-T01.
