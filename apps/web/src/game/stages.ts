@@ -17,6 +17,8 @@ interface FortOptions {
   upperShieldLayers?: number;
   upperMaterial?: BlockKind;
   extraTop?: boolean;
+  crownTop?: boolean;
+  crownCat?: boolean;
 }
 
 /** A deterministic, reusable fort footprint; each stage adds a distinct layout mechanic. */
@@ -55,6 +57,15 @@ function fort(options: FortOptions = {}): SpawnSpec[] {
       block(centerX, upperY - 92, 86, 18, 'rubber'),
     );
   }
+  if (options.crownTop) {
+    const crownY = upperY - 184;
+    result.push(
+      block(centerX - 25, crownY + 28, 18, 50, 'stone'),
+      block(centerX + 25, crownY + 28, 18, 50, 'stone'),
+      block(centerX, crownY, 82, 18, 'steel'),
+    );
+    if (options.crownCat) result.push(cat(centerX, crownY - 34, 22, options.upperShieldLayers ?? 0));
+  }
   return result;
 }
 
@@ -85,7 +96,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '빨랫줄 경비 고양이', avatar: '😼', text: '빨랫줄 골목은 한 발도 못 지나간다냥!', chickReply: '그럼 위와 아래를 동시에 흔들겠어!', instruction: '단단한 받침 대신 얇은 유리판을 노려 보세요.' },
     spawns: [
       ...fort({ centerX: 860, width: 150, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone' }),
-      ...fort({ centerX: 1080, width: 120, deckY: 600, lowerCats: 1, deckMaterial: 'glass' }),
+      ...fort({ centerX: 1080, width: 120, deckY: 600, lowerCats: 1, deckMaterial: 'glass', upperCat: true }),
       { kind: 'egg', x: 1200, y: 650 },
     ],
   }),
@@ -99,8 +110,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '바닥지기 고양이', avatar: '🐈', text: '바닥을 열어도 내 요새는 끄떡없다냥!', chickReply: '경첩을 열어 길을 만들 거야!', instruction: '충격을 받은 여닫이 바닥은 아래로 열려요.' },
     spawns: [
       { kind: 'trapdoor', x: 640, y: 590, w: 150, h: 16, anchor: { x: 565, y: 590 }, triggerImpact: 5 },
-      ...fort({ centerX: 900, lowerCats: 1, baseMaterial: 'stone', upperCat: false }),
-      block(900, 520, 130, 20, 'glass'), cat(900, 484, 23, 1),
+      ...fort({ centerX: 900, lowerCats: 2, baseMaterial: 'stone', upperCat: false }),
+      block(900, 520, 130, 20, 'glass'), cat(900, 484, 23, 1), cat(860, 484, 22),
     ],
   }),
   4: makeStage(4, {
@@ -113,7 +124,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '성벽 수비대장', avatar: '🪨🐱', text: '이 돌무더기를 넘을 수 있겠냥?', chickReply: '바위를 굴려 길을 열겠어!', instruction: '바위는 부딪히면 굴러가며 주변 구조물을 밀어요.' },
     spawns: [
       { kind: 'boulder', x: 700, y: 620, radius: 27, armed: true },
-      ...fort({ centerX: 920, lowerCats: 2, shieldLayers: 0, upperCat: true, upperMaterial: 'stone', baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 920, width: 220, lowerCats: 3, shieldLayers: 0, upperCat: true, upperMaterial: 'stone', baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   5: makeStage(5, {
@@ -127,7 +138,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'trapdoor', x: 620, y: 590, w: 145, h: 16, anchor: { x: 548, y: 590 }, triggerImpact: 5 },
       { kind: 'shutter', x: 760, y: 440, w: 24, h: 140, minY: 350, maxY: 500, speed: 2 },
-      ...fort({ centerX: 950, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', deckMaterial: 'wood' }),
+      ...fort({ centerX: 950, width: 170, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', deckMaterial: 'wood', extraTop: true, crownTop: true, crownCat: true }),
       cat(1110, 522, 23),
     ],
   }),
@@ -141,7 +152,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '옥상 고양이 대장', avatar: '👑🐱', text: '왕은 황금알의 빛으로 봄을 가두려 한다냥. 그게 왕의 명령이다!', chickReply: '봄은 누구의 보물도 아니야. 황금알을 구해 초원에 돌려줄게!', instruction: '받침을 무너뜨리거나 선풍기 바람으로 위쪽을 노리세요.' },
     spawns: [
       { kind: 'fan', x: 500, y: 430, w: 180, h: 420, forceX: 0.0008, forceY: -0.012 },
-      ...fort({ centerX: 930, lowerCats: 1, upperCat: false, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 930, width: 220, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
       cat(930, 330, 36, 0, true, 260),
     ],
   }),
@@ -155,7 +166,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '옥상 바람잡이', avatar: '😺', text: '바람의 방향부터 읽어 보라냥!', chickReply: '질풍을 타고 지붕을 건너겠어!', instruction: '선풍기 바람은 날아가는 병아리의 궤적을 바꿔요.' },
     spawns: [
       { kind: 'fan', x: 470, y: 430, w: 220, h: 460, forceX: 0.001, forceY: -0.012 },
-      ...fort({ centerX: 920, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone' }),
+      ...fort({ centerX: 920, width: 230, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
       { kind: 'seesaw', x: 700, y: 650, w: 180, h: 14 },
     ],
   }),
@@ -169,7 +180,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '시계탑 수리공 고양이', avatar: '🕰️🐱', text: '시계손이 한 바퀴 돌 때마다 길이 바뀐다냥!', chickReply: '틈이 생기는 순간을 노릴게!', instruction: '시계손의 회전 반대편에서 안전한 통과 순간을 기다리세요.' },
     spawns: [
       { kind: 'clockHand', x: 690, y: 430, w: 210, h: 18, anchor: { x: 590, y: 430 }, angularSpeed: 0.45 },
-      ...fort({ centerX: 920, lowerCats: 1, upperCat: true, upperShieldLayers: 1 }),
+      ...fort({ centerX: 920, width: 160, lowerCats: 3, upperCat: true, upperShieldLayers: 1, extraTop: true }),
     ],
   }),
   9: makeStage(9, {
@@ -183,7 +194,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'clockHand', x: 700, y: 430, w: 220, h: 18, anchor: { x: 590, y: 430 }, angularSpeed: -0.4 },
       { kind: 'gear', x: 620, y: 470, radius: 48, angularSpeed: 0.03 },
-      ...fort({ centerX: 940, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 940, width: 210, lowerCats: 3, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   10: makeStage(10, {
@@ -197,7 +208,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'clockHand', x: 650, y: 400, w: 210, h: 18, anchor: { x: 550, y: 400 }, angularSpeed: 0.42 },
       { kind: 'chandelier', x: 780, y: 330, w: 100, h: 36, anchor: { x: 780, y: 190 } },
-      ...fort({ centerX: 940, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 940, width: 260, lowerCats: 4, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   11: makeStage(11, {
@@ -210,7 +221,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '공장 감독 고양이', avatar: '🏭🐱', text: '조립 라인은 멈추지 않는다냥!', chickReply: '벨트를 타고 공장을 거꾸로 돌리겠어!', instruction: '컨베이어는 위에 놓인 물체를 옆으로 밀어 줘요.' },
     spawns: [
       { kind: 'conveyor', x: 700, y: 650, w: 220, h: 18, forceX: 5 },
-      ...fort({ centerX: 940, lowerCats: 2, upperCat: false, baseMaterial: 'steel' }),
+      ...fort({ centerX: 940, width: 240, lowerCats: 3, upperCat: true, baseMaterial: 'steel' }),
     ],
   }),
   12: makeStage(12, {
@@ -224,7 +235,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'tire', x: 680, y: 630, radius: 42 },
       { kind: 'conveyor', x: 760, y: 650, w: 200, h: 18, forceX: 4 },
-      ...fort({ centerX: 970, lowerCats: 2, upperCat: true, baseMaterial: 'stone', upperMaterial: 'steel' }),
+      ...fort({ centerX: 970, width: 180, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', upperMaterial: 'steel', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   13: makeStage(13, {
@@ -238,7 +249,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'gear', x: 620, y: 465, radius: 50, angularSpeed: -0.035 },
       { kind: 'conveyor', x: 750, y: 650, w: 210, h: 18, forceX: 4.5 },
-      ...fort({ centerX: 960, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 960, width: 220, lowerCats: 3, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   14: makeStage(14, {
@@ -252,8 +263,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'shutter', x: 760, y: 430, w: 24, h: 140, minY: 340, maxY: 500, speed: 2.2 },
       { kind: 'conveyor', x: 700, y: 650, w: 180, h: 18, forceX: 4 },
-      ...fort({ centerX: 960, lowerCats: 2, upperCat: true, baseMaterial: 'steel', deckMaterial: 'stone' }),
-      ...fort({ centerX: 1120, deckY: 600, width: 100, lowerCats: 1, baseMaterial: 'wood', deckMaterial: 'glass' }),
+      ...fort({ centerX: 960, width: 260, lowerCats: 4, upperCat: true, baseMaterial: 'steel', deckMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 1120, deckY: 600, width: 100, lowerCats: 2, baseMaterial: 'wood', deckMaterial: 'glass' }),
     ],
   }),
   15: makeStage(15, {
@@ -268,7 +279,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       { kind: 'conveyor', x: 700, y: 650, w: 220, h: 18, forceX: 5 },
       { kind: 'gear', x: 600, y: 470, radius: 48, angularSpeed: 0.04 },
       { kind: 'trampoline', x: 650, y: 640, w: 120, h: 20 },
-      ...fort({ centerX: 960, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 960, width: 220, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   16: makeStage(16, {
@@ -281,7 +292,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '초원 꽃지기', avatar: '🌼🐱', text: '민들레 바람은 용감한 병아리만 태운다냥!', chickReply: '꽃바람을 타고 올라갈게!', instruction: '꽃 발사대는 위에서 닿으면 병아리를 위로 띄워요.' },
     spawns: [
       { kind: 'flowerLauncher', x: 650, y: 640, radius: 34, forceY: 11 },
-      ...fort({ centerX: 940, lowerCats: 1, upperCat: true, baseMaterial: 'wood', deckMaterial: 'stone' }),
+      ...fort({ centerX: 940, width: 170, lowerCats: 3, upperCat: true, baseMaterial: 'wood', deckMaterial: 'stone', extraTop: true }),
       cat(1060, 452, 23),
     ],
   }),
@@ -296,7 +307,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'seesaw', x: 700, y: 650, w: 190, h: 14 },
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 34, forceY: 12 },
-      ...fort({ centerX: 960, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone' }),
+      ...fort({ centerX: 960, width: 260, lowerCats: 4, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   18: makeStage(18, {
@@ -310,7 +321,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'boulder', x: 720, y: 620, radius: 28, armed: true },
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 34, forceY: 12 },
-      ...fort({ centerX: 970, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 970, width: 260, lowerCats: 4, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   19: makeStage(19, {
@@ -324,7 +335,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 35, forceY: 12 },
       { kind: 'chandelier', x: 780, y: 320, w: 110, h: 38, anchor: { x: 780, y: 180 } },
-      ...fort({ centerX: 970, lowerCats: 2, upperCat: true, upperShieldLayers: 2, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 970, width: 260, lowerCats: 4, upperCat: true, upperShieldLayers: 2, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
     ],
   }),
   20: makeStage(20, {
@@ -338,9 +349,10 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 36, forceY: 13 },
       { kind: 'chandelier', x: 965, y: 230, w: 130, h: 42, anchor: { x: 965, y: 130 }, breakImpact: 22 },
-      ...fort({ centerX: 965, lowerCats: 1, upperCat: false, baseMaterial: 'steel', deckMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 965, width: 230, lowerCats: 2, upperCat: true, baseMaterial: 'steel', deckMaterial: 'stone', extraTop: true }),
       block(880, 286, 26, 100, 'steel'), block(1050, 286, 26, 100, 'steel'),
       block(965, 318, 176, 20, 'wood'),
+      cat(965, 328, 23),
       cat(965, 275, 38, 0, true, 500),
       { kind: 'egg', x: 1210, y: 650 },
     ],

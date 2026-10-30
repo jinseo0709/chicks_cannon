@@ -36,6 +36,19 @@ describe('campaign stage data', () => {
     expect(STAGE_ORDER.filter((stage) => STAGES[stage].bossRole)).toEqual([6, 20]);
   });
 
+  it('raises forts and adds more cats as each region approaches its finale', () => {
+    const catCount = (stage: GameStage) => STAGES[stage].spawns.filter((spawn) => spawn.kind === 'cat').length;
+    const fortTop = (stage: GameStage) => Math.min(...STAGES[stage].spawns
+      .filter((spawn) => spawn.kind === 'block')
+      .map((spawn) => spawn.y));
+
+    for (const [start, finale] of [[1, 5], [6, 10], [11, 15], [16, 19]] as const) {
+      expect(catCount(finale)).toBeGreaterThan(catCount(start));
+      expect(fortTop(finale)).toBeLessThan(fortTop(start));
+    }
+    expect(catCount(20)).toBeGreaterThanOrEqual(5);
+  });
+
   it('assigns the six reused backgrounds and each region signature gimmick', () => {
     const themes = STAGE_ORDER.map((stage) => STAGES[stage].theme);
     expect(themes.slice(0, 3)).toEqual(['alley-day', 'alley-day', 'alley-day']);
