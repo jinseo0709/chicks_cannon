@@ -1,6 +1,6 @@
 # Task: T01 Build Regional Map Pages
 
-## Status: pending
+## Status: done
 
 ## Goal
 Replace the six-node map with four browsable regional pages, each showing exactly five numbered stages, their completion/star/badge state, and an unambiguous current-stage card.
@@ -41,10 +41,10 @@ Replace the six-node map with four browsable regional pages, each showing exactl
   - Test all four region labels, 5 nodes per page (15 star slots), boundary disabled nav buttons, navigation preserving completion state, locked stage no callback, replay allowed, active region's unlock and final completed stage 20, progress 0/20 and 20/20, focusable controls and descriptive accessible labels.
 
 ## Acceptance Criteria
-- [ ] Map displays one region and exactly five global stage nodes at a time.
-- [ ] Region navigation works at boundaries and does not modify completion/unlock state.
-- [ ] Stars, badges, lock state, current stage card, and global 20-stage progress remain correct.
-- [ ] Map tests pass and mobile layout has no horizontal overflow.
+- [x] Map displays one region and exactly five global stage nodes at a time.
+- [x] Region navigation works at boundaries and does not modify completion/unlock state.
+- [x] Stars, badges, lock state, current stage card, and global 20-stage progress remain correct.
+- [x] Map tests pass and mobile layout has no horizontal overflow.
 
 ## Validation
 - `npm.cmd test --workspace @chicks-cannon/web -- WorldMapScreen.test.tsx` — all four page states and interaction cases pass.
@@ -62,6 +62,6 @@ Task: T01-build-regional-map-pages
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
-- commit: pending
+- [x] Implementation complete
+- [x] Validation passed: 9 map tests, 3 app tests, build, and 390×844 mobile overflow check passed.
+- commit: `8c07e19` (`feat(map): 4개 지역 스테이지 페이지 추가`)
