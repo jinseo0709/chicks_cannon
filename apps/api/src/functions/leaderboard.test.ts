@@ -49,21 +49,22 @@ describe('leaderboard HTTP handlers', () => {
     expect(JSON.stringify(jsonBody(invalid))).not.toContain('<img>');
   });
 
-  it('handles malformed JSON, rate limits, and hides unexpected exception details', async () => {
+  it('handles malformed JSON and hides unexpected exception details', async () => {
     const store = new MemoryLeaderboardStore();
     const fixed = new Date('2026-10-20T12:00:00.000Z');
     const handlers = createLeaderboardHandlers(new LeaderboardService(store, () => new Date(fixed)), async () => participantId);
     const malformed = await handlers.post(makeRequest({ method: 'POST', malformedJson: true }));
     expect(malformed.status).toBe(400);
 
-    const valid = { participantId, nickname: '새싹', score: 10, campaignCompleted: true };
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      expect((await handlers.post(makeRequest({ method: 'POST', body: valid }))).status).toBe(200);
-    }
-    const limited = await handlers.post(makeRequest({ method: 'POST', body: valid }));
-    expect(limited.status).toBe(429);
-    expect(limited.headers).toMatchObject({ 'Retry-After': '600' });
-    expect(jsonBody(limited)).toMatchObject({ error: { code: 'RATE_LIMITED' } });
+    const handlersWithStoreError = createLeaderboardHandlers({
+      submitBest: async () => { throw new Error('private database detail'); },
+      list: async () => { throw new Error('private database detail'); },
+    } as unknown as LeaderboardService, async () => participantId);
+    const failed = await handlersWithStoreError.post(makeRequest({ method: 'POST', body: {
+      participantId, nickname: '새싹', score: 10, campaignCompleted: true,
+    } }));
+    expect(failed.status).toBe(500);
+    expect(JSON.stringify(jsonBody(failed))).not.toContain('private database detail');
   });
 
   it('rejects unauthenticated requests before reading or saving their submitted identity', async () => {

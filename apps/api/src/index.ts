@@ -1,12 +1,12 @@
 import { app } from '@azure/functions';
 import { createLeaderboardHandlers } from './functions/leaderboard';
 import { authenticateEntraRequest } from './leaderboard/entra-auth';
+import { CosmosLeaderboardStore } from './leaderboard/cosmos-store';
 import { MemoryLeaderboardStore } from './leaderboard/memory-store';
 import { LeaderboardService } from './leaderboard/service';
-import { SqlLeaderboardStore } from './leaderboard/sql-store';
 
-const store = process.env.LEADERBOARD_STORE === 'sql'
-  ? new SqlLeaderboardStore()
+const store = process.env.LEADERBOARD_STORE === 'cosmos'
+  ? new CosmosLeaderboardStore()
   : new MemoryLeaderboardStore();
 const handlers = createLeaderboardHandlers(new LeaderboardService(store), authenticateEntraRequest);
 

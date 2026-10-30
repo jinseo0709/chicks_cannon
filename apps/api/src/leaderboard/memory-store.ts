@@ -2,31 +2,11 @@ import type {
   LeaderboardEntry,
   LeaderboardPage,
   LeaderboardStore,
-  RateLimitResult,
   SubmitScoreRequest,
 } from './types';
 
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT = 5;
-
 export class MemoryLeaderboardStore implements LeaderboardStore {
   private readonly entries = new Map<string, LeaderboardEntry>();
-  private readonly attempts = new Map<string, number[]>();
-
-  async recordSubmissionAttempt(participantId: string, now: Date): Promise<RateLimitResult> {
-    const cutoff = now.getTime() - RATE_WINDOW_MS;
-    const recent = (this.attempts.get(participantId) ?? []).filter((timestamp) => timestamp > cutoff);
-    if (recent.length >= RATE_LIMIT) {
-      this.attempts.set(participantId, recent);
-      return {
-        allowed: false,
-        retryAfterSeconds: Math.max(1, Math.ceil((recent[0] + RATE_WINDOW_MS - now.getTime()) / 1000)),
-      };
-    }
-    recent.push(now.getTime());
-    this.attempts.set(participantId, recent);
-    return { allowed: true, retryAfterSeconds: 0 };
-  }
 
   async submitBest(request: SubmitScoreRequest, now: Date): Promise<LeaderboardEntry> {
     const timestamp = now.toISOString();

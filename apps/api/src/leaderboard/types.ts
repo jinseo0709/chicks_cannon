@@ -26,13 +26,7 @@ export interface LeaderboardPage {
   totalPages: number;
 }
 
-export interface RateLimitResult {
-  allowed: boolean;
-  retryAfterSeconds: number;
-}
-
 export interface LeaderboardStore {
-  recordSubmissionAttempt(participantId: string, now: Date): Promise<RateLimitResult>;
   submitBest(request: SubmitScoreRequest, now: Date): Promise<LeaderboardEntry>;
   list(page: number, pageSize: number): Promise<LeaderboardPage>;
 }

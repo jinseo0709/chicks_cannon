@@ -35,17 +35,6 @@ describe('MemoryLeaderboardStore', () => {
     expect(first.totalPages).toBe(2);
   });
 
-  it('allows five attempts in a rolling ten-minute window', async () => {
-    const store = new MemoryLeaderboardStore();
-    for (let index = 0; index < 5; index += 1) {
-      expect((await store.recordSubmissionAttempt('participant', new Date(baseTime.getTime() + index * 1000))).allowed).toBe(true);
-    }
-    const limited = await store.recordSubmissionAttempt('participant', new Date(baseTime.getTime() + 5000));
-    expect(limited.allowed).toBe(false);
-    expect(limited.retryAfterSeconds).toBeGreaterThan(0);
-    expect((await store.recordSubmissionAttempt('participant', new Date(baseTime.getTime() + 600_001))).allowed).toBe(true);
-  });
-
   it('returns an empty, zero-page result before the first submission', async () => {
     expect(await new MemoryLeaderboardStore().list(1, 25)).toEqual({
       items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 0,

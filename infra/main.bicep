@@ -9,20 +9,14 @@ param namePrefix string
 @description('Static Web Apps resource name.')
 param staticWebAppName string
 
-@description('SQL database name.')
-param sqlDatabaseName string = 'chickscannon'
+@description('Name of the existing Azure Cosmos DB for NoSQL account.')
+param cosmosAccountName string
 
-@description('SQL database SKU. Choose a SKU supported in the target region.')
-param sqlDatabaseSkuName string = 'Basic'
+@description('Existing Cosmos DB database where the separate leaderboard container will be created.')
+param cosmosDatabaseId string
 
-@description('SQL logical server admin display name. Use a Microsoft Entra user or group.')
-param sqlAdministratorLogin string
-
-@description('Object ID of the Microsoft Entra SQL administrator.')
-param sqlAdministratorObjectId string
-
-@description('Tenant ID for the SQL administrator.')
-param sqlAdministratorTenantId string
+@description('Only new Cosmos container used by this game; do not point it at the maze-rescue container.')
+param cosmosContainerId string = 'ChicksCannonLeaderboard'
 
 @description('Microsoft Entra tenant ID allowed to sign in to the leaderboard.')
 param entraTenantId string
@@ -33,13 +27,9 @@ param entraApiAudience string
 @description('Client/application ID GUID of the single-page app allowed to call the leaderboard API.')
 param entraSpaClientId string
 
-@secure()
-@description('One-time SQL server bootstrap field required by the ARM API. SQL authentication is disabled; never reuse or commit this value.')
-param sqlBootstrapPassword string
-
 var functionAppName = '${namePrefix}-api'
 var storageAccountName = toLower(replace('${namePrefix}storage', '-', ''))
-var sqlServerName = '${namePrefix}-sql'
+var cosmosEndpoint = 'https://${cosmosAccountName}.documents.azure.com:443/'
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -78,9 +68,10 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
         { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'node' }
         { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }
-        { name: 'LEADERBOARD_STORE', value: 'sql' }
-        { name: 'AZURE_SQL_SERVER', value: '${sqlServer.name}.${environment().suffixes.sqlServerHostname}' }
-        { name: 'AZURE_SQL_DATABASE', value: sqlDatabaseName }
+        { name: 'LEADERBOARD_STORE', value: 'cosmos' }
+        { name: 'COSMOS_ENDPOINT', value: cosmosEndpoint }
+        { name: 'COSMOS_DATABASE_ID', value: cosmosDatabaseId }
+        { name: 'COSMOS_CONTAINER_ID', value: cosmosContainerId }
         { name: 'ENTRA_TENANT_ID', value: entraTenantId }
         { name: 'ENTRA_API_AUDIENCE', value: entraApiAudience }
         { name: 'ENTRA_SPA_CLIENT_ID', value: entraSpaClientId }
@@ -99,37 +90,7 @@ resource staticWebApp 'Microsoft.Web/staticSites@2024-04-01' = {
   }
 }
 
-resource sqlServer 'Microsoft.Sql/servers@2023-08-01' = {
-  name: sqlServerName
-  location: location
-  properties: {
-    administratorLogin: 'sqlbootstrap'
-    administratorLoginPassword: sqlBootstrapPassword
-    version: '12.0'
-    minimalTlsVersion: '1.2'
-    publicNetworkAccess: 'Enabled'
-    administrators: {
-      administratorType: 'ActiveDirectory'
-      azureADOnlyAuthentication: true
-      login: sqlAdministratorLogin
-      principalType: 'Group'
-      sid: sqlAdministratorObjectId
-      tenantId: sqlAdministratorTenantId
-    }
-  }
-}
-
-resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01' = {
-  parent: sqlServer
-  name: sqlDatabaseName
-  location: location
-  sku: { name: sqlDatabaseSkuName }
-  properties: { collation: 'SQL_Latin1_General_CP1_CI_AS' }
-}
-
 output staticWebAppResourceName string = staticWebApp.name
 output staticWebAppHostname string = staticWebApp.properties.defaultHostname
 output functionAppResourceName string = functionApp.name
 output functionAppHostname string = functionApp.properties.defaultHostName
-output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
-output sqlDatabaseResourceName string = sqlDatabase.name
