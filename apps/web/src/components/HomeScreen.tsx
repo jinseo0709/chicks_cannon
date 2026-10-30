@@ -6,10 +6,11 @@ import type { GameStage } from '../game/types';
 export interface HomeScreenProps {
   currentStage: GameStage;
   onPlay(): void;
+  onOpenGuide(): void;
   onOpenLeaderboard(): void;
 }
 
-export function HomeScreen({ currentStage, onPlay, onOpenLeaderboard }: HomeScreenProps): JSX.Element {
+export function HomeScreen({ currentStage, onPlay, onOpenGuide, onOpenLeaderboard }: HomeScreenProps): JSX.Element {
   const stage = STAGES[currentStage];
   const moveScene = (event: PointerEvent<HTMLElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -34,6 +35,9 @@ export function HomeScreen({ currentStage, onPlay, onOpenLeaderboard }: HomeScre
 
       <button className="home-rank-button" onClick={onOpenLeaderboard} aria-label="순위표 열기">
         <span aria-hidden="true">♛</span><b>순위표</b>
+      </button>
+      <button className="home-rank-button home-guide-button" onClick={onOpenGuide} aria-label="게임 방법 보기">
+        <span aria-hidden="true">ⓘ</span><b>게임 방법</b>
       </button>
 
       <header className="home-brand">

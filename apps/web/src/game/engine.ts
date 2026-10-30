@@ -1401,13 +1401,15 @@ export class ChickCannonEngine {
   private completeStage(): void {
     const finalBoss = this.bossRole === 'final';
     this.state = finalBoss ? 'WON' : 'EVOLUTION';
-    this.stageStars = this.calculateStageStars();
-    if (this.bonusChallengeStatus === 'running' && this.bonusChallengeElapsedMs <= STAGES[this.stage].bonusChallenge.timeLimitMs) {
+    const timeChallengeWon = this.bonusChallengeStatus === 'running' &&
+      this.bonusChallengeElapsedMs <= STAGES[this.stage].bonusChallenge.timeLimitMs;
+    if (timeChallengeWon) {
       this.bonusChallengeStatus = 'success';
       this.awardScore(STAGES[this.stage].bonusChallenge.bonusScore, 640, 120, '시간 도전 성공');
     } else if (this.bonusChallengeStatus === 'running') {
       this.bonusChallengeStatus = 'expired';
     }
+    this.stageStars = this.calculateStageStars();
     this.winElapsedMs = 0;
     this.settleFrames = 0;
     if (!finalBoss) {
@@ -1445,10 +1447,10 @@ export class ChickCannonEngine {
   }
 
   private calculateStageStars(): 1 | 2 | 3 {
+    if (this.stageScore < STAGE_SCORE_TARGETS[this.stage]) return 1;
     const ammoForThreeStars = Math.ceil(STAGES[this.stage].ammo / 2);
-    if (this.ammo >= ammoForThreeStars && this.stageScore >= STAGE_SCORE_TARGETS[this.stage]) return 3;
-    if (this.ammo >= 1) return 2;
-    return 1;
+    if (this.ammo >= ammoForThreeStars) return 3;
+    return 2;
   }
 
   private grantItem(kind: ItemKind): void {

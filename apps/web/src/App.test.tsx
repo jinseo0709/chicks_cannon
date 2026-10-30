@@ -18,6 +18,7 @@ afterEach(() => {
 function startFromOpening(): void {
   fireEvent.change(screen.getByRole('textbox', { name: '랭킹에 표시할 닉네임' }), { target: { value: '테스트모험가' } });
   fireEvent.click(screen.getByRole('button', { name: '이야기 시작' }));
+  fireEvent.click(screen.getByRole('button', { name: '가이드 확인 완료 · 계속하기' }));
 }
 
 describe('App navigation and campaign entry', () => {
@@ -27,6 +28,18 @@ describe('App navigation and campaign entry', () => {
     expect(screen.getByRole('button', { name: '소리 켜기' }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: '소리 켜기' }));
     expect(screen.getByRole('button', { name: '소리 끄기' }).getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('shows the controls and updated star rules before the first home screen and can reopen the guide', () => {
+    render(<App />);
+    fireEvent.change(screen.getByRole('textbox', { name: '랭킹에 표시할 닉네임' }), { target: { value: '테스트모험가' } });
+    fireEvent.click(screen.getByRole('button', { name: '이야기 시작' }));
+    expect(screen.getByRole('heading', { name: '첫 모험 가이드' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '별은 이렇게 모아요' })).toBeTruthy();
+    expect(screen.getByText('클리어하고 스테이지 점수 목표 달성')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '가이드 확인 완료 · 계속하기' }));
+    fireEvent.click(screen.getByRole('button', { name: '게임 방법 보기' }));
+    expect(screen.getByRole('heading', { name: '첫 모험 가이드' })).toBeTruthy();
   });
 
   it('restores saved stars and completion when the app loads', () => {

@@ -14,18 +14,21 @@ describe('campaign stage data', () => {
     ]);
   });
 
-  it('keeps chick forms fixed within each region and score targets rising', () => {
+  it('keeps chick forms fixed within each region and scales score targets to stage contents', () => {
     expect(STAGE_ORDER.map((stage) => CHICK_FORMS[stage].formId)).toEqual([
       'baby', 'baby', 'baby', 'baby', 'baby',
       'breeze', 'breeze', 'breeze', 'breeze', 'breeze',
       'fighter', 'fighter', 'fighter', 'fighter', 'fighter',
       'golden', 'golden', 'golden', 'golden', 'golden',
     ]);
-    expect(STAGE_ORDER.map((stage) => STAGE_SCORE_TARGETS[stage])).toEqual([
-      3600, 3900, 4200, 4500, 4800, 5100, 5400, 5700, 6000, 6300,
-      6600, 6900, 7200, 7500, 7800, 8100, 8400, 8700, 9000, 10000,
-    ]);
-    expect(STAGE_ORDER.slice(1).every((stage, index) => STAGE_SCORE_TARGETS[stage] > STAGE_SCORE_TARGETS[STAGE_ORDER[index]])).toBe(true);
+    for (const stage of STAGE_ORDER) {
+      const rewards = STAGES[stage].spawns.reduce((sum, spawn) => {
+        if (spawn.kind === 'cat') return sum + (spawn.boss ? 3000 : spawn.shieldLayers ? 2000 : 1200);
+        if (spawn.kind === 'block') return sum + (spawn.material === 'tnt' ? 600 : 180) * 0.25;
+        return sum;
+      }, STAGES[stage].bonusChallenge.bonusScore);
+      expect(STAGE_SCORE_TARGETS[stage]).toBe(Math.ceil(rewards / 100) * 100);
+    }
   });
 
   it('keeps the stage-6 mid-boss and reserves the final boss for stage 20', () => {

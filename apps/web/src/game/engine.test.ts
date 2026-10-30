@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Body, Bodies, Composite, Events, Sleeping } from 'matter-js';
 import { ChickCannonEngine } from './engine';
 import { STAGES } from './stages';
-import { CHICK_FORMS, STAGE_ORDER } from './constants';
+import { CHICK_FORMS, STAGE_ORDER, STAGE_SCORE_TARGETS } from './constants';
 import type { GameSnapshot, GameStage, GameState, SpawnSpec } from './types';
 
 type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number; alive?: boolean; triggered?: boolean; spent?: boolean; stageFrozen?: boolean } };
@@ -19,6 +19,7 @@ interface CampaignHarness {
   finalRewardClaimed: boolean;
   replayOnly: boolean;
   bonusChallengeElapsedMs: number;
+  bonusChallengeStatus: GameSnapshot['bonusChallengeStatus'];
   bossHp: number;
   engine: Matter.Engine;
   bodies: Map<number, TestBody>;
@@ -604,22 +605,37 @@ describe('ChickCannonEngine', () => {
     engine.dispose();
   });
 
-  it('calculates one, two and three star thresholds using stage-local score and ammo', () => {
+  it('awards stars for clearing, meeting the score target, and saving enough ammo', () => {
     const { harness, snapshot } = createEngine();
     harness.stage = 1;
     harness.ammo = 3;
     harness.stageScore = snapshot().scoreTarget - 1;
-    expect(harness.calculateStageStars()).toBe(2);
+    expect(harness.calculateStageStars()).toBe(1);
     harness.stageScore = snapshot().scoreTarget;
     expect(harness.calculateStageStars()).toBe(3);
-    harness.ammo = 1;
+    harness.ammo = 2;
     expect(harness.calculateStageStars()).toBe(2);
-    harness.ammo = 0;
+    harness.stageScore = snapshot().scoreTarget - 1;
     expect(harness.calculateStageStars()).toBe(1);
+    harness.stageScore = snapshot().scoreTarget;
+    harness.ammo = 0;
+    expect(harness.calculateStageStars()).toBe(2);
     harness.stage = 5;
     harness.ammo = 3;
-    harness.stageScore = 10000;
+    harness.stageScore = STAGE_SCORE_TARGETS[5];
     expect(harness.calculateStageStars()).toBe(3);
+  });
+
+  it('counts a successful time bonus in the score target but keeps the ammo condition for three stars', () => {
+    const { harness, snapshot } = createEngine();
+    harness.stageScore = snapshot().scoreTarget - Math.floor(STAGES[1].bonusChallenge.bonusScore / 2);
+    harness.ammo = 0;
+    harness.bonusChallengeStatus = 'running';
+    harness.bonusChallengeElapsedMs = STAGES[1].bonusChallenge.timeLimitMs;
+    harness.completeStage();
+    harness.publish();
+    expect(snapshot()).toMatchObject({ stageStars: 2, bonusChallengeStatus: 'success' });
+    expect(snapshot().stageScore).toBeGreaterThanOrEqual(STAGE_SCORE_TARGETS[1]);
   });
 
   it('excludes completed-stage replay points from the campaign total', () => {

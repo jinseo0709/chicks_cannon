@@ -50,7 +50,7 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
               <strong className="stage-score-value">{snapshot.stageScore.toLocaleString('ko-KR')}<small>점</small></strong>
               <div className="hud-target-progress">
                 <span className="score-target-label"><span aria-hidden="true">⭐</span> {snapshot.stageScore.toLocaleString('ko-KR')} / {snapshot.scoreTarget.toLocaleString('ko-KR')}</span>
-                <div className="score-target-track" role="progressbar" aria-label="별 3개 점수 목표 진행률"
+                <div className="score-target-track" role="progressbar" aria-label="별 2개 점수 목표 진행률"
                   aria-valuemin={0} aria-valuemax={100} aria-valuenow={targetProgress}>
                   <span style={{ width: `${targetProgress}%` }} />
                 </div>

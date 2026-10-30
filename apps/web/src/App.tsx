@@ -4,6 +4,7 @@ import { EndingModal } from './components/EndingModal';
 import { GameCanvas } from './components/GameCanvas';
 import { GameHud } from './components/GameHud';
 import { GameModal } from './components/GameModal';
+import { GuideScreen } from './components/GuideScreen';
 import { PausePanel } from './components/PausePanel';
 import { HomeScreen } from './components/HomeScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
@@ -20,7 +21,7 @@ import type { CampaignProgress } from './game/progress';
 const activeGameStates = new Set(['AIMING', 'FLYING', 'RESOLVING']);
 
 export function App(): JSX.Element {
-  const [screen, setScreen] = useState<'opening' | 'home' | 'map' | 'game' | 'leaderboard'>('opening');
+  const [screen, setScreen] = useState<'opening' | 'guide' | 'home' | 'map' | 'game' | 'leaderboard'>('opening');
   const [leaderboardReturn, setLeaderboardReturn] = useState<'home' | 'map' | 'game'>('home');
   const [progress, setProgress] = useState(() => loadCampaignProgress(getSafeBrowserStorage()));
   const completedStages = progress.completedStages;
@@ -75,12 +76,14 @@ export function App(): JSX.Element {
           aria-pressed={controller.snapshot.muted}
           title={controller.snapshot.muted ? '소리 켜기' : '소리 끄기'}
         />}
-        {screen === 'opening' && <OpeningScreen storage={getSafeBrowserStorage()} onContinue={() => setScreen('home')} />}
+        {screen === 'opening' && <OpeningScreen storage={getSafeBrowserStorage()} onContinue={() => setScreen('guide')} />}
+        {screen === 'guide' && <GuideScreen onContinue={() => setScreen('home')} />}
 
         {screen === 'home' && (
           <HomeScreen
             currentStage={unlockedStage}
             onPlay={() => setScreen('map')}
+            onOpenGuide={() => setScreen('guide')}
             onOpenLeaderboard={() => openLeaderboard('home')}
           />
         )}
