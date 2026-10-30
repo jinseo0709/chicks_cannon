@@ -71,7 +71,7 @@ describe('campaign stage data', () => {
     expect(catCount(20)).toBeGreaterThanOrEqual(5);
   });
 
-  it.each([10, 15, 19] as const)('splits the stage %s finale targets across separate fort platforms', (stage) => {
+  it.each([15, 19] as const)('splits the stage %s finale targets across separate fort platforms', (stage) => {
     const platforms = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block' && spawn.h === 22 && spawn.y === 558);
     const centers = platforms.map((platform) => platform.x).sort((a, b) => a - b);
     expect(centers.length).toBeGreaterThanOrEqual(2);
@@ -103,6 +103,17 @@ describe('campaign stage data', () => {
     expect(STAGES[4].spawns.some((spawn) => spawn.kind === 'boulder')).toBe(true);
     expect(STAGES[5].spawns.some((spawn) => spawn.kind === 'trapdoor')).toBe(true);
     expect(STAGES[5].spawns.some((spawn) => spawn.kind === 'shutter')).toBe(true);
+  });
+
+  it('gives rooftop and clocktower stages five distinct coarse silhouettes', () => {
+    const regionTwoStages = [6, 7, 8, 9, 10] as const;
+    expect(new Set(regionTwoStages.map(coarseLayoutSignature)).size).toBe(regionTwoStages.length);
+    expect(STAGES[6].spawns.some((spawn) => spawn.kind === 'fan')).toBe(true);
+    expect(STAGES[7].spawns.some((spawn) => spawn.kind === 'seesaw')).toBe(true);
+    expect(STAGES[8].spawns.some((spawn) => spawn.kind === 'clockHand')).toBe(true);
+    expect(STAGES[9].spawns.some((spawn) => spawn.kind === 'gear')).toBe(true);
+    expect(STAGES[10].spawns.some((spawn) => spawn.kind === 'chandelier')).toBe(true);
+    expect(STAGES[6].bossRole).toBe('mid');
   });
 
   it('contains complete authored story, routes, challenge, and in-bounds spawn data', () => {

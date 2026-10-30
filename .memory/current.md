@@ -1,16 +1,16 @@
-﻿# Current Context
+# Current Context
 
 ## Active Plan
 [Redesign Stage Variety](./plans/2026-10-30-stage-variety-redesign.md)
 
 ## Active Phase
-[P01 Alley and Rooftop Layouts](./phases/2026-10-30-stage-variety-redesign/P01-alley-and-rooftop/phase.md)
+[P02 Factory and Meadow Layouts](./phases/2026-10-30-stage-variety-redesign/P02-factory-and-meadow/phase.md)
 
 ## Active Task
-[T02 Redesign Rooftop and Clocktower Stages](./phases/2026-10-30-stage-variety-redesign/P01-alley-and-rooftop/T02-redesign-rooftop-stages.md)
+[T01 Redesign Factory Stages](./phases/2026-10-30-stage-variety-redesign/P02-factory-and-meadow/T01-redesign-factory-stages.md)
 
 ## Status
-- T01 complete: stage-data tests (30 passed), web build passed. Commit: see recent Korean commit in Git history.
+- P01 complete: stages 1?10 have distinct authored layouts. T01 commit: 041bfe0; T02 validation passed and is being committed before P02 starts.
 
 ## Next Step (IMPORTANT)
-Read P01-T02 and author distinct layouts for stages 6–10 while preserving the stage-6 mid-boss and campaign progression. Validate and commit in Korean before advancing to P02-T01.
+Read P02-T01 and redesign stages 11?15 with distinct factory layouts and attack solutions. Run focused stage tests and the web build, then commit in Korean before advancing to P02-T02.

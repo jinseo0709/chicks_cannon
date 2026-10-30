@@ -7,5 +7,5 @@
 | T02 | `pending` | Give stages 6–10 distinct rooftop/clocktower silhouettes and attack solutions. | [T02](./T02-redesign-rooftop-stages.md) |
 
 ## Progress
-- done: 1/2 (active: T02)
+- done: 2/2 (active: none)
 

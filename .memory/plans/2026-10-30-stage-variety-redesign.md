@@ -13,7 +13,7 @@ Redesign all 20 campaign encounters so each has a recognizable structure silhoue
 ## Phases
 | Phase | Status | Summary | Blueprint |
 | :--- | :--- | :--- | :--- |
-| P01 | `in_progress` | Redesign alley/wall and rooftop/clocktower encounters. | [P01](../phases/2026-10-30-stage-variety-redesign/P01-alley-and-rooftop/phase.md) |
+| P01 | `done ?` | Redesign alley/wall and rooftop/clocktower encounters. | [P01](../phases/2026-10-30-stage-variety-redesign/P01-alley-and-rooftop/phase.md) |
 | P02 | `pending` | Redesign factory and golden meadow encounters. | [P02](../phases/2026-10-30-stage-variety-redesign/P02-factory-and-meadow/phase.md) |
 | P03 | `pending` | Validate campaign-wide layout identity, route hints, and score targets. | [P03](../phases/2026-10-30-stage-variety-redesign/P03-campaign-validation/phase.md) |
 

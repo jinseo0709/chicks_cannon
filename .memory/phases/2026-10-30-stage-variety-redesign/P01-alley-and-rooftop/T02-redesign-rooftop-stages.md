@@ -1,6 +1,6 @@
 # Task: T02 Redesign Rooftop and Clocktower Stages
 
-## Status: pending
+## Status: done
 
 ## Goal
 Give stages 6–10 distinct rooftop/clocktower silhouettes and make the mid-boss, clock-hand, gear, and bell encounters require different decisions.
@@ -26,10 +26,10 @@ Give stages 6–10 distinct rooftop/clocktower silhouettes and make the mid-boss
 - Details: Assert region-2 stages have distinct actual spawn profiles; retain stage completeness, bounds, route proximity, and score consistency checks.
 
 ## Acceptance Criteria
-- [ ] Stages 6–10 have distinct dominant layouts and attack sequences.
-- [ ] Stage 6 remains the region’s mid-boss and stage 10 does not trigger campaign-ending behavior.
-- [ ] Routes match reachable geometry and existing gimmicks.
-- [ ] Focused test and web build pass.
+- [x] Stages 6–10 have distinct dominant layouts and attack sequences.
+- [x] Stage 6 remains the region’s mid-boss and stage 10 does not trigger campaign-ending behavior.
+- [x] Routes match reachable geometry and existing gimmicks.
+- [x] Focused test and web build pass.
 
 ## Validation
 - `npm.cmd test --workspace @chicks-cannon/web -- src/game/stages.test.ts`
@@ -48,7 +48,7 @@ Task: T02-redesign-rooftop-stages
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
-- commit: pending
+- [x] Implementation complete
+- [x] Validation passed
+- commit: recorded in Git history with this task
 
