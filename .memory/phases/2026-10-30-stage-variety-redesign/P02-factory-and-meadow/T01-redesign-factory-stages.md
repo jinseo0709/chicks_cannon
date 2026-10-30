@@ -1,6 +1,6 @@
 # Task: T01 Redesign Factory Stages
 
-## Status: pending
+## Status: done
 
 ## Goal
 Break the repeated dual-fort pattern in stages 11–15 and give the conveyor, tire, gear, shutter, and trampoline encounters individual structural identities.
@@ -27,10 +27,10 @@ Break the repeated dual-fort pattern in stages 11–15 and give the conveyor, ti
 - Details: Assert stages 11–15 have distinct spawn/solution profiles and retain completeness, bounds, route-target, and score consistency checks.
 
 ## Acceptance Criteria
-- [ ] Stages 11–15 no longer read as the same central fort plus a smaller right fort.
-- [ ] Each regional mechanic has a distinct role in its stage’s target sequence.
-- [ ] Routes and instructions match reachable targets.
-- [ ] Focused test and web build pass.
+- [x] Stages 11–15 no longer read as the same central fort plus a smaller right fort.
+- [x] Each regional mechanic has a distinct role in its stage’s target sequence.
+- [x] Routes and instructions match reachable targets.
+- [x] Focused test and web build pass.
 
 ## Validation
 - `npm.cmd test --workspace @chicks-cannon/web -- src/game/stages.test.ts`
@@ -49,7 +49,7 @@ Task: T01-redesign-factory-stages
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
-- commit: pending
+- [x] Implementation complete
+- [x] Validation passed
+- commit: recorded in Git history with this task
 

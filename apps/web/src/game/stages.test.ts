@@ -72,7 +72,9 @@ describe('campaign stage data', () => {
   });
 
   it.each([15, 19] as const)('splits the stage %s finale targets across separate fort platforms', (stage) => {
-    const platforms = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block' && spawn.h === 22 && spawn.y === 558);
+    const platformY = stage === 15 ? 600 : 558;
+    const platformHeight = stage === 15 ? 20 : 22;
+    const platforms = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block' && spawn.h === platformHeight && spawn.y === platformY);
     const centers = platforms.map((platform) => platform.x).sort((a, b) => a - b);
     expect(centers.length).toBeGreaterThanOrEqual(2);
     expect(centers[centers.length - 1]! - centers[0]!).toBeGreaterThan(140);
@@ -114,6 +116,16 @@ describe('campaign stage data', () => {
     expect(STAGES[9].spawns.some((spawn) => spawn.kind === 'gear')).toBe(true);
     expect(STAGES[10].spawns.some((spawn) => spawn.kind === 'chandelier')).toBe(true);
     expect(STAGES[6].bossRole).toBe('mid');
+  });
+
+  it('gives factory stages five distinct coarse silhouettes and signature-mechanic roles', () => {
+    const factoryStages = [11, 12, 13, 14, 15] as const;
+    expect(new Set(factoryStages.map(coarseLayoutSignature)).size).toBe(factoryStages.length);
+    for (const stage of factoryStages) expect(STAGES[stage].spawns.some((spawn) => spawn.kind === 'conveyor')).toBe(true);
+    expect(STAGES[12].spawns.some((spawn) => spawn.kind === 'tire')).toBe(true);
+    expect(STAGES[13].spawns.some((spawn) => spawn.kind === 'gear')).toBe(true);
+    expect(STAGES[14].spawns.some((spawn) => spawn.kind === 'shutter')).toBe(true);
+    expect(STAGES[15].spawns.some((spawn) => spawn.kind === 'trampoline')).toBe(true);
   });
 
   it('contains complete authored story, routes, challenge, and in-bounds spawn data', () => {
