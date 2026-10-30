@@ -25,7 +25,7 @@ import type {
   SlickZone,
 } from './types';
 
-const STAGE_CLEAR_DISPLAY_MS = 120;
+const FINAL_BOSS_VICTORY_DISPLAY_MS = 2600;
 const CHICK_SKILL_COOLDOWN_MS = 15000;
 const BOSS_MAX_HP = 500;
 
@@ -1335,7 +1335,8 @@ export class ChickCannonEngine {
   }
 
   private completeStage(): void {
-    this.state = 'WON';
+    const finalBoss = this.bossRole === 'final';
+    this.state = finalBoss ? 'WON' : 'EVOLUTION';
     this.stageStars = this.calculateStageStars();
     if (this.bonusChallengeStatus === 'running' && this.bonusChallengeElapsedMs <= STAGES[this.stage].bonusChallenge.timeLimitMs) {
       this.bonusChallengeStatus = 'success';
@@ -1345,19 +1346,23 @@ export class ChickCannonEngine {
     }
     this.winElapsedMs = 0;
     this.settleFrames = 0;
+    if (!finalBoss) {
+      const reward = STAGE_CLEAR_REWARDS[this.stage];
+      if (reward) this.grantItem(reward);
+    }
   }
 
   private advanceStageClear(delta: number): void {
-    this.winElapsedMs += delta;
-    if (this.winElapsedMs < STAGE_CLEAR_DISPLAY_MS) return;
-    if (this.bossRole === 'final') {
-      this.finalRewardClaimed = false;
-      this.state = 'ENDING';
+    if (this.bossRole !== 'final') {
+      const reward = STAGE_CLEAR_REWARDS[this.stage];
+      if (reward) this.grantItem(reward);
+      this.state = 'EVOLUTION';
       return;
     }
-    const reward = STAGE_CLEAR_REWARDS[this.stage];
-    if (reward) this.grantItem(reward);
-    this.state = 'EVOLUTION';
+    this.winElapsedMs += delta;
+    if (this.winElapsedMs < FINAL_BOSS_VICTORY_DISPLAY_MS) return;
+    this.finalRewardClaimed = false;
+    this.state = 'ENDING';
   }
 
   private applyStagePenalty(value: number, x: number, y: number, label: string): void {

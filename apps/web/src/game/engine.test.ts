@@ -28,6 +28,7 @@ interface CampaignHarness {
   applyStagePenalty(value: number, x: number, y: number, label: string): void;
   damageBody(body: TestBody, amount: number, context: { source: 'chick'; point: { x: number; y: number }; direction: { x: number; y: number }; frontal: boolean }): void;
   calculateStageStars(): 1 | 2 | 3;
+  completeStage(): void;
   spawn(spec: SpawnSpec): void;
   publish(): void;
 }
@@ -52,27 +53,30 @@ function createEngine(stage: GameStage = 1) {
 }
 
 describe('ChickCannonEngine', () => {
-  it('waits briefly before showing a region unlock', () => {
+  it('opens the clear popup immediately when the last enemy is gone', () => {
     const { engine, harness, snapshot } = createEngine(5);
     Composite.clear(harness.engine.world, false, true);
     harness.bodies.clear();
-    harness.state = 'WON';
-    harness.winElapsedMs = 0;
+    harness.state = 'AIMING';
 
-    for (let frame = 0; frame < 7; frame += 1) engine.step(16.667);
-    expect(snapshot().state).toBe('WON');
     engine.step(16.667);
-    expect(snapshot().state).toBe('EVOLUTION');
+    expect(snapshot()).toMatchObject({ stage: 5, state: 'EVOLUTION' });
+  });
+
+  it('recovers a non-final clear that enters WON instead of remaining stuck', () => {
+    const { engine, harness, snapshot } = createEngine(5);
+    harness.state = 'WON';
+
+    engine.step(16.667);
+
+    expect(snapshot()).toMatchObject({ stage: 5, state: 'EVOLUTION', items: { cushion: 1 } });
   });
 
   it('keeps the post-clear action popup when replaying a completed region', () => {
     const { engine, harness, snapshot } = createEngine(5);
     harness.replayOnly = true;
-    harness.state = 'WON';
-    harness.winElapsedMs = 100;
-
-    engine.step(33.333);
-    engine.step(33.333);
+    harness.completeStage();
+    harness.publish();
 
     expect(snapshot()).toMatchObject({ stage: 5, state: 'EVOLUTION' });
   });
@@ -94,7 +98,7 @@ describe('ChickCannonEngine', () => {
     engine.step(16.667);
 
     expect(Math.hypot(harness.activeChick!.velocity.x, harness.activeChick!.velocity.y)).toBeGreaterThan(0.65);
-    expect(snapshot().state).toBe('WON');
+    expect(snapshot().state).toBe('EVOLUTION');
   });
 
   it.each(STAGE_ORDER)('keeps unhit structures and the golden egg fixed at level %s start', (stage) => {
