@@ -65,6 +65,26 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().state).toBe('EVOLUTION');
   });
 
+  it('clears as soon as the last cat is defeated even if the chick never settles', () => {
+    const { engine, harness, snapshot } = createEngine();
+    Composite.clear(harness.engine.world, false, true);
+    harness.bodies.clear();
+    harness.spawn({ kind: 'cat', x: 900, y: 350 });
+    const cat = [...harness.bodies.values()][0];
+    engine.dismissDialogue();
+    engine.setAim({ x: 35, y: 525 });
+    engine.releaseAim();
+    Body.setVelocity(harness.activeChick!, { x: 18, y: -2 });
+    harness.damageBody(cat, 100, {
+      source: 'chick', point: { ...cat.position }, direction: { x: 1, y: 0 }, frontal: true,
+    });
+
+    engine.step(16.667);
+
+    expect(Math.hypot(harness.activeChick!.velocity.x, harness.activeChick!.velocity.y)).toBeGreaterThan(0.65);
+    expect(snapshot().state).toBe('WON');
+  });
+
   it.each(STAGE_ORDER)('keeps unhit structures and the golden egg fixed at level %s start', (stage) => {
     const { engine, harness } = createEngine(stage);
     engine.dismissDialogue();

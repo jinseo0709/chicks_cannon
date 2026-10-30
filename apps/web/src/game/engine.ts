@@ -465,6 +465,11 @@ export class ChickCannonEngine {
   step(deltaMs: number): void {
     if (!this.alive || this.state === 'PAUSED' || this.state === 'DIALOGUE') return;
     const delta = clamp(Number.isFinite(deltaMs) ? deltaMs : 16.667, 1, 33.333);
+    if (this.state === 'WON') {
+      this.advanceStageClear(delta);
+      this.publish();
+      return;
+    }
     this.skillCooldownRemainingMs = Math.max(0, this.skillCooldownRemainingMs - delta);
     this.bossHitRemainingMs = Math.max(0, this.bossHitRemainingMs - delta);
     this.bossShockwaveRemainingMs = Math.max(0, this.bossShockwaveRemainingMs - delta);
@@ -513,21 +518,8 @@ export class ChickCannonEngine {
         }
       }
     }
-    if (this.state === 'WON') {
-      this.winElapsedMs += delta;
-      if (this.winElapsedMs >= STAGE_CLEAR_DISPLAY_MS) {
-        if (this.bossRole === 'final') {
-          this.finalRewardClaimed = false;
-          this.state = 'ENDING';
-        } else {
-          const reward = STAGE_CLEAR_REWARDS[this.stage];
-          if (reward) this.grantItem(reward);
-          this.state = 'EVOLUTION';
-        }
-      }
-    } else {
-      this.checkTurnSettlement();
-    }
+    if (activeStates.has(this.state) && this.areAllCatsDefeated()) this.completeStage();
+    else this.checkTurnSettlement();
     this.publish();
   }
 
@@ -1319,20 +1311,8 @@ export class ChickCannonEngine {
     this.settleFrames = speed < 0.65 || outOfBounds ? this.settleFrames + 1 : 0;
     if (this.settleFrames <= 50) return;
 
-    const catsAlive = [...this.bodies.values()].some(
-      (body) => body.label === 'enemy' && body.customData?.alive !== false && body.position.y < WORLD.height + 20,
-    );
-    const bossDefeated = !this.hasBoss || this.bossHp <= 0;
-    if (!catsAlive && bossDefeated) {
-      this.state = 'WON';
-      this.stageStars = this.calculateStageStars();
-      if (this.bonusChallengeStatus === 'running' && this.bonusChallengeElapsedMs <= STAGES[this.stage].bonusChallenge.timeLimitMs) {
-        this.bonusChallengeStatus = 'success';
-        this.awardScore(STAGES[this.stage].bonusChallenge.bonusScore, 640, 120, '시간 도전 성공');
-      } else if (this.bonusChallengeStatus === 'running') {
-        this.bonusChallengeStatus = 'expired';
-      }
-      this.winElapsedMs = 0;
+    if (this.areAllCatsDefeated()) {
+      this.completeStage();
     } else if (this.ammo <= 0) {
       this.state = 'LOST';
       this.defeatCause = 'ammo';
@@ -1345,6 +1325,39 @@ export class ChickCannonEngine {
       this.state = 'AIMING';
     }
     this.settleFrames = 0;
+  }
+
+  private areAllCatsDefeated(): boolean {
+    const catsAlive = [...this.bodies.values()].some(
+      (body) => body.label === 'enemy' && body.customData?.alive !== false && body.position.y < WORLD.height + 20,
+    );
+    return !catsAlive && (!this.hasBoss || this.bossHp <= 0);
+  }
+
+  private completeStage(): void {
+    this.state = 'WON';
+    this.stageStars = this.calculateStageStars();
+    if (this.bonusChallengeStatus === 'running' && this.bonusChallengeElapsedMs <= STAGES[this.stage].bonusChallenge.timeLimitMs) {
+      this.bonusChallengeStatus = 'success';
+      this.awardScore(STAGES[this.stage].bonusChallenge.bonusScore, 640, 120, '시간 도전 성공');
+    } else if (this.bonusChallengeStatus === 'running') {
+      this.bonusChallengeStatus = 'expired';
+    }
+    this.winElapsedMs = 0;
+    this.settleFrames = 0;
+  }
+
+  private advanceStageClear(delta: number): void {
+    this.winElapsedMs += delta;
+    if (this.winElapsedMs < STAGE_CLEAR_DISPLAY_MS) return;
+    if (this.bossRole === 'final') {
+      this.finalRewardClaimed = false;
+      this.state = 'ENDING';
+    } else {
+      const reward = STAGE_CLEAR_REWARDS[this.stage];
+      if (reward) this.grantItem(reward);
+      this.state = 'EVOLUTION';
+    }
   }
 
   private applyStagePenalty(value: number, x: number, y: number, label: string): void {
