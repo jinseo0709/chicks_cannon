@@ -53,6 +53,7 @@ describe('App navigation and campaign entry', () => {
     const { container } = render(<App />);
     fireEvent.click(container.querySelector('.opening-screen button')!);
     fireEvent.click(container.querySelector('.home-play-button')!);
+    expect(container.querySelector('#global-sound-toggle')?.classList.contains('sound-toggle-map')).toBe(true);
     expect(screen.getByRole('heading', { name: '지붕과 시계탑' })).toBeTruthy();
     expect(container.querySelectorAll('.map-level-node')).toHaveLength(5);
     expect(screen.getByRole('button', { name: /스테이지 6,/ }).hasAttribute('disabled')).toBe(false);
