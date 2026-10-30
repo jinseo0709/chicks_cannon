@@ -21,28 +21,33 @@ function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['d
 
 describe('GameModal', () => {
   it('shows the stage badge when the timed bonus challenge succeeds', () => {
-    const snapshot = { ...makeSnapshot('WON', null, 2), bonusChallengeStatus: 'success' as const };
+    const snapshot = { ...makeSnapshot('EVOLUTION', null, 2, 5), bonusChallengeStatus: 'success' as const };
     render(<GameModal snapshot={snapshot} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
-    expect(document.querySelector('.challenge-badge')?.textContent).toContain(STAGES[3].bonusChallenge.badge);
-    expect(document.querySelector('.challenge-badge')?.textContent).toContain('+400점');
+    expect(document.querySelector('.challenge-badge')?.textContent).toContain(STAGES[5].bonusChallenge.badge);
+    expect(document.querySelector('.challenge-badge')?.textContent).toContain('+500점');
   });
 
-  it.each([1, 2, 3] as const)('shows the engine-calculated %s-star clear rating and stage score', (stars) => {
-    const { container } = render(<GameModal snapshot={makeSnapshot('WON', null, stars)} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
-    expect(screen.getByRole('img', { name: `Stage stars ${stars} of 3` })).toBeTruthy();
-    expect(container.querySelectorAll('.clear-star.earned')).toHaveLength(stars);
-    expect(container.querySelector('.clear-result')?.textContent).toBe('이번 판 점수 4,200점 · 별 3개 목표 6,000점');
+  it.each([1, 3, 5, 6, 10, 15] as const)('does not show a clear popup for stage %s', (stage) => {
+    const snapshot = makeSnapshot('WON', null, 2, stage);
+    const { container } = render(<GameModal snapshot={snapshot} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
+    expect(container.firstChild).toBeNull();
   });
 
-  it('uses stage-specific copy for regular clears and milestone copy only for region unlocks and the mid-boss', () => {
+  it('shows no clear popup on ordinary stages or the mid-boss', () => {
     const props = { onRetry: vi.fn(), onNextStage: vi.fn(), onWorldMap: vi.fn() };
     const { rerender } = render(<GameModal snapshot={makeSnapshot('WON', null, 2, 3)} {...props} />);
-    expect(screen.getByRole('heading', { name: STAGES[3].title })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: '길을 열었어요!' })).toBeNull();
+    expect(screen.queryByRole('status')).toBeNull();
     rerender(<GameModal snapshot={makeSnapshot('WON', null, 2, 5)} {...props} />);
-    expect(screen.getByRole('heading', { name: '새 지역이 열렸어요!' })).toBeTruthy();
+    expect(screen.queryByRole('status')).toBeNull();
     rerender(<GameModal snapshot={makeSnapshot('WON', null, 2, 6)} {...props} />);
-    expect(screen.getByRole('heading', { name: '중간 보스를 물리쳤어요!' })).toBeTruthy();
+    expect(screen.queryByRole('status')).toBeNull();
+    rerender(<GameModal snapshot={makeSnapshot('EVOLUTION', null, 2, 6)} {...props} />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('shows the region unlock popup at the end of a region', () => {
+    render(<GameModal snapshot={makeSnapshot('EVOLUTION', null, 2, 5)} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
+    expect(screen.getByRole('heading', { name: '새 지역이 열렸어요!' })).toBeTruthy();
   });
 
   it('distinguishes an egg failure and an ammo failure and retries', () => {
@@ -66,9 +71,9 @@ describe('GameModal', () => {
     const onNextStage = vi.fn();
     const onWorldMap = vi.fn();
     const props = { onRetry: vi.fn(), onNextStage, onWorldMap };
-    const { rerender } = render(<GameModal snapshot={makeSnapshot('EVOLUTION')} {...props} />);
-    expect(screen.getByRole('heading', { name: '다음 길이 열렸어요!' })).toBeTruthy();
-    expect(screen.getByText('달걀 지진 1개 획득!')).toBeTruthy();
+    const { rerender } = render(<GameModal snapshot={makeSnapshot('EVOLUTION', null, 2, 5)} {...props} />);
+    expect(screen.getByRole('heading', { name: '새 지역이 열렸어요!' })).toBeTruthy();
+    expect(screen.getByText('알 쿠션 1개 획득!')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '다음 스테이지' }));
     fireEvent.click(screen.getByRole('button', { name: '월드맵' }));
     rerender(<GameModal snapshot={makeSnapshot('ENDING')} {...props} />);

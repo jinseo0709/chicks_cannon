@@ -52,8 +52,8 @@ function createEngine(stage: GameStage = 1) {
 }
 
 describe('ChickCannonEngine', () => {
-  it('shows the stage clear screen for about 0.9 seconds before advancing', () => {
-    const { engine, harness, snapshot } = createEngine();
+  it('waits briefly before showing a region unlock', () => {
+    const { engine, harness, snapshot } = createEngine(5);
     Composite.clear(harness.engine.world, false, true);
     harness.bodies.clear();
     harness.state = 'WON';
@@ -63,6 +63,18 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().state).toBe('WON');
     engine.step(16.667);
     expect(snapshot().state).toBe('EVOLUTION');
+  });
+
+  it('does not repeat a region unlock popup when replaying a completed region', () => {
+    const { engine, harness, snapshot } = createEngine(5);
+    harness.replayOnly = true;
+    harness.state = 'WON';
+    harness.winElapsedMs = 850;
+
+    engine.step(33.333);
+    engine.step(33.333);
+
+    expect(snapshot()).toMatchObject({ stage: 6, state: 'AIMING' });
   });
 
   it('clears as soon as the last cat is defeated even if the chick never settles', () => {
@@ -456,7 +468,7 @@ describe('ChickCannonEngine', () => {
     for (const stage of STAGE_ORDER.slice(0, 6)) {
       expect(snapshot().stage).toBe(stage);
       expect(snapshot().campaignComplete).toBe(false);
-      engine.dismissDialogue();
+      if (snapshot().state === 'DIALOGUE') engine.dismissDialogue();
       engine.setAim({ x: 35, y: 525 });
       engine.releaseAim();
       for (const body of harness.bodies.values()) {
@@ -466,22 +478,21 @@ describe('ChickCannonEngine', () => {
         }
       }
       if (stage === 6) harness.bossHp = 0;
-      Body.setPosition(harness.activeChick!, { x: 1600, y: 300 });
-      Body.setVelocity(harness.activeChick!, { x: 0, y: 0 });
-      for (let frame = 0; frame < 240; frame += 1) engine.step(16.667);
-      expect(snapshot().state).toBe('EVOLUTION');
+      engine.step(16.667);
+      for (let frame = 0; frame < 54; frame += 1) engine.step(16.667);
       expect(snapshot().campaignComplete).toBe(false);
-      if (stage < 6) {
+      if (stage === 5) {
+        expect(snapshot().state).toBe('EVOLUTION');
         expect(snapshot().items[rewards[stage - 1]]).toBe(1);
         expect(snapshot().evolvedForm?.stage).toBe(stage + 1);
         engine.continueAfterEvolution();
         expect(snapshot().items[rewards[stage - 1]]).toBe(1);
       } else {
-        expect(snapshot().evolvedForm?.stage).toBe(7);
-        engine.continueAfterEvolution();
+        expect(snapshot()).toMatchObject({ stage: stage + 1, state: 'AIMING' });
+        if (stage < 5) expect(snapshot().items[rewards[stage - 1]]).toBe(1);
       }
     }
-    expect(snapshot()).toMatchObject({ stage: 7, state: 'DIALOGUE', campaignComplete: false });
+    expect(snapshot()).toMatchObject({ stage: 7, state: 'AIMING', campaignComplete: false });
     expect(engine.claimFinalReward('butter')).toBe(false);
   });
 

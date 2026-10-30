@@ -43,7 +43,7 @@ export function App(): JSX.Element {
   };
 
   useEffect(() => {
-    if (controller.snapshot.state !== 'EVOLUTION' && controller.snapshot.state !== 'ENDING') {
+    if (controller.snapshot.state !== 'WON' && controller.snapshot.state !== 'EVOLUTION' && controller.snapshot.state !== 'ENDING') {
       recordedResultRef.current = null;
       return;
     }

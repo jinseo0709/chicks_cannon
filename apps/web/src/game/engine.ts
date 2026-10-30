@@ -9,7 +9,7 @@ import {
   Sleeping,
   type IEventCollision,
 } from 'matter-js';
-import { BLOCK_CONFIG, CHICK_FORMS, CHICK_SKILL_RANGE, LAST_STAGE, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
+import { BLOCK_CONFIG, CHICK_FORMS, CHICK_SKILL_RANGE, LAST_STAGE, REGIONS, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
 import { emptyItemInventory, MAX_ITEM_COUNT, STAGE_CLEAR_REWARDS } from './items';
 import { STAGES } from './stages';
 import type {
@@ -1353,11 +1353,24 @@ export class ChickCannonEngine {
     if (this.bossRole === 'final') {
       this.finalRewardClaimed = false;
       this.state = 'ENDING';
-    } else {
-      const reward = STAGE_CLEAR_REWARDS[this.stage];
-      if (reward) this.grantItem(reward);
-      this.state = 'EVOLUTION';
+      return;
     }
+    const reward = STAGE_CLEAR_REWARDS[this.stage];
+    if (reward) this.grantItem(reward);
+    if (!this.replayOnly && REGIONS[STAGES[this.stage].region].lastStage === this.stage) {
+      this.state = 'EVOLUTION';
+      return;
+    }
+    const next = STAGE_ORDER[STAGE_ORDER.indexOf(this.stage) + 1];
+    if (!next) return;
+    this.stage = next;
+    this.stageEntryCampaignScore = this.score;
+    this.stageScore = 0;
+    this.replayOnly = false;
+    this.stageEntryItems = { ...this.items };
+    this.stageEntryEggCushionActive = this.eggCushionActive;
+    this.loadStage(next);
+    this.dismissDialogue();
   }
 
   private applyStagePenalty(value: number, x: number, y: number, label: string): void {
