@@ -17,8 +17,8 @@ Deliver a complete, sequential 20-stage campaign in four regions of five stages,
 | :--- | :--- | :--- | :--- |
 | P01 | `done` | Define the 20-stage campaign, region/form/background mapping, stage content, and durable progress model. | [P01](../phases/2026-10-29-expand-campaign-to-20-stages/P01-campaign-data-and-progress/phase.md) |
 | P02 | `done` | Implement four regional gimmicks and make boss behavior role-based for the stage-6 and stage-20 encounters. | [P02](../phases/2026-10-29-expand-campaign-to-20-stages/P02-gameplay-mechanics-and-bosses/phase.md) |
-| P03 | `in_progress` | Present the campaign as four five-node map pages and resume players from saved progress. | [P03](../phases/2026-10-29-expand-campaign-to-20-stages/P03-regional-world-map/phase.md) |
-| P04 | `pending` | Update cross-cutting game and UI assumptions, complete campaign regression coverage, and validate the web app. | [P04](../phases/2026-10-29-expand-campaign-to-20-stages/P04-integration-and-validation/phase.md) |
+| P03 | `done` | Present the campaign as four five-node map pages and resume players from saved progress. | [P03](../phases/2026-10-29-expand-campaign-to-20-stages/P03-regional-world-map/phase.md) |
+| P04 | `in_progress` | Update cross-cutting game and UI assumptions, complete campaign regression coverage, and validate the web app. | [P04](../phases/2026-10-29-expand-campaign-to-20-stages/P04-integration-and-validation/phase.md) |
 
 ## Execution Order
 Complete tasks in phase order. P02 and P03 depend on the P01 stage/region contracts. P04 follows both and updates remaining hard-coded six-stage/final-boss behavior.

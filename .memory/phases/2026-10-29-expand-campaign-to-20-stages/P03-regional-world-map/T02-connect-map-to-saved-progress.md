@@ -1,6 +1,6 @@
 # Task: T02 Connect Map to Saved Progress
 
-## Status: pending
+## Status: done
 
 ## Goal
 Initialize the app from saved campaign state, keep it updated on each clear, and route the map to the region and stage the player should resume.
@@ -38,10 +38,10 @@ Initialize the app from saved campaign state, keep it updated on each clear, and
   - Replace test asserting storage is cleared on load. Cover saved completion/star/badge restore, next incomplete stage and region selection, app mount with absent/broken storage, and writing a stage result without duplicate completion or badge loss.
 
 ## Acceptance Criteria
-- [ ] Reload restores completion, stars, badges, selected resume stage, and region.
-- [ ] Loading the app never removes saved progress; unavailable storage falls back without crashing.
-- [ ] Clear events save once and region form gates follow stage unlock boundaries.
-- [ ] App progress integration tests pass.
+- [x] Reload restores completion, stars, badges, selected resume stage, and region.
+- [x] Loading the app never removes saved progress; unavailable storage falls back without crashing.
+- [x] Clear events save once and region form gates follow stage unlock boundaries.
+- [x] App progress integration tests pass.
 
 ## Validation
 - `npm.cmd test --workspace @chicks-cannon/web -- App.test.tsx progress.test.ts` — app restore/save and progress helper tests pass.
@@ -59,6 +59,6 @@ Task: T02-connect-map-to-saved-progress
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
-- commit: pending
+- [x] Implementation complete
+- [x] Validation passed: 15 app/progress tests and production build passed.
+- commit: `e4c9e5b` (`feat(progress): 저장된 지역 진행으로 이어하기`)
