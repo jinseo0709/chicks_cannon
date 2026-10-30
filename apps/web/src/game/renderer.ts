@@ -54,8 +54,12 @@ export class GameCanvasRenderer {
     const hitShake = hitProgress > 0 ? this.catShakeStrength * (hitProgress / 110) : 0;
     const bossHitProgress = Math.max(0, (snapshot.bossHitRemainingMs ?? 0) / 200);
     const bossShake = STAGES[snapshot.stage].bossRole && bossHitProgress > 0 ? Math.sin(sceneTime / 7) * 10 * bossHitProgress : 0;
-    ctx.translate(endShake + Math.sin(sceneTime / 9) * hitShake + bossShake,
-      Math.cos(sceneTime / 11) * hitShake * 0.42 + Math.cos(sceneTime / 8) * bossShake * 0.55);
+    const timerUrgent = snapshot.bonusChallengeStatus === 'running' && snapshot.bonusChallengeRemainingMs <= 10000 &&
+      ['AIMING', 'FLYING', 'RESOLVING'].includes(snapshot.state);
+    const urgency = timerUrgent ? Math.max(0, 1 - snapshot.bonusChallengeRemainingMs / 10000) : 0;
+    const timerShake = timerUrgent ? 1.2 + urgency * 2.2 : 0;
+    ctx.translate(endShake + Math.sin(sceneTime / 9) * hitShake + bossShake + Math.sin(sceneTime / 25) * timerShake,
+      Math.cos(sceneTime / 11) * hitShake * 0.42 + Math.cos(sceneTime / 8) * bossShake * 0.55 + Math.sin(sceneTime / 31) * timerShake * 0.55);
     this.drawGround(snapshot.stage);
     this.drawSlickZones(snapshot.slickZones, sceneTime);
     snapshot.entities.forEach((entity) => this.drawEntityShadow(entity));
@@ -85,6 +89,7 @@ export class GameCanvasRenderer {
     this.drawBossConfetti(snapshot, sceneTime);
     this.drawAimKeyboardTip(snapshot);
     ctx.restore();
+    this.drawTimerUrgency(snapshot, sceneTime);
     ctx.restore();
   }
 
@@ -243,6 +248,24 @@ export class GameCanvasRenderer {
       } else ctx.fillRect(-size / 2, -size / 2, size, size * 1.8);
       ctx.restore();
     }
+    ctx.restore();
+  }
+
+  private drawTimerUrgency(snapshot: GameSnapshot, nowMs: number): void {
+    if (snapshot.bonusChallengeStatus !== 'running' || snapshot.bonusChallengeRemainingMs > 10000 ||
+      !['AIMING', 'FLYING', 'RESOLVING'].includes(snapshot.state)) return;
+    const ctx = this.context;
+    const progress = Math.max(0, 1 - snapshot.bonusChallengeRemainingMs / 10000);
+    const pulse = (Math.sin(nowMs / 115) + 1) / 2;
+    ctx.save();
+    ctx.fillStyle = `rgba(194, 21, 30, ${0.035 + progress * 0.045 + pulse * 0.025})`;
+    ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+    const vignette = ctx.createRadialGradient(WORLD.width / 2, WORLD.height / 2, 170, WORLD.width / 2, WORLD.height / 2, 760);
+    vignette.addColorStop(0, 'rgba(238, 25, 35, 0)');
+    vignette.addColorStop(0.62, `rgba(218, 22, 32, ${0.025 + progress * 0.035})`);
+    vignette.addColorStop(1, `rgba(190, 16, 28, ${0.18 + progress * 0.16 + pulse * 0.04})`);
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, WORLD.width, WORLD.height);
     ctx.restore();
   }
 

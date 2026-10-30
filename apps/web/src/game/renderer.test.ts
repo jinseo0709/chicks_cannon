@@ -58,6 +58,23 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
   });
 
+  it('adds a red urgency wash when ten seconds remain on the challenge timer', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    vi.clearAllMocks();
+    renderer.render(snapshot, 100);
+    const normalFillCount = vi.mocked(context.fillRect).mock.calls.length;
+    vi.clearAllMocks();
+    renderer.render({
+      ...snapshot,
+      bonusChallengeRemainingMs: 9500,
+      bonusChallengeStatus: 'running',
+    }, 120);
+    expect(context.fillRect).toHaveBeenCalledTimes(normalFillCount + 2);
+    renderer.dispose();
+  });
+
   it('scales the backing canvas for DPR and letterboxes the 1280 by 720 scene', () => {
     const canvas = document.createElement('canvas');
     const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());

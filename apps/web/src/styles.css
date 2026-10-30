@@ -778,13 +778,14 @@ h2 {
 .hud-chapter-name { flex: 0 0 auto; overflow: visible; color: #fff0c9; font-size: clamp(0.78rem, 1.15vw, 1rem); font-weight: 950; letter-spacing: 0.06em; white-space: nowrap; }
 .hud-stage-title { font-weight: 800; letter-spacing: 0; }
 .hud-timer-badge { flex: 0 0 auto; padding: 0.12rem 0.5rem; color: #fff5d8; background: rgb(91 54 28 / 82%); border: 1px solid #f0cf88; border-radius: 999px; font-size: 0.76rem; font-weight: 950; white-space: nowrap; }
-.hud-timer-badge.urgent { color: #fff; background: linear-gradient(#ef5947, #a92727); border-color: #ffd2a2; box-shadow: 0 0 10px rgb(255 58 40 / 58%); animation: timer-pulse 700ms ease-in-out infinite alternate; }
+.hud-timer-badge.urgent { color: #fff; background: linear-gradient(#ef5947, #a92727); border-color: #ffd2a2; box-shadow: 0 0 10px rgb(255 58 40 / 58%); animation: timer-pulse 700ms ease-in-out infinite alternate, timer-shake 240ms ease-in-out infinite; }
 .hud-row-bottom { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .hud-row-bottom .stage-score-value { flex: 0 0 auto; }
 .hud-target-progress { display: grid; flex: 1 1 0; gap: 3px; min-width: 0; }
 .hud-target-progress .score-target-label { overflow: visible; font-size: 0.72rem; font-weight: 950; white-space: nowrap; }
 .hud-target-progress .score-target-track { width: 100%; }
 @keyframes timer-pulse { from { filter: brightness(0.9); } to { filter: brightness(1.2); } }
+@keyframes timer-shake { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-2px) rotate(-1deg); } 75% { transform: translateX(2px) rotate(1deg); } }
 .score-card {
   position: relative;
   display: grid;

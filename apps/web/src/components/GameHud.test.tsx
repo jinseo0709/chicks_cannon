@@ -18,6 +18,14 @@ const props = () => ({ onRestart: vi.fn(), onMute: vi.fn(), onUseItem: vi.fn(), 
 afterEach(cleanup);
 
 describe('GameHud', () => {
+  it('marks the timer urgent when ten seconds or less remain', () => {
+    const urgent = { ...makeSnapshot('AIMING'), bonusChallengeRemainingMs: 9500, bonusChallengeStatus: 'running' as const };
+    const { container, rerender } = render(<GameHud snapshot={urgent} {...props()} />);
+    expect(container.querySelector('.hud-timer-badge')?.classList.contains('urgent')).toBe(true);
+    rerender(<GameHud snapshot={{ ...urgent, bonusChallengeRemainingMs: 10500 }} {...props()} />);
+    expect(container.querySelector('.hud-timer-badge')?.classList.contains('urgent')).toBe(false);
+  });
+
   it('shows stage score and routes active controls', () => {
     const actions = props();
     const { container } = render(<GameHud snapshot={makeSnapshot('FLYING')} {...actions} />);
