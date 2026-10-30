@@ -3,10 +3,12 @@ import { Body, Bodies, Composite, Events, Sleeping } from 'matter-js';
 import { ChickCannonEngine } from './engine';
 import { STAGES } from './stages';
 import { CHICK_FORMS, STAGE_ORDER } from './constants';
-import type { GameSnapshot, GameStage, SpawnSpec } from './types';
+import type { GameSnapshot, GameStage, GameState, SpawnSpec } from './types';
 
 type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number; alive?: boolean; triggered?: boolean; spent?: boolean } };
 interface CampaignHarness {
+  state: GameState;
+  winElapsedMs: number;
   stage: GameStage;
   score: number;
   stageScore: number;
@@ -50,6 +52,19 @@ function createEngine(stage: GameStage = 1) {
 }
 
 describe('ChickCannonEngine', () => {
+  it('shows the stage clear screen for about 1.8 seconds before advancing', () => {
+    const { engine, harness, snapshot } = createEngine();
+    Composite.clear(harness.engine.world, false, true);
+    harness.bodies.clear();
+    harness.state = 'WON';
+    harness.winElapsedMs = 0;
+
+    for (let frame = 0; frame < 107; frame += 1) engine.step(16.667);
+    expect(snapshot().state).toBe('WON');
+    engine.step(16.667);
+    expect(snapshot().state).toBe('EVOLUTION');
+  });
+
   it('keeps the stage setup still after retry until its dialogue is dismissed', () => {
     const { engine, harness, snapshot } = createEngine();
     engine.retryStage();

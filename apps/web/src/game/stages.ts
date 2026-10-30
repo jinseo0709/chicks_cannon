@@ -72,7 +72,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       { name: '낮은 나무 받침', hint: '낮은 받침을 맞혀 골목 요새를 무너뜨리기', target: { x: 825, y: 620 } },
       { name: '유리 선반', hint: '위쪽 유리 선반을 깨고 고양이에게 떨어뜨리기', target: { x: 920, y: 454 } },
     ],
-    story: { speaker: '골목대장 고양이', avatar: '🐱', text: '이 둥지는 이제 내 낮잠 자리다냥!', chickReply: '첫 발부터 제대로 보여 줄게, 삐약!', instruction: '나무 받침이나 유리 선반을 맞혀 요새를 무너뜨려요.' },
+    story: { speaker: '골목대장 고양이', avatar: '🐱', text: '마지막 둥지의 알은 우리가 가져간다냥. 깨지면 마을의 봄도 끝이다냥!', chickReply: '알 속엔 아직 태어나지 않은 내 동생이 있어. 둥지와 함께 꼭 지켜 낼 거야!', instruction: '나무 받침이나 유리 선반을 맞혀 요새를 무너뜨려요.' },
     spawns: [...fort({ lowerCats: 1, upperCat: false }), { kind: 'egg', x: 1190, y: 650 }],
   }),
   2: makeStage(2, {
@@ -138,7 +138,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       { name: '낮은 보스 받침', hint: '낮은 받침을 부숴 보스 발밑 요새를 흔들기', target: { x: 850, y: 620 } },
       { name: '선풍기 바람길', hint: '상승 바람을 타고 위쪽 방패 뒤를 노리기', target: { x: 500, y: 430 } },
     ],
-    story: { speaker: '옥상 고양이 대장', avatar: '👑🐱', text: '내가 이 지붕의 첫 번째 관문이다냥!', chickReply: '여기서 멈추지 않아, 삐약!', instruction: '받침을 무너뜨리거나 선풍기 바람으로 위쪽을 노리세요.' },
+    story: { speaker: '옥상 고양이 대장', avatar: '👑🐱', text: '그 알의 생명력으로 초원의 봄을 붙들고 있다냥. 왕의 명령이다!', chickReply: '그래서 마을의 봄이 사라졌구나. 알도, 초원도 되찾겠어!', instruction: '받침을 무너뜨리거나 선풍기 바람으로 위쪽을 노리세요.' },
     spawns: [
       { kind: 'fan', x: 500, y: 430, w: 180, h: 420, forceX: 0.0008, forceY: -0.012 },
       ...fort({ centerX: 930, lowerCats: 1, upperCat: false, baseMaterial: 'stone', extraTop: true }),
@@ -334,7 +334,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       { name: '왕의 아래 요새', hint: '아래쪽 강철 받침을 부숴 왕의 방어를 흔들기', target: { x: 850, y: 620 } },
       { name: '왕관 위 약점', hint: '샹들리에를 흔들어 왕관 위 약점을 맞히기', target: { x: 965, y: 285 } },
     ],
-    story: { speaker: '황금 초원의 고양이 왕', avatar: '👑🐱', text: '내가 초원의 마지막 고양이 왕이다냥!', chickReply: '모두의 둥지를 되찾고 끝내겠어!', instruction: '아래 요새를 무너뜨린 뒤 샹들리에를 이용해 왕관 위 약점을 노리세요.' },
+    story: { speaker: '황금 초원의 고양이 왕', avatar: '👑🐱', text: '그 알이 깨어나면 내 영원한 겨울도 끝난다냥. 절대 돌려줄 수 없다!', chickReply: '내 동생은 왕좌를 위한 힘이 아니야. 이제 알과 모두의 봄을 돌려줘!', instruction: '아래 요새를 무너뜨린 뒤 샹들리에를 이용해 왕관 위 약점을 노리세요.' },
     spawns: [
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 36, forceY: 13 },
       { kind: 'chandelier', x: 965, y: 230, w: 130, h: 42, anchor: { x: 965, y: 130 }, breakImpact: 22 },

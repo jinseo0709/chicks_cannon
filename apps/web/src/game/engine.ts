@@ -25,7 +25,7 @@ import type {
   SlickZone,
 } from './types';
 
-const STAGE_CLEAR_DISPLAY_MS = 2600;
+const STAGE_CLEAR_DISPLAY_MS = 1800;
 const CHICK_SKILL_COOLDOWN_MS = 15000;
 const BOSS_MAX_HP = 500;
 
