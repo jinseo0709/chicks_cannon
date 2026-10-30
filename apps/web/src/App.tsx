@@ -13,7 +13,7 @@ import { LeaderboardClient } from './leaderboard/client';
 import { getSafeBrowserStorage } from './leaderboard/identity';
 import { useChickCannon } from './game/use-chick-cannon';
 import { STAGES } from './game/stages';
-import type { GameStage } from './game/types';
+import type { GameStage, RegionId } from './game/types';
 import { getUnlockedStage, loadCampaignProgress, recordStageResult, saveCampaignProgress } from './game/progress';
 
 export function App(): JSX.Element {
@@ -24,10 +24,14 @@ export function App(): JSX.Element {
   const [leaderboardClient] = useState(() => new LeaderboardClient());
   const controller = useChickCannon();
   const unlockedStage = useMemo<GameStage>(() => getUnlockedStage(progress), [progress]);
+  const [selectedRegion, setSelectedRegion] = useState<RegionId>(() => STAGES[getUnlockedStage(progress)].region);
 
   useEffect(() => {
     saveCampaignProgress(getSafeBrowserStorage(), progress);
   }, [progress]);
+  useEffect(() => {
+    setSelectedRegion(STAGES[unlockedStage].region);
+  }, [unlockedStage]);
   const openLeaderboard = (returnTo: 'home' | 'map' | 'game') => {
     setLeaderboardReturn(returnTo);
     setScreen('leaderboard');
@@ -63,6 +67,8 @@ export function App(): JSX.Element {
             bestStars={progress.bestStars}
             challengeBadges={progress.challengeBadges}
             unlockedStage={unlockedStage}
+            selectedRegion={selectedRegion}
+            onSelectRegion={setSelectedRegion}
             onSelectStage={openStage}
             onBack={() => setScreen('home')}
             onOpenLeaderboard={() => openLeaderboard('map')}
