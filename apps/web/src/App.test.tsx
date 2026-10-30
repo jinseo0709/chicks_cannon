@@ -35,6 +35,27 @@ describe('App navigation and campaign entry', () => {
     expect(screen.getByRole('img', { name: 'Stage 2 best stars 3 of 3' })).toBeTruthy();
   });
 
+  it('resumes stage 6 on region 2 and retains the selected region during navigation', () => {
+    localStorage.setItem('chicks-cannon-world-progress-v1', JSON.stringify({
+      version: 4,
+      completedStages: [1, 2, 3, 4, 5],
+      bestStars: { 1: 2, 2: 2, 3: 3, 4: 1, 5: 3 },
+      challengeBadges: [5],
+    }));
+    const { container } = render(<App />);
+    fireEvent.click(container.querySelector('.opening-screen button')!);
+    fireEvent.click(container.querySelector('.home-play-button')!);
+    expect(screen.getByRole('heading', { name: '지붕과 시계탑' })).toBeTruthy();
+    expect(container.querySelectorAll('.map-level-node')).toHaveLength(5);
+    expect(screen.getByRole('button', { name: /스테이지 6,/ }).hasAttribute('disabled')).toBe(false);
+    expect(container.querySelector('.map-current-card h2')?.textContent).toBe('지붕 위의 고양이 대장');
+
+    fireEvent.click(screen.getByRole('button', { name: '다음 지역' }));
+    fireEvent.click(screen.getByRole('button', { name: '홈으로 돌아가기' }));
+    fireEvent.click(container.querySelector('.home-play-button')!);
+    expect(screen.getByRole('heading', { name: '기계 공장' })).toBeTruthy();
+  });
+
   it('renders the home title and starts a story-led game session', () => {
     render(<App />);
     expect(screen.getByRole('heading', { name: '우리 둥지를 빼앗겼다!' })).toBeTruthy();

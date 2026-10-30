@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type JSX } from 'react';
+import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { DialoguePanel } from './components/DialoguePanel';
 import { EndingModal } from './components/EndingModal';
 import { GameCanvas } from './components/GameCanvas';
@@ -15,6 +15,7 @@ import { useChickCannon } from './game/use-chick-cannon';
 import { STAGES } from './game/stages';
 import type { GameStage, RegionId } from './game/types';
 import { getUnlockedStage, loadCampaignProgress, recordStageResult, saveCampaignProgress } from './game/progress';
+import type { CampaignProgress } from './game/progress';
 
 export function App(): JSX.Element {
   const [screen, setScreen] = useState<'opening' | 'home' | 'map' | 'game' | 'leaderboard'>('opening');
@@ -25,8 +26,12 @@ export function App(): JSX.Element {
   const controller = useChickCannon();
   const unlockedStage = useMemo<GameStage>(() => getUnlockedStage(progress), [progress]);
   const [selectedRegion, setSelectedRegion] = useState<RegionId>(() => STAGES[getUnlockedStage(progress)].region);
+  const persistedProgressRef = useRef<CampaignProgress | null>(null);
+  const recordedResultRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (persistedProgressRef.current === progress) return;
+    persistedProgressRef.current = progress;
     saveCampaignProgress(getSafeBrowserStorage(), progress);
   }, [progress]);
   useEffect(() => {
@@ -38,9 +43,17 @@ export function App(): JSX.Element {
   };
 
   useEffect(() => {
-    if (controller.snapshot.state !== 'EVOLUTION' && controller.snapshot.state !== 'ENDING') return;
-    setProgress((current) => recordStageResult(current, controller.snapshot.stage, controller.snapshot.stageStars || 1, controller.snapshot.bonusChallengeStatus === 'success'));
-  }, [controller.snapshot.stage, controller.snapshot.state, controller.snapshot.bonusChallengeStatus]);
+    if (controller.snapshot.state !== 'EVOLUTION' && controller.snapshot.state !== 'ENDING') {
+      recordedResultRef.current = null;
+      return;
+    }
+    const challengeWon = controller.snapshot.bonusChallengeStatus === 'success';
+    const stars = controller.snapshot.stageStars || 1;
+    const resultKey = `${controller.snapshot.stage}:${stars}:${challengeWon}`;
+    if (recordedResultRef.current === resultKey) return;
+    recordedResultRef.current = resultKey;
+    setProgress((current) => recordStageResult(current, controller.snapshot.stage, stars, challengeWon));
+  }, [controller.snapshot.stage, controller.snapshot.state, controller.snapshot.stageStars, controller.snapshot.bonusChallengeStatus]);
 
   const openStage = (stage: GameStage) => {
     if (stage > unlockedStage) return;
