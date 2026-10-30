@@ -19,8 +19,10 @@ export function GuideScreen({ onContinue }: GuideScreenProps): JSX.Element {
 
       <div className="tutorial-card-grid">
         <article className="tutorial-card">
-          <span className="tutorial-card-icon"><img src={assetUrl('assets/props/slingshot.png')} alt="" /></span>
-          <h2>조준하고 발사하기</h2>
+          <div className="tutorial-card-heading">
+            <h2>조준하고 발사하기</h2>
+            <span className="tutorial-card-icon"><img src={assetUrl('assets/props/slingshot.png')} alt="" /></span>
+          </div>
           <ul>
             <li>병아리를 뒤로 끌어당겨 조준하고 놓으면 발사돼요.</li>
             <li>당기는 길이로 힘을, 방향으로 궤적을 조절해요.</li>
@@ -29,8 +31,10 @@ export function GuideScreen({ onContinue }: GuideScreenProps): JSX.Element {
         </article>
 
         <article className="tutorial-card">
-          <span className="tutorial-card-icon"><img src={assetUrl('assets/cats/normal.png')} alt="" /></span>
-          <h2>목표와 기믹</h2>
+          <div className="tutorial-card-heading">
+            <h2>목표와 기믹</h2>
+            <span className="tutorial-card-icon"><img src={assetUrl('assets/cats/normal.png')} alt="" /></span>
+          </div>
           <ul>
             <li>모든 고양이를 처치하면 스테이지를 클리어해요.</li>
             <li>나무·유리·돌은 충격을 주고, 바위·시소·기어 같은 기믹은 밀거나 튕겨 활용해요.</li>
@@ -39,8 +43,10 @@ export function GuideScreen({ onContinue }: GuideScreenProps): JSX.Element {
         </article>
 
         <article className="tutorial-card">
-          <span className="tutorial-card-icon"><img src={assetUrl('assets/chicks/stage-1.png')} alt="" /></span>
-          <h2>특수 능력과 아이템</h2>
+          <div className="tutorial-card-heading">
+            <h2>특수 능력과 아이템</h2>
+            <span className="tutorial-card-icon"><img src={assetUrl('assets/chicks/stage-1.png')} alt="" /></span>
+          </div>
           <ul>
             <li>비행 중 <kbd>Space</kbd> 또는 화면을 눌러 병아리 능력을 사용해요. 고양이 가까이에서만 발동해요.</li>
             <li>아래 아이템 보드를 누르거나 숫자 <kbd>1</kbd>~<kbd>4</kbd>를 눌러 아이템을 써요.</li>
