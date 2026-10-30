@@ -50,8 +50,30 @@ function createEngine(stage: GameStage = 1) {
 }
 
 describe('ChickCannonEngine', () => {
+  it('keeps the stage setup still after retry until its dialogue is dismissed', () => {
+    const { engine, harness, snapshot } = createEngine();
+    engine.retryStage();
+    const initial = [...harness.bodies.entries()].map(([id, body]) => ({
+      id,
+      x: body.position.x,
+      y: body.position.y,
+    }));
+    const eggCount = initial.filter(({ id }) => harness.bodies.get(id)?.label === 'hostageEgg').length;
+
+    for (let frame = 0; frame < 180; frame += 1) engine.step(16.667);
+
+    expect(snapshot().state).toBe('DIALOGUE');
+    expect(snapshot().defeatCause).toBeNull();
+    expect(eggCount).toBeGreaterThan(0);
+    for (const body of initial) {
+      expect(harness.bodies.get(body.id)?.position.x).toBeCloseTo(body.x);
+      expect(harness.bodies.get(body.id)?.position.y).toBeCloseTo(body.y);
+    }
+  });
+
   it('pushes a chick upward when it crosses a fan field', () => {
     const { engine, harness } = createEngine();
+    engine.dismissDialogue();
     harness.engine.gravity.y = 0;
     harness.spawn({ kind: 'fan', x: 200, y: 200, w: 240, h: 300, forceX: 0.004, forceY: -0.04 });
     const chick = Bodies.circle(200, 200, 18, { density: 0.003, label: 'chick' }) as TestBody;
@@ -68,6 +90,7 @@ describe('ChickCannonEngine', () => {
 
   it('opens a trapdoor once on a strong impact, rotates it to the hinge stop, and resets it on retry', () => {
     const { engine, harness } = createEngine(3);
+    engine.dismissDialogue();
     harness.spawn({ kind: 'trapdoor', x: 300, y: 300, w: 120, h: 16, anchor: { x: 240, y: 300 }, triggerImpact: 5 });
     const trapdoor = [...harness.bodies.values()].find((body) => body.label === 'trapdoor')!;
     const striker = Bodies.rectangle(trapdoor.position.x, trapdoor.position.y - 18, 20, 20, { density: 0.003, label: 'block' }) as TestBody;
@@ -92,6 +115,7 @@ describe('ChickCannonEngine', () => {
 
   it('rotates clock hands clockwise and counterclockwise around their authored pivots', () => {
     const { engine, harness, snapshot } = createEngine();
+    engine.dismissDialogue();
     harness.engine.gravity.y = 0;
     harness.spawn({ kind: 'clockHand', x: 300, y: 200, w: 120, h: 16, anchor: { x: 250, y: 200 }, angularSpeed: 0.5 });
     harness.spawn({ kind: 'clockHand', x: 300, y: 400, w: 120, h: 16, anchor: { x: 250, y: 400 }, angularSpeed: -0.5 });
@@ -107,6 +131,7 @@ describe('ChickCannonEngine', () => {
 
   it('moves only top-contact bodies along a conveyor and clamps their horizontal speed', () => {
     const { engine, harness } = createEngine();
+    engine.dismissDialogue();
     harness.engine.gravity.y = 0;
     harness.spawn({ kind: 'conveyor', x: 300, y: 400, w: 200, h: 20, forceX: 8 });
     const topBody = Bodies.rectangle(300, 385, 20, 18, { density: 0.003, label: 'block' }) as TestBody;
@@ -122,6 +147,7 @@ describe('ChickCannonEngine', () => {
 
   it('launches from flower tops once per contact and permits a new launch after separation', () => {
     const { engine, harness } = createEngine();
+    engine.dismissDialogue();
     const launcherSpec = { kind: 'flowerLauncher', x: 300, y: 400, radius: 35, forceY: 9 } as const;
     harness.spawn(launcherSpec);
     const launcher = [...harness.bodies.values()].find((body) => body.label === 'flowerLauncher')!;
@@ -242,6 +268,7 @@ describe('ChickCannonEngine', () => {
 
   it('drops a cat when the chick destroys the block supporting it', () => {
     const { engine, harness } = createEngine();
+    engine.dismissDialogue();
     Composite.clear(harness.engine.world, false, true);
     harness.bodies.clear();
     harness.engine.gravity.y = 1.05;

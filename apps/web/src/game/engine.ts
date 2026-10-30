@@ -462,7 +462,7 @@ export class ChickCannonEngine {
   }
 
   step(deltaMs: number): void {
-    if (!this.alive || this.state === 'PAUSED') return;
+    if (!this.alive || this.state === 'PAUSED' || this.state === 'DIALOGUE') return;
     const delta = clamp(Number.isFinite(deltaMs) ? deltaMs : 16.667, 1, 33.333);
     this.skillCooldownRemainingMs = Math.max(0, this.skillCooldownRemainingMs - delta);
     this.bossHitRemainingMs = Math.max(0, this.bossHitRemainingMs - delta);

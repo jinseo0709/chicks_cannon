@@ -43,6 +43,21 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
   });
 
+  it('shows only a fading first section of the predicted aim path', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    renderer.render({
+      ...snapshot,
+      aimPosition: { x: WORLD.cannon.x - 100, y: WORLD.cannon.y },
+    }, 100);
+
+    const pathDots = vi.mocked(context.arc).mock.calls.filter(([, , radius]) => radius === 2.6);
+    expect(pathDots.length).toBeGreaterThan(5);
+    expect(pathDots.length).toBeLessThan(25);
+    renderer.dispose();
+  });
+
   it('scales the backing canvas for DPR and letterboxes the 1280 by 720 scene', () => {
     const canvas = document.createElement('canvas');
     const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());

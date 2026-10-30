@@ -734,10 +734,12 @@ export class GameCanvasRenderer {
       return;
     }
 
-    // Individual neon beads follow the physics prediction without a connecting ribbon.
+    // Keep the hint partial so it suggests the launch direction without revealing the full route.
     const step = strength > 0.72 ? 2 : 3;
-    for (let frame = 0; frame < trajectory.length; frame += step) {
+    const visibleLength = Math.max(2, Math.ceil(trajectory.length * 0.55));
+    for (let frame = 0; frame < visibleLength; frame += step) {
       const point = ctxPoint(trajectory[frame]);
+      ctx.globalAlpha = 0.22 + (1 - frame / visibleLength) * 0.68;
       ctx.beginPath();
       ctx.arc(point.x, point.y, 5.5, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(74, 255, 145, .14)';
