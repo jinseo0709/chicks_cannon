@@ -1,6 +1,6 @@
 # Task: T02 Persist Campaign Progress
 
-## Status: pending
+## Status: done
 
 ## Goal
 Load and save validated 20-stage completion, best stars, and challenge badges through the existing browser storage abstraction, preserving progress between sessions and safely recovering from malformed or unavailable storage.
@@ -16,6 +16,8 @@ Load and save validated 20-stage completion, best stars, and challenge badges th
 - Related Files:
   - `apps/web/src/game/progress.ts` :: `CampaignProgress`, `createEmptyCampaignProgress`, `clearSavedCampaignProgress`, `recordStageResult`; modify and export `loadCampaignProgress`, `saveCampaignProgress`, `getUnlockedStage`.
   - `apps/web/src/game/progress.test.ts` :: progress persistence tests; modify.
+  - `apps/web/src/App.tsx` :: lazy load and save progress, remove reset-on-load, derive unlocked stage; modify.
+  - `apps/web/src/App.test.tsx` :: restore saved progress after app remount; modify.
 - Details
   - Schema: `CampaignProgress = { version: 4; completedStages: GameStage[]; bestStars: Partial<Record<GameStage,1|2|3>>; challengeBadges: GameStage[] }`.
   - `loadCampaignProgress(storage: Pick<Storage,'getItem'>): CampaignProgress` reads key `chicks-cannon-world-progress-v1`, parses JSON and returns normalized v4 progress. Missing, invalid JSON, wrong schema version, or inaccessible storage returns `createEmptyCampaignProgress()` without throwing. For version 3 data, migrate valid stage IDs 1–6 into v4, preserving stars/badges and completion; this keeps previous sessions useful. Filter every ID to integer 1–20; de-duplicate and sort ascending. Keep only valid stars 1,2,3. A badge is retained only when its stage is completed.
@@ -56,6 +58,6 @@ Task: T02-persist-campaign-progress
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
+- [x] Implementation complete
+- [x] Validation passed
 - commit: pending

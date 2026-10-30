@@ -13,22 +13,20 @@ import { LeaderboardClient } from './leaderboard/client';
 import { getSafeBrowserStorage } from './leaderboard/identity';
 import { useChickCannon } from './game/use-chick-cannon';
 import type { GameStage } from './game/types';
-import { clearSavedCampaignProgress, createEmptyCampaignProgress, recordStageResult } from './game/progress';
+import { getUnlockedStage, loadCampaignProgress, recordStageResult, saveCampaignProgress } from './game/progress';
 
 export function App(): JSX.Element {
   const [screen, setScreen] = useState<'opening' | 'home' | 'map' | 'game' | 'leaderboard'>('opening');
   const [leaderboardReturn, setLeaderboardReturn] = useState<'home' | 'map' | 'game'>('home');
-  const [progress, setProgress] = useState(() => {
-    clearSavedCampaignProgress(getSafeBrowserStorage());
-    return createEmptyCampaignProgress();
-  });
+  const [progress, setProgress] = useState(() => loadCampaignProgress(getSafeBrowserStorage()));
   const completedStages = progress.completedStages;
   const [leaderboardClient] = useState(() => new LeaderboardClient());
   const controller = useChickCannon();
-  const unlockedStage = useMemo<GameStage>(() => {
-    const firstIncomplete = ([1, 2, 3, 4, 5, 6] as const).find((stage) => !completedStages.includes(stage));
-    return firstIncomplete ?? 6;
-  }, [completedStages]);
+  const unlockedStage = useMemo<GameStage>(() => getUnlockedStage(progress), [progress]);
+
+  useEffect(() => {
+    saveCampaignProgress(getSafeBrowserStorage(), progress);
+  }, [progress]);
   const openLeaderboard = (returnTo: 'home' | 'map' | 'game') => {
     setLeaderboardReturn(returnTo);
     setScreen('leaderboard');
