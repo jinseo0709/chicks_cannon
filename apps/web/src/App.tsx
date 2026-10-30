@@ -17,6 +17,8 @@ import type { GameStage, RegionId } from './game/types';
 import { getUnlockedStage, loadCampaignProgress, recordStageResult, saveCampaignProgress } from './game/progress';
 import type { CampaignProgress } from './game/progress';
 
+const activeGameStates = new Set(['AIMING', 'FLYING', 'RESOLVING']);
+
 export function App(): JSX.Element {
   const [screen, setScreen] = useState<'opening' | 'home' | 'map' | 'game' | 'leaderboard'>('opening');
   const [leaderboardReturn, setLeaderboardReturn] = useState<'home' | 'map' | 'game'>('home');
@@ -25,6 +27,7 @@ export function App(): JSX.Element {
   const [leaderboardClient] = useState(() => new LeaderboardClient());
   const controller = useChickCannon();
   const unlockedStage = useMemo<GameStage>(() => getUnlockedStage(progress), [progress]);
+  const showGlobalSoundToggle = screen !== 'game' || !activeGameStates.has(controller.snapshot.state);
   const [selectedRegion, setSelectedRegion] = useState<RegionId>(() => STAGES[getUnlockedStage(progress)].region);
   const persistedProgressRef = useRef<CampaignProgress | null>(null);
   const recordedResultRef = useRef<string | null>(null);
@@ -64,6 +67,14 @@ export function App(): JSX.Element {
   return (
     <main className="app-shell">
       <section className="game-frame" aria-label="병아리 대포 게임">
+        {showGlobalSoundToggle && <button
+          id="global-sound-toggle"
+          className={`icon-button ui-icon-button ${screen === 'home' ? 'sound-toggle-home' : screen === 'map' ? 'sound-toggle-map' : ''} ${controller.snapshot.muted ? 'ui-icon-muted' : 'ui-icon-sound'}`}
+          onClick={controller.toggleMute}
+          aria-label={controller.snapshot.muted ? '소리 켜기' : '소리 끄기'}
+          aria-pressed={controller.snapshot.muted}
+          title={controller.snapshot.muted ? '소리 켜기' : '소리 끄기'}
+        />}
         {screen === 'opening' && <OpeningScreen onContinue={() => setScreen('home')} />}
 
         {screen === 'home' && (

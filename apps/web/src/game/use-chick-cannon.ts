@@ -220,7 +220,9 @@ export function useChickCannon(): ChickCannonController {
   }, []);
   const toggleMute = useCallback(() => {
     engineRef.current?.toggleMute();
-    audioRef.current?.setMuted(engineRef.current?.getSnapshot().muted ?? false);
+    const muted = engineRef.current?.getSnapshot().muted ?? false;
+    audioRef.current?.setMuted(muted);
+    if (!muted) void audioRef.current?.unlock();
   }, []);
   const togglePause = useCallback(() => {
     const engine = engineRef.current;

@@ -13,6 +13,14 @@ afterEach(() => {
 });
 
 describe('App navigation and campaign entry', () => {
+  it('toggles sound from the opening screen before gameplay starts', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: '소리 끄기' }));
+    expect(screen.getByRole('button', { name: '소리 켜기' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: '소리 켜기' }));
+    expect(screen.getByRole('button', { name: '소리 끄기' }).getAttribute('aria-pressed')).toBe('false');
+  });
+
   it('restores saved stars and completion when the app loads', () => {
     localStorage.setItem('chicks-cannon-world-progress-v1', JSON.stringify({
       version: 3,

@@ -978,6 +978,19 @@ h2 {
 .ui-icon-sound { background-position: 100% 0; }
 .ui-icon-muted { background-position: 0 33.333%; }
 
+#global-sound-toggle {
+  position: absolute;
+  z-index: 130;
+  top: clamp(0.7rem, 2vw, 1.25rem);
+  right: clamp(0.7rem, 2vw, 1.25rem);
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+#global-sound-toggle.sound-toggle-home { right: 8.5rem; }
+#global-sound-toggle.sound-toggle-map { right: 4.25rem; }
+
 .icon-button:hover,
 .item-button:not(:disabled):hover {
   filter: brightness(1.06);
@@ -1505,6 +1518,9 @@ h2 {
 }
 
 @media (max-width: 560px) {
+  #global-sound-toggle { top: 0.65rem; right: 0.65rem; width: 2.25rem; height: 2.25rem; min-width: 2.25rem; min-height: 2.25rem; }
+  #global-sound-toggle.sound-toggle-home { right: 3.65rem; }
+  #global-sound-toggle.sound-toggle-map { right: 3.65rem; }
   .boss-health-panel { top: calc(100% + 2px); width: min(360px, calc(100vw - 22px)); padding: 0.32rem 0.5rem 0.38rem; }
   .boss-health-heading { font-size: 0.72rem; }
   .boss-health-heading span { font-size: 0.68rem; }
