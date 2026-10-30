@@ -33,7 +33,7 @@ describe('GameModal', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('shows no clear popup on ordinary stages or the mid-boss', () => {
+  it('removes the short WON popup but keeps the stage action popup', () => {
     const props = { onRetry: vi.fn(), onNextStage: vi.fn(), onWorldMap: vi.fn() };
     const { rerender } = render(<GameModal snapshot={makeSnapshot('WON', null, 2, 3)} {...props} />);
     expect(screen.queryByRole('status')).toBeNull();
@@ -42,7 +42,9 @@ describe('GameModal', () => {
     rerender(<GameModal snapshot={makeSnapshot('WON', null, 2, 6)} {...props} />);
     expect(screen.queryByRole('status')).toBeNull();
     rerender(<GameModal snapshot={makeSnapshot('EVOLUTION', null, 2, 6)} {...props} />);
-    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(screen.getByRole('button', { name: '다음 스테이지' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '월드맵' })).toBeTruthy();
   });
 
   it('shows the region unlock popup at the end of a region', () => {

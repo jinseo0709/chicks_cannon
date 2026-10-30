@@ -16,17 +16,17 @@ export interface GameModalProps {
 export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameModalProps): JSX.Element | null {
   if (snapshot.state === 'WON') return null;
   if (snapshot.state === 'EVOLUTION') {
-    if (REGIONS[STAGES[snapshot.stage].region].lastStage !== snapshot.stage) return null;
     const form = snapshot.evolvedForm;
     const evolved = form?.formId !== snapshot.form.formId;
+    const regionUnlocked = REGIONS[STAGES[snapshot.stage].region].lastStage === snapshot.stage;
     const rewardKind = STAGE_CLEAR_REWARDS[snapshot.stage];
     const reward = rewardKind ? ITEM_INFO[rewardKind] : null;
     return (
       <div className="overlay-backdrop">
         <section className="modal-card evolution-modal" role="dialog" aria-modal="true" aria-labelledby="evolution-title">
-          <p className="eyebrow">NEW REGION UNLOCKED</p>
+          <p className="eyebrow">{regionUnlocked ? 'NEW REGION UNLOCKED' : 'STAGE CLEAR'}</p>
           <img className="evolution-avatar-image" src={assetUrl(`assets/chicks/stage-${form?.assetVariant ?? 1}.png`)} alt="" />
-          <h2 id="evolution-title">새 지역이 열렸어요!</h2>
+          <h2 id="evolution-title">{regionUnlocked ? '새 지역이 열렸어요!' : evolved ? '새로운 모습으로 진화!' : '스테이지를 클리어했어요!'}</h2>
           {snapshot.bonusChallengeStatus === 'success' && <div className="challenge-badge" role="status"><span aria-hidden="true">🏅</span> {STAGES[snapshot.stage].bonusChallenge.badge} 배지 · 시간 도전 +{STAGES[snapshot.stage].bonusChallenge.bonusScore}점</div>}
           <h3>{form?.name}</h3>
           <p>{evolved && '새로운 모습으로 진화했어요! '}<strong>{form?.skillName}</strong> · {form?.skillDesc}</p>

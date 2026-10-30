@@ -65,7 +65,7 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().state).toBe('EVOLUTION');
   });
 
-  it('does not repeat a region unlock popup when replaying a completed region', () => {
+  it('keeps the post-clear action popup when replaying a completed region', () => {
     const { engine, harness, snapshot } = createEngine(5);
     harness.replayOnly = true;
     harness.state = 'WON';
@@ -74,7 +74,7 @@ describe('ChickCannonEngine', () => {
     engine.step(33.333);
     engine.step(33.333);
 
-    expect(snapshot()).toMatchObject({ stage: 6, state: 'AIMING' });
+    expect(snapshot()).toMatchObject({ stage: 5, state: 'EVOLUTION' });
   });
 
   it('clears as soon as the last cat is defeated even if the chick never settles', () => {
@@ -481,18 +481,13 @@ describe('ChickCannonEngine', () => {
       engine.step(16.667);
       for (let frame = 0; frame < 54; frame += 1) engine.step(16.667);
       expect(snapshot().campaignComplete).toBe(false);
-      if (stage === 5) {
-        expect(snapshot().state).toBe('EVOLUTION');
-        expect(snapshot().items[rewards[stage - 1]]).toBe(1);
-        expect(snapshot().evolvedForm?.stage).toBe(stage + 1);
-        engine.continueAfterEvolution();
-        expect(snapshot().items[rewards[stage - 1]]).toBe(1);
-      } else {
-        expect(snapshot()).toMatchObject({ stage: stage + 1, state: 'AIMING' });
-        if (stage < 5) expect(snapshot().items[rewards[stage - 1]]).toBe(1);
-      }
+      expect(snapshot().state).toBe('EVOLUTION');
+      if (stage <= 5) expect(snapshot().items[rewards[stage - 1]]).toBe(1);
+      if (stage === 5) expect(snapshot().evolvedForm?.stage).toBe(stage + 1);
+      engine.continueAfterEvolution();
+      expect(snapshot()).toMatchObject({ stage: stage + 1, state: 'DIALOGUE' });
     }
-    expect(snapshot()).toMatchObject({ stage: 7, state: 'AIMING', campaignComplete: false });
+    expect(snapshot()).toMatchObject({ stage: 7, state: 'DIALOGUE', campaignComplete: false });
     expect(engine.claimFinalReward('butter')).toBe(false);
   });
 
