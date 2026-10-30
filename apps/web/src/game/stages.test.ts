@@ -49,6 +49,13 @@ describe('campaign stage data', () => {
     expect(catCount(20)).toBeGreaterThanOrEqual(5);
   });
 
+  it.each([5, 10, 15, 19] as const)('splits the stage %s finale targets across separate fort platforms', (stage) => {
+    const platforms = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block' && spawn.h === 22 && spawn.y === 558);
+    const centers = platforms.map((platform) => platform.x).sort((a, b) => a - b);
+    expect(centers.length).toBeGreaterThanOrEqual(2);
+    expect(centers[centers.length - 1]! - centers[0]!).toBeGreaterThan(140);
+  });
+
   it('assigns the six reused backgrounds and each region signature gimmick', () => {
     const themes = STAGE_ORDER.map((stage) => STAGES[stage].theme);
     expect(themes.slice(0, 3)).toEqual(['alley-day', 'alley-day', 'alley-day']);

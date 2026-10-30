@@ -96,7 +96,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '빨랫줄 경비 고양이', avatar: '😼', text: '빨랫줄 골목은 한 발도 못 지나간다냥!', chickReply: '그럼 위와 아래를 동시에 흔들겠어!', instruction: '단단한 받침 대신 얇은 유리판을 노려 보세요.' },
     spawns: [
       ...fort({ centerX: 860, width: 150, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone' }),
-      ...fort({ centerX: 1080, width: 120, deckY: 600, lowerCats: 1, deckMaterial: 'glass', upperCat: true }),
+      ...fort({ centerX: 1080, width: 120, deckY: 558, lowerCats: 1, deckMaterial: 'glass', upperCat: true }),
       { kind: 'egg', x: 1200, y: 650 },
     ],
   }),
@@ -124,7 +124,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     story: { speaker: '성벽 수비대장', avatar: '🪨🐱', text: '이 돌무더기를 넘을 수 있겠냥?', chickReply: '바위를 굴려 길을 열겠어!', instruction: '바위는 부딪히면 굴러가며 주변 구조물을 밀어요.' },
     spawns: [
       { kind: 'boulder', x: 700, y: 620, radius: 27, armed: true },
-      ...fort({ centerX: 920, width: 220, lowerCats: 3, shieldLayers: 0, upperCat: true, upperMaterial: 'stone', baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 920, width: 220, lowerCats: 3, shieldLayers: 0, upperCat: true, upperMaterial: 'stone', baseMaterial: 'stone', extraTop: true }),
     ],
   }),
   5: makeStage(5, {
@@ -138,8 +138,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'trapdoor', x: 620, y: 590, w: 145, h: 16, anchor: { x: 548, y: 590 }, triggerImpact: 5 },
       { kind: 'shutter', x: 760, y: 440, w: 24, h: 140, minY: 350, maxY: 500, speed: 2 },
-      ...fort({ centerX: 950, width: 170, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', deckMaterial: 'wood', extraTop: true, crownTop: true, crownCat: true }),
-      cat(1110, 522, 23),
+      ...fort({ centerX: 950, width: 170, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', deckMaterial: 'wood', extraTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 2, upperCat: false, baseMaterial: 'wood', deckMaterial: 'glass' }),
     ],
   }),
   6: makeStage(6, {
@@ -194,7 +194,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'clockHand', x: 700, y: 430, w: 220, h: 18, anchor: { x: 590, y: 430 }, angularSpeed: -0.4 },
       { kind: 'gear', x: 620, y: 470, radius: 48, angularSpeed: 0.03 },
-      ...fort({ centerX: 940, width: 210, lowerCats: 3, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 940, width: 210, lowerCats: 3, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 1, upperCat: false, baseMaterial: 'wood', deckMaterial: 'glass' }),
     ],
   }),
   10: makeStage(10, {
@@ -208,7 +209,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'clockHand', x: 650, y: 400, w: 210, h: 18, anchor: { x: 550, y: 400 }, angularSpeed: 0.42 },
       { kind: 'chandelier', x: 780, y: 330, w: 100, h: 36, anchor: { x: 780, y: 190 } },
-      ...fort({ centerX: 940, width: 260, lowerCats: 4, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 940, width: 260, lowerCats: 4, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 1, upperCat: false, baseMaterial: 'wood', deckMaterial: 'glass' }),
     ],
   }),
   11: makeStage(11, {
@@ -235,7 +237,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'tire', x: 680, y: 630, radius: 42 },
       { kind: 'conveyor', x: 760, y: 650, w: 200, h: 18, forceX: 4 },
-      ...fort({ centerX: 970, width: 180, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', upperMaterial: 'steel', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 970, width: 180, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', upperMaterial: 'steel', extraTop: true, crownTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 1, upperCat: false, baseMaterial: 'wood', deckMaterial: 'glass' }),
     ],
   }),
   13: makeStage(13, {
@@ -249,7 +252,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'gear', x: 620, y: 465, radius: 50, angularSpeed: -0.035 },
       { kind: 'conveyor', x: 750, y: 650, w: 210, h: 18, forceX: 4.5 },
-      ...fort({ centerX: 960, width: 220, lowerCats: 3, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 960, width: 220, lowerCats: 3, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 1, upperCat: false, baseMaterial: 'steel', deckMaterial: 'glass' }),
     ],
   }),
   14: makeStage(14, {
@@ -263,8 +267,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'shutter', x: 760, y: 430, w: 24, h: 140, minY: 340, maxY: 500, speed: 2.2 },
       { kind: 'conveyor', x: 700, y: 650, w: 180, h: 18, forceX: 4 },
-      ...fort({ centerX: 960, width: 260, lowerCats: 4, upperCat: true, baseMaterial: 'steel', deckMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
-      ...fort({ centerX: 1120, deckY: 600, width: 100, lowerCats: 2, baseMaterial: 'wood', deckMaterial: 'glass' }),
+      ...fort({ centerX: 960, width: 220, lowerCats: 3, upperCat: true, baseMaterial: 'steel', deckMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 1160, deckY: 558, width: 100, lowerCats: 2, baseMaterial: 'wood', deckMaterial: 'glass' }),
     ],
   }),
   15: makeStage(15, {
@@ -279,7 +283,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       { kind: 'conveyor', x: 700, y: 650, w: 220, h: 18, forceX: 5 },
       { kind: 'gear', x: 600, y: 470, radius: 48, angularSpeed: 0.04 },
       { kind: 'trampoline', x: 650, y: 640, w: 120, h: 20 },
-      ...fort({ centerX: 960, width: 220, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 960, width: 220, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 2, upperCat: false, baseMaterial: 'steel', deckMaterial: 'glass' }),
     ],
   }),
   16: makeStage(16, {
@@ -307,7 +312,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'seesaw', x: 700, y: 650, w: 190, h: 14 },
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 34, forceY: 12 },
-      ...fort({ centerX: 960, width: 260, lowerCats: 4, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 960, width: 210, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 2, upperCat: false, baseMaterial: 'wood', deckMaterial: 'glass' }),
     ],
   }),
   18: makeStage(18, {
@@ -321,7 +327,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'boulder', x: 720, y: 620, radius: 28, armed: true },
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 34, forceY: 12 },
-      ...fort({ centerX: 970, width: 260, lowerCats: 4, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 970, width: 220, lowerCats: 3, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 2, upperCat: false, baseMaterial: 'wood', deckMaterial: 'glass' }),
     ],
   }),
   19: makeStage(19, {
@@ -335,7 +342,8 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 35, forceY: 12 },
       { kind: 'chandelier', x: 780, y: 320, w: 110, h: 38, anchor: { x: 780, y: 180 } },
-      ...fort({ centerX: 970, width: 260, lowerCats: 4, upperCat: true, upperShieldLayers: 2, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true, crownTop: true, crownCat: true }),
+      ...fort({ centerX: 970, width: 220, lowerCats: 3, upperCat: true, upperShieldLayers: 2, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true, crownTop: true }),
+      ...fort({ centerX: 1160, width: 100, lowerCats: 2, upperCat: false, baseMaterial: 'steel', deckMaterial: 'glass' }),
     ],
   }),
   20: makeStage(20, {
