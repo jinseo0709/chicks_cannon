@@ -14,8 +14,8 @@ Redesign all 20 campaign encounters so each has a recognizable structure silhoue
 | Phase | Status | Summary | Blueprint |
 | :--- | :--- | :--- | :--- |
 | P01 | `done ?` | Redesign alley/wall and rooftop/clocktower encounters. | [P01](../phases/2026-10-30-stage-variety-redesign/P01-alley-and-rooftop/phase.md) |
-| P02 | `pending` | Redesign factory and golden meadow encounters. | [P02](../phases/2026-10-30-stage-variety-redesign/P02-factory-and-meadow/phase.md) |
-| P03 | `pending` | Validate campaign-wide layout identity, route hints, and score targets. | [P03](../phases/2026-10-30-stage-variety-redesign/P03-campaign-validation/phase.md) |
+| P02 | `done ?` | Redesign factory and golden meadow encounters. | [P02](../phases/2026-10-30-stage-variety-redesign/P02-factory-and-meadow/phase.md) |
+| P03 | `in_progress` | Validate campaign-wide layout identity, route hints, and score targets. | [P03](../phases/2026-10-30-stage-variety-redesign/P03-campaign-validation/phase.md) |
 
 ## Execution Order
 Run P01-T01, P01-T02, P02-T01, P02-T02, then P03-T01. Each region task changes only its five-stage region and keeps the complete stage dataset valid. P03 owns final campaign-wide regression and build validation.

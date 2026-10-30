@@ -72,9 +72,7 @@ describe('campaign stage data', () => {
   });
 
   it.each([15, 19] as const)('splits the stage %s finale targets across separate fort platforms', (stage) => {
-    const platformY = stage === 15 ? 600 : 558;
-    const platformHeight = stage === 15 ? 20 : 22;
-    const platforms = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block' && spawn.h === platformHeight && spawn.y === platformY);
+    const platforms = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block' && spawn.h === 20 && spawn.y === 600);
     const centers = platforms.map((platform) => platform.x).sort((a, b) => a - b);
     expect(centers.length).toBeGreaterThanOrEqual(2);
     expect(centers[centers.length - 1]! - centers[0]!).toBeGreaterThan(140);
@@ -126,6 +124,17 @@ describe('campaign stage data', () => {
     expect(STAGES[13].spawns.some((spawn) => spawn.kind === 'gear')).toBe(true);
     expect(STAGES[14].spawns.some((spawn) => spawn.kind === 'shutter')).toBe(true);
     expect(STAGES[15].spawns.some((spawn) => spawn.kind === 'trampoline')).toBe(true);
+  });
+
+  it('gives golden meadow stages five distinct silhouettes and keeps the king arena unique', () => {
+    const meadowStages = [16, 17, 18, 19, 20] as const;
+    expect(new Set(meadowStages.map(coarseLayoutSignature)).size).toBe(meadowStages.length);
+    for (const stage of meadowStages) expect(STAGES[stage].spawns.some((spawn) => spawn.kind === 'flowerLauncher')).toBe(true);
+    expect(STAGES[17].spawns.some((spawn) => spawn.kind === 'seesaw')).toBe(true);
+    expect(STAGES[18].spawns.some((spawn) => spawn.kind === 'boulder')).toBe(true);
+    expect(STAGES[19].spawns.some((spawn) => spawn.kind === 'chandelier')).toBe(true);
+    expect(STAGES[20].bossRole).toBe('final');
+    expect(STAGES[20].spawns.some((spawn) => spawn.kind === 'cat' && spawn.boss)).toBe(true);
   });
 
   it('contains complete authored story, routes, challenge, and in-bounds spawn data', () => {

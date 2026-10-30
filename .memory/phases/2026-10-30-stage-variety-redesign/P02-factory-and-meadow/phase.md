@@ -7,5 +7,5 @@
 | T02 | `pending` | Give stages 16–20 distinct meadow silhouettes and final-boss approach. | [T02](./T02-redesign-meadow-stages.md) |
 
 ## Progress
-- done: 1/2 (active: T02)
+- done: 2/2 (active: none)
 

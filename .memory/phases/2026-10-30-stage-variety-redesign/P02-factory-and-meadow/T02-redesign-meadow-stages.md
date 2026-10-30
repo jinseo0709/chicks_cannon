@@ -1,6 +1,6 @@
 # Task: T02 Redesign Golden Meadow Stages
 
-## Status: pending
+## Status: done
 
 ## Goal
 Give stages 16–20 different meadow silhouettes and approach sequences, ending in a boss arena distinct from the preceding gate encounter.
@@ -27,10 +27,10 @@ Give stages 16–20 different meadow silhouettes and approach sequences, ending 
 - Details: Assert distinct stage 16–20 profiles and retain completeness, bounds, route-target, and score consistency checks.
 
 ## Acceptance Criteria
-- [ ] Stages 16–20 have distinct silhouettes and primary attack sequences.
-- [ ] The flower launcher remains a repeated signature with varied uses.
-- [ ] Stage 20 remains the only final boss and has a dedicated layout.
-- [ ] Focused test and web build pass.
+- [x] Stages 16–20 have distinct silhouettes and primary attack sequences.
+- [x] The flower launcher remains a repeated signature with varied uses.
+- [x] Stage 20 remains the only final boss and has a dedicated layout.
+- [x] Focused test and web build pass.
 
 ## Validation
 - `npm.cmd test --workspace @chicks-cannon/web -- src/game/stages.test.ts`
@@ -49,7 +49,7 @@ Task: T02-redesign-meadow-stages
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
-- commit: pending
+- [x] Implementation complete
+- [x] Validation passed
+- commit: recorded in Git history with this task
 

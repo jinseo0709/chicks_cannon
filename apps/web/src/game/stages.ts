@@ -345,13 +345,15 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     bonusChallenge: { timeLimitMs: 50000, bonusScore: 900, badge: '꽃바람' },
     attackRoutes: [
       { name: '민들레 꽃받침', hint: '꽃받침을 밟아 위쪽 고양이에게 날아가기', target: { x: 650, y: 630 } },
-      { name: '낮은 나무 기둥', hint: '낮은 기둥을 끊어 두 고양이의 발판 무너뜨리기', target: { x: 825, y: 620 } },
+      { name: '낮은 나무 기둥', hint: '낮은 기둥을 끊어 세 고양이의 발판 무너뜨리기', target: { x: 805, y: 610 } },
     ],
-    story: { speaker: '초원 꽃지기', avatar: '🌼🐱', text: '민들레 바람은 용감한 병아리만 태운다냥!', chickReply: '꽃바람을 타고 올라갈게!', instruction: '꽃 발사대는 위에서 닿으면 병아리를 위로 띄워요.' },
+    story: { speaker: '초원 꽃지기', avatar: '🌼🐱', text: '민들레 바람은 용감한 병아리만 태운다냥!', chickReply: '꽃바람을 타고 올라갈게!', instruction: '꽃바람을 타고 낮은 나무 발판에서 중간 섬, 높은 발판 순서로 건너가세요.' },
     spawns: [
       { kind: 'flowerLauncher', x: 650, y: 640, radius: 34, forceY: 11 },
-      ...fort({ centerX: 940, width: 170, lowerCats: 3, upperCat: true, baseMaterial: 'wood', deckMaterial: 'stone', extraTop: true }),
-      cat(1060, 452, 23),
+      block(760, 645, 22, 50, 'wood'), block(850, 645, 22, 50, 'wood'), block(805, 610, 130, 20, 'wood'),
+      cat(775, 576), cat(805, 576), cat(835, 576),
+      block(930, 595, 22, 90, 'wood'), block(990, 595, 22, 90, 'wood'), block(960, 535, 110, 20, 'stone'), cat(960, 501),
+      block(1030, 535, 20, 80, 'wood'), block(1090, 535, 20, 80, 'wood'), block(1060, 480, 110, 20, 'stone'), cat(1060, 446),
     ],
   }),
   17: makeStage(17, {
@@ -365,8 +367,13 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'seesaw', x: 700, y: 650, w: 190, h: 14 },
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 34, forceY: 12 },
-      ...fort({ centerX: 960, width: 210, lowerCats: 3, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
-      ...fort({ centerX: 1160, width: 100, lowerCats: 2, upperCat: false, baseMaterial: 'wood', deckMaterial: 'glass' }),
+      block(820, 645, 22, 50, 'stone'), block(900, 645, 22, 50, 'stone'), block(860, 610, 120, 20, 'stone'),
+      cat(840, 576), cat(880, 576),
+      block(920, 575, 22, 110, 'stone'), block(1000, 575, 22, 110, 'stone'), block(960, 500, 120, 20, 'stone'),
+      cat(940, 476), cat(980, 476, 23, 1),
+      block(1050, 510, 22, 110, 'wood'), block(1130, 510, 22, 110, 'wood'), block(1090, 435, 120, 20, 'glass'),
+      cat(1070, 401), cat(1110, 401),
+      block(1150, 645, 22, 50, 'wood'), block(1210, 645, 22, 50, 'wood'), block(1180, 610, 80, 20, 'glass'),
     ],
   }),
   18: makeStage(18, {
@@ -380,8 +387,12 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'boulder', x: 720, y: 620, radius: 28, armed: true },
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 34, forceY: 12 },
-      ...fort({ centerX: 970, width: 220, lowerCats: 3, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
-      ...fort({ centerX: 1160, width: 100, lowerCats: 2, upperCat: false, baseMaterial: 'wood', deckMaterial: 'glass' }),
+      block(850, 645, 24, 50, 'stone'), block(930, 645, 24, 50, 'stone'), block(890, 610, 120, 20, 'stone'),
+      cat(860, 576, 23, 1), cat(890, 576, 23, 1), cat(920, 576, 23, 1),
+      block(970, 575, 24, 110, 'stone'), block(1050, 575, 24, 110, 'stone'), block(1010, 500, 120, 20, 'stone'), cat(1010, 466, 23, 1),
+      block(1090, 645, 24, 50, 'wood'), block(1170, 645, 24, 50, 'wood'), block(1130, 610, 120, 20, 'glass'),
+      cat(1100, 576), cat(1130, 576),
+      block(1190, 575, 20, 110, 'wood'), block(1250, 575, 20, 110, 'wood'), block(1220, 500, 90, 20, 'glass'),
     ],
   }),
   19: makeStage(19, {
@@ -395,8 +406,11 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 35, forceY: 12 },
       { kind: 'chandelier', x: 780, y: 320, w: 110, h: 38, anchor: { x: 780, y: 180 } },
-      ...fort({ centerX: 970, width: 220, lowerCats: 3, upperCat: true, upperShieldLayers: 2, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true, crownTop: true }),
-      ...fort({ centerX: 1160, width: 100, lowerCats: 2, upperCat: false, baseMaterial: 'steel', deckMaterial: 'glass' }),
+      block(850, 640, 24, 60, 'steel'), block(930, 640, 24, 60, 'steel'), block(890, 600, 120, 20, 'steel'), cat(860, 566), cat(890, 566), cat(920, 566),
+      block(860, 515, 20, 80, 'stone'), block(920, 515, 20, 80, 'stone'), block(890, 460, 110, 20, 'stone'),
+      block(880, 402, 18, 50, 'stone'), block(900, 402, 18, 50, 'stone'), block(890, 375, 70, 18, 'rubber'), cat(890, 341, 23, 2),
+      block(1030, 640, 24, 60, 'steel'), block(1110, 640, 24, 60, 'steel'), block(1070, 600, 120, 20, 'steel'), cat(1040, 566), cat(1100, 566),
+      block(1040, 515, 20, 80, 'wood'), block(1100, 515, 20, 80, 'wood'), block(1070, 460, 110, 20, 'glass'),
     ],
   }),
   20: makeStage(20, {
@@ -410,7 +424,10 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     spawns: [
       { kind: 'flowerLauncher', x: 620, y: 640, radius: 36, forceY: 13 },
       { kind: 'chandelier', x: 965, y: 230, w: 130, h: 42, anchor: { x: 965, y: 130 }, breakImpact: 22 },
-      ...fort({ centerX: 965, width: 230, lowerCats: 2, upperCat: true, baseMaterial: 'steel', deckMaterial: 'stone', extraTop: true }),
+      block(860, 640, 24, 60, 'steel'), block(1070, 640, 24, 60, 'steel'), block(965, 600, 230, 20, 'stone'),
+      cat(925, 566), cat(1005, 566),
+      block(900, 520, 22, 80, 'wood'), block(1030, 520, 22, 80, 'wood'), block(965, 465, 150, 20, 'stone'), cat(965, 431),
+      block(930, 402, 18, 50, 'stone'), block(1000, 402, 18, 50, 'stone'), block(965, 375, 100, 18, 'rubber'),
       block(880, 286, 26, 100, 'steel'), block(1050, 286, 26, 100, 'steel'),
       block(965, 318, 176, 20, 'wood'),
       cat(965, 328, 23),

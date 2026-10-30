@@ -37,7 +37,7 @@ export const STAGE_SCORE_TARGETS: Readonly<Record<GameStage, number>> = {
   1: 1800, 2: 9300, 3: 6400, 4: 5700, 5: 9200,
   6: 9600, 7: 6600, 8: 6700, 9: 10600, 10: 9600,
   11: 5800, 12: 8300, 13: 10700, 14: 8600, 15: 9500,
-  16: 7400, 17: 9700, 18: 12100, 19: 10000, 20: 9900,
+  16: 7400, 17: 9500, 18: 12000, 19: 9800, 20: 9900,
 };
 
 const FORM_DEFINITIONS: Readonly<Record<ChickFormId, Omit<ChickForm, 'stage'>>> = {

@@ -51,5 +51,5 @@ Task: T01-redesign-factory-stages
 ## Progress
 - [x] Implementation complete
 - [x] Validation passed
-- commit: recorded in Git history with this task
+- commit: f92837f
 
