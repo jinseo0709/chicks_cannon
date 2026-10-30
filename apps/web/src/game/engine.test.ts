@@ -5,7 +5,7 @@ import { STAGES } from './stages';
 import { CHICK_FORMS, STAGE_ORDER } from './constants';
 import type { GameSnapshot, GameStage, GameState, SpawnSpec } from './types';
 
-type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number; alive?: boolean; triggered?: boolean; spent?: boolean } };
+type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number; alive?: boolean; triggered?: boolean; spent?: boolean; stageFrozen?: boolean } };
 interface CampaignHarness {
   state: GameState;
   winElapsedMs: number;
@@ -52,17 +52,45 @@ function createEngine(stage: GameStage = 1) {
 }
 
 describe('ChickCannonEngine', () => {
-  it('shows the stage clear screen for about 1.8 seconds before advancing', () => {
+  it('shows the stage clear screen for about 0.9 seconds before advancing', () => {
     const { engine, harness, snapshot } = createEngine();
     Composite.clear(harness.engine.world, false, true);
     harness.bodies.clear();
     harness.state = 'WON';
     harness.winElapsedMs = 0;
 
-    for (let frame = 0; frame < 107; frame += 1) engine.step(16.667);
+    for (let frame = 0; frame < 53; frame += 1) engine.step(16.667);
     expect(snapshot().state).toBe('WON');
     engine.step(16.667);
     expect(snapshot().state).toBe('EVOLUTION');
+  });
+
+  it.each(STAGE_ORDER)('keeps unhit structures and the golden egg fixed at level %s start', (stage) => {
+    const { engine, harness } = createEngine(stage);
+    engine.dismissDialogue();
+    const structures = [...harness.bodies.values()].filter((body) => body.customData?.stageFrozen);
+    const startingPositions = structures.map(({ position }) => ({ x: position.x, y: position.y }));
+    expect(structures.length).toBeGreaterThan(0);
+
+    for (let frame = 0; frame < 120; frame += 1) engine.step(16.667);
+
+    expect(structures.every((body) => body.isStatic)).toBe(true);
+    expect(structures.map(({ position }) => ({ x: position.x, y: position.y }))).toEqual(startingPositions);
+  });
+
+  it('releases the frozen level structure when the chick first hits an obstacle', () => {
+    const { engine, harness } = createEngine();
+    engine.dismissDialogue();
+    const block = [...harness.bodies.values()].find((body) => body.label === 'block' && body.customData?.stageFrozen)!;
+    const chick = Bodies.circle(block.position.x - 40, block.position.y, 14, { label: 'chick' }) as TestBody;
+    Composite.add(harness.engine.world, chick);
+
+    Events.trigger(harness.engine, 'collisionStart', {
+      pairs: [{ bodyA: block, bodyB: chick, collision: { normal: { x: 1, y: 0 }, supports: [] } }],
+    });
+
+    expect(block.customData?.stageFrozen).toBe(false);
+    expect(block.isStatic).toBe(false);
   });
 
   it('keeps the stage setup still after retry until its dialogue is dismissed', () => {

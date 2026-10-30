@@ -41,7 +41,7 @@ const assetPaths: Record<AssetId, string> = {
   'cat-boss': '/assets/cats/boss.png',
   nest: '/assets/props/nest.png',
   slingshot: '/assets/props/slingshot.png',
-  egg: '/assets/props/egg.png',
+  egg: '/assets/props/egg.svg',
   'block-wood': '/assets/props/wood.png',
   'block-stone': '/assets/props/stone.png',
   'block-glass': '/assets/props/glass.png',

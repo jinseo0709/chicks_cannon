@@ -25,7 +25,7 @@ import type {
   SlickZone,
 } from './types';
 
-const STAGE_CLEAR_DISPLAY_MS = 1800;
+const STAGE_CLEAR_DISPLAY_MS = 900;
 const CHICK_SKILL_COOLDOWN_MS = 15000;
 const BOSS_MAX_HP = 500;
 
@@ -68,6 +68,7 @@ type GameBody = Matter.Body & {
     armed?: boolean;
     weakpointArmed?: boolean;
     weakpointHit?: boolean;
+    stageFrozen?: boolean;
   };
 };
 
@@ -588,10 +589,10 @@ export class ChickCannonEngine {
     const ground = Bodies.rectangle(640, 695, 2560, 50, { isStatic: true, label: 'ground' }) as GameBody;
     const wall = Bodies.rectangle(-20, 360, 40, 1440, { isStatic: true, label: 'wall' }) as GameBody;
     Composite.add(this.engine.world, [ground, wall]);
-    STAGES[stage].spawns.forEach((spawn) => this.spawn(spawn));
+    STAGES[stage].spawns.forEach((spawn) => this.spawn(spawn, true));
   }
 
-  private spawn(spec: SpawnSpec): void {
+  private spawn(spec: SpawnSpec, freezeForOpening = false): void {
     if (!Number.isFinite(spec.x) || !Number.isFinite(spec.y)) return;
     if (spec.kind === 'fan') {
       this.fans.push({
@@ -769,6 +770,10 @@ export class ChickCannonEngine {
     }
     this.track(body, customData);
     Composite.add(this.engine.world, body);
+    if (freezeForOpening && !body.isStatic && ['block', 'tnt', 'hostageEgg', 'boulder'].includes(body.label)) {
+      customData.stageFrozen = true;
+      Body.setStatic(body, true);
+    }
     if (spec.kind === 'cat' && customData.boss) {
       this.bossHp = customData.hp ?? BOSS_MAX_HP;
       this.bossMaxHp = customData.maxHp ?? this.bossHp;
@@ -1043,6 +1048,11 @@ export class ChickCannonEngine {
     if (this.catsReleased) return;
     this.catsReleased = true;
     for (const body of this.bodies.values()) {
+      if (body.customData?.stageFrozen) {
+        body.customData.stageFrozen = false;
+        Body.setStatic(body, false);
+        Sleeping.set(body, false);
+      }
       if (body.label !== 'enemy' || !body.isStatic) continue;
       Body.setStatic(body, false);
       Sleeping.set(body, false);
