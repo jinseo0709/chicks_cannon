@@ -1,6 +1,6 @@
 # Task: T01 Implement Regional Gimmick Physics
 
-## Status: pending
+## Status: done
 
 ## Goal
 Make each new regional gimmick a deterministic, visible-in-state physics interaction that can be authored through `SpawnSpec` and played with the existing cannon physics engine.
@@ -59,6 +59,6 @@ Task: T01-implement-regional-gimmick-physics
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
+- [x] Implementation complete
+- [x] Validation passed
 - commit: pending

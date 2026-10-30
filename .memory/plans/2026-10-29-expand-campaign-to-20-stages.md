@@ -15,8 +15,8 @@ Deliver a complete, sequential 20-stage campaign in four regions of five stages,
 ## Phases
 | Phase | Status | Summary | Blueprint |
 | :--- | :--- | :--- | :--- |
-| P01 | `in_progress` | Define the 20-stage campaign, region/form/background mapping, stage content, and durable progress model. | [P01](../phases/2026-10-29-expand-campaign-to-20-stages/P01-campaign-data-and-progress/phase.md) |
-| P02 | `pending` | Implement four regional gimmicks and make boss behavior role-based for the stage-6 and stage-20 encounters. | [P02](../phases/2026-10-29-expand-campaign-to-20-stages/P02-gameplay-mechanics-and-bosses/phase.md) |
+| P01 | `done` | Define the 20-stage campaign, region/form/background mapping, stage content, and durable progress model. | [P01](../phases/2026-10-29-expand-campaign-to-20-stages/P01-campaign-data-and-progress/phase.md) |
+| P02 | `in_progress` | Implement four regional gimmicks and make boss behavior role-based for the stage-6 and stage-20 encounters. | [P02](../phases/2026-10-29-expand-campaign-to-20-stages/P02-gameplay-mechanics-and-bosses/phase.md) |
 | P03 | `pending` | Present the campaign as four five-node map pages and resume players from saved progress. | [P03](../phases/2026-10-29-expand-campaign-to-20-stages/P03-regional-world-map/phase.md) |
 | P04 | `pending` | Update cross-cutting game and UI assumptions, complete campaign regression coverage, and validate the web app. | [P04](../phases/2026-10-29-expand-campaign-to-20-stages/P04-integration-and-validation/phase.md) |
 

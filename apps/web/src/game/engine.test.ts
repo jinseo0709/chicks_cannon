@@ -5,7 +5,7 @@ import { STAGES } from './stages';
 import { CHICK_FORMS, STAGE_ORDER } from './constants';
 import type { GameSnapshot, GameStage, SpawnSpec } from './types';
 
-type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number; alive?: boolean } };
+type TestBody = Matter.Body & { customData?: { projectile?: 'shell'|'feather'; hp?: number; alive?: boolean; triggered?: boolean; spent?: boolean } };
 interface CampaignHarness {
   stage: GameStage;
   score: number;
@@ -63,6 +63,117 @@ describe('ChickCannonEngine', () => {
     expect(chick.velocity.y).toBeLessThan(-0.1);
     expect(chick.velocity.x).toBeGreaterThan(0);
     expect(obstacle.velocity).toEqual({ x: 0, y: 0 });
+  });
+
+  it('opens a trapdoor once on a strong impact, rotates it to the hinge stop, and resets it on retry', () => {
+    const { engine, harness } = createEngine(3);
+    harness.spawn({ kind: 'trapdoor', x: 300, y: 300, w: 120, h: 16, anchor: { x: 240, y: 300 }, triggerImpact: 5 });
+    const trapdoor = [...harness.bodies.values()].find((body) => body.label === 'trapdoor')!;
+    const striker = Bodies.rectangle(trapdoor.position.x, trapdoor.position.y - 18, 20, 20, { density: 0.003, label: 'block' }) as TestBody;
+    Body.setVelocity(striker, { x: 0, y: 8 });
+    Composite.add(harness.engine.world, striker);
+
+    Events.trigger(harness.engine, 'collisionStart', {
+      pairs: [{ bodyA: trapdoor, bodyB: striker, collision: { normal: { x: 0, y: 1 }, supports: [] } }],
+    });
+    expect(trapdoor.customData?.triggered).toBe(true);
+    expect(trapdoor.isStatic).toBe(false);
+    for (let frame = 0; frame < 90; frame += 1) engine.step(16.667);
+    expect(trapdoor.angle).toBeGreaterThan(0.2);
+    expect(trapdoor.angle).toBeLessThanOrEqual(85 * Math.PI / 180 + 0.01);
+
+    engine.retryStage();
+    const resetDoor = [...harness.bodies.values()].find((body) => body.label === 'trapdoor')!;
+    expect(resetDoor.id).not.toBe(trapdoor.id);
+    expect(resetDoor.isStatic).toBe(true);
+    expect(resetDoor.customData?.triggered).toBe(false);
+  });
+
+  it('rotates clock hands clockwise and counterclockwise around their authored pivots', () => {
+    const { engine, harness, snapshot } = createEngine();
+    harness.engine.gravity.y = 0;
+    harness.spawn({ kind: 'clockHand', x: 300, y: 200, w: 120, h: 16, anchor: { x: 250, y: 200 }, angularSpeed: 0.5 });
+    harness.spawn({ kind: 'clockHand', x: 300, y: 400, w: 120, h: 16, anchor: { x: 250, y: 400 }, angularSpeed: -0.5 });
+    const hands = [...harness.bodies.values()].filter((body) => body.label === 'clockHand');
+    const firstPositions = hands.map((body) => ({ ...body.position }));
+    for (let frame = 0; frame < 60; frame += 1) engine.step(16.667);
+    expect(hands[0].angle).toBeGreaterThan(0.45);
+    expect(hands[1].angle).toBeLessThan(-0.45);
+    expect(hands[0].position.y).toBeGreaterThan(firstPositions[0].y);
+    expect(hands[1].position.y).toBeLessThan(firstPositions[1].y);
+    expect(snapshot().entities.filter((entity) => entity.kind === 'clockHand')).toHaveLength(2);
+  });
+
+  it('moves only top-contact bodies along a conveyor and clamps their horizontal speed', () => {
+    const { engine, harness } = createEngine();
+    harness.engine.gravity.y = 0;
+    harness.spawn({ kind: 'conveyor', x: 300, y: 400, w: 200, h: 20, forceX: 8 });
+    const topBody = Bodies.rectangle(300, 385, 20, 18, { density: 0.003, label: 'block' }) as TestBody;
+    const sideBody = Bodies.rectangle(410, 400, 20, 20, { density: 0.003, label: 'block' }) as TestBody;
+    Composite.add(harness.engine.world, [topBody, sideBody]);
+    for (let frame = 0; frame < 10; frame += 1) engine.step(16.667);
+    expect(topBody.velocity.x).toBeGreaterThan(0);
+    expect(sideBody.velocity.x).toBeCloseTo(0);
+    Body.setVelocity(topBody, { x: 30, y: topBody.velocity.y });
+    engine.step(16.667);
+    expect(topBody.velocity.x).toBeLessThanOrEqual(12);
+  });
+
+  it('launches from flower tops once per contact and permits a new launch after separation', () => {
+    const { engine, harness } = createEngine();
+    const launcherSpec = { kind: 'flowerLauncher', x: 300, y: 400, radius: 35, forceY: 9 } as const;
+    harness.spawn(launcherSpec);
+    const launcher = [...harness.bodies.values()].find((body) => body.label === 'flowerLauncher')!;
+    const chick = Bodies.circle(300, 360, 10, { label: 'chick' }) as TestBody;
+    Body.setVelocity(chick, { x: 0, y: 5 });
+    Composite.add(harness.engine.world, chick);
+    const contact = () => Events.trigger(harness.engine, 'collisionStart', {
+      pairs: [{ bodyA: launcher, bodyB: chick, collision: { normal: { x: 0, y: 1 }, supports: [] } }],
+    });
+    contact();
+    expect(chick.velocity.y).toBe(-9);
+    expect(chick.customData?.spent).toBe(true);
+    Body.setVelocity(chick, { x: 0, y: 5 });
+    contact();
+    expect(chick.velocity.y).toBe(5);
+
+    Body.setPosition(chick, { x: 500, y: 360 });
+    engine.step(16.667);
+    expect(chick.customData?.spent).toBe(false);
+    Body.setPosition(chick, { x: 300, y: 360 });
+    Body.setVelocity(chick, { x: 0, y: 5 });
+    contact();
+    expect(chick.velocity.y).toBe(-9);
+  });
+
+  it('does not launch from a flower side and keeps gimmick snapshots serializable', () => {
+    const { harness, snapshot } = createEngine();
+    harness.spawn({ kind: 'flowerLauncher', x: 300, y: 400, radius: 35 });
+    const launcher = [...harness.bodies.values()].find((body) => body.label === 'flowerLauncher')!;
+    const sideBody = Bodies.circle(330, 400, 10, { label: 'chick' }) as TestBody;
+    Body.setVelocity(sideBody, { x: 0, y: 5 });
+    Composite.add(harness.engine.world, sideBody);
+    Events.trigger(harness.engine, 'collisionStart', {
+      pairs: [{ bodyA: launcher, bodyB: sideBody, collision: { normal: { x: 1, y: 0 }, supports: [] } }],
+    });
+    expect(sideBody.velocity.y).toBe(5);
+    expect(sideBody.customData?.spent).toBeUndefined();
+    expect(() => JSON.stringify(snapshot())).not.toThrow();
+  });
+
+  it('uses finite default dimensions and strengths for invalid optional gimmick values', () => {
+    const { harness } = createEngine();
+    harness.spawn({ kind: 'trapdoor', x: 300, y: 300, w: Number.NaN, h: -1, triggerImpact: Number.NaN });
+    harness.spawn({ kind: 'clockHand', x: 500, y: 300, w: 100, h: 10, angularSpeed: Number.NaN });
+    harness.spawn({ kind: 'conveyor', x: 700, y: 300, w: 100, h: 10, forceX: Number.NaN });
+    harness.spawn({ kind: 'flowerLauncher', x: 900, y: 300, radius: Number.NaN, forceY: Number.NaN });
+    for (const body of harness.bodies.values()) {
+      expect(Number.isFinite(body.position.x)).toBe(true);
+      expect(Number.isFinite(body.position.y)).toBe(true);
+      expect(Number.isFinite(body.angle)).toBe(true);
+      expect(body.bounds.max.x).toBeGreaterThan(body.bounds.min.x);
+      expect(body.bounds.max.y).toBeGreaterThan(body.bounds.min.y);
+    }
   });
 
   it('starts the optional bonus timer after dialogue and pauses it with the game', () => {
@@ -188,7 +299,7 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().entities).toHaveLength(count);
   });
 
-  it.each([1, 6] as const)('expires supplementary projectiles and clears them on retry in level %s', (stage) => {
+  it.each([1, 16] as const)('expires supplementary projectiles and clears them on retry in level %s', (stage) => {
     const { engine, harness, snapshot } = createEngine(stage);
     Composite.clear(harness.engine.world, false, true);
     harness.bodies.clear();
@@ -227,10 +338,10 @@ describe('ChickCannonEngine', () => {
     expect(cat.customData?.hp).toBeCloseTo(1000 - 4 * 4.5 * CHICK_FORMS[stage].damageMultiplier);
   });
 
-  it('progresses through all six levels and opens the ending only after the last one', () => {
+  it('progresses past the stage-6 mid-boss without ending the campaign', () => {
     const { engine, harness, snapshot } = createEngine();
     const rewards = ['mega', 'booster', 'quake', 'butter', 'cushion'] as const;
-    for (const stage of STAGE_ORDER) {
+    for (const stage of STAGE_ORDER.slice(0, 6)) {
       expect(snapshot().stage).toBe(stage);
       expect(snapshot().campaignComplete).toBe(false);
       engine.dismissDialogue();
@@ -244,21 +355,21 @@ describe('ChickCannonEngine', () => {
       }
       Body.setPosition(harness.activeChick!, { x: 1600, y: 300 });
       Body.setVelocity(harness.activeChick!, { x: 0, y: 0 });
-      for (let frame = 0; frame < 100; frame += 1) engine.step(16.667);
-      expect(snapshot().state).toBe(stage === 6 ? 'ENDING' : 'EVOLUTION');
-      expect(snapshot().campaignComplete).toBe(stage === 6);
+      for (let frame = 0; frame < 240; frame += 1) engine.step(16.667);
+      expect(snapshot().state).toBe('EVOLUTION');
+      expect(snapshot().campaignComplete).toBe(false);
       if (stage < 6) {
         expect(snapshot().items[rewards[stage - 1]]).toBe(1);
         expect(snapshot().evolvedForm?.stage).toBe(stage + 1);
         engine.continueAfterEvolution();
         expect(snapshot().items[rewards[stage - 1]]).toBe(1);
+      } else {
+        expect(snapshot().evolvedForm?.stage).toBe(7);
+        engine.continueAfterEvolution();
       }
     }
-    expect(engine.claimFinalReward('butter')).toBe(true);
-    expect(snapshot()).toMatchObject({ items: { butter: 2 }, finalRewardClaimed: true });
-    expect(engine.claimFinalReward('quake')).toBe(false);
-    engine.continueAfterEvolution();
-    expect(snapshot().stage).toBe(6);
+    expect(snapshot()).toMatchObject({ stage: 7, state: 'DIALOGUE', campaignComplete: false });
+    expect(engine.claimFinalReward('butter')).toBe(false);
   });
 
   it('starts the campaign in dialogue and launches with clamped drag power', () => {
@@ -305,9 +416,14 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().items).toEqual({ booster: 1, quake: 1, mega: 1, butter: 1, cushion: 1 });
     engine.dismissDialogue();
     engine.useItem('mega');
-    expect(snapshot().items.mega).toBe(0);
+    expect(snapshot().items.mega).toBe(1);
     engine.useItem('mega');
+    expect(snapshot().items.mega).toBe(1);
+    engine.useItem('mega');
+    engine.setAim({ x: 80, y: 500 });
+    engine.releaseAim();
     expect(snapshot().items.mega).toBe(0);
+    expect(engine.useItem('mega')).toBe(false);
     engine.restartCampaign();
     expect(snapshot().stage).toBe(1);
     expect(snapshot().state).toBe('DIALOGUE');

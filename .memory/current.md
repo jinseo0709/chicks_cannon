@@ -4,13 +4,13 @@
 [Expand the Campaign to 20 Stages](./plans/2026-10-29-expand-campaign-to-20-stages.md)
 
 ## Active Phase
-[P01 Campaign Data and Progress](./phases/2026-10-29-expand-campaign-to-20-stages/P01-campaign-data-and-progress/phase.md)
+[P02 Gameplay Mechanics and Bosses](./phases/2026-10-29-expand-campaign-to-20-stages/P02-gameplay-mechanics-and-bosses/phase.md)
 
 ## Active Task
-[T02 Persist Campaign Progress](./phases/2026-10-29-expand-campaign-to-20-stages/P01-campaign-data-and-progress/T02-persist-campaign-progress.md)
+[T01 Implement Regional Gimmick Physics](./phases/2026-10-29-expand-campaign-to-20-stages/P02-gameplay-mechanics-and-bosses/T01-implement-regional-gimmick-physics.md)
 
 ## Status
-- T01 completed and committed as `12922ac`; campaign data, regional backgrounds, and home-to-map launch compile and pass validation.
+- P01 complete: T01 `12922ac` and T02 `b64aa09`; 20-stage data and persistent progress compile and pass validation.
 
 ## Next Step (IMPORTANT)
-Read the T02 blueprint and implement browser persistence, v3 progress migration, and sequential unlock calculation in `progress.ts`, then validate and commit before advancing.
+Read the P02-T01 blueprint and implement deterministic physics behavior for the trapdoor, clock hand, conveyor, and flower launcher in `engine.ts`, then run its engine tests and commit before advancing.

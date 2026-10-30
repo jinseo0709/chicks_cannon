@@ -116,6 +116,11 @@ export interface GameEntityView {
   projectile?: 'shell' | 'feather';
   expiresAtMs?: number;
   slick?: boolean;
+  customData?: {
+    triggered?: boolean;
+    spent?: boolean;
+    direction?: 1 | -1;
+  };
   alive: boolean;
 }
 

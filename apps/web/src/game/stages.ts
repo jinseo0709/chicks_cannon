@@ -98,7 +98,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     ],
     story: { speaker: '바닥지기 고양이', avatar: '🐈', text: '바닥을 열어도 내 요새는 끄떡없다냥!', chickReply: '경첩을 열어 길을 만들 거야!', instruction: '충격을 받은 여닫이 바닥은 아래로 열려요.' },
     spawns: [
-      { kind: 'trapdoor', x: 640, y: 648, w: 150, h: 16, anchor: { x: 565, y: 648 }, triggerImpact: 5 },
+      { kind: 'trapdoor', x: 640, y: 590, w: 150, h: 16, anchor: { x: 565, y: 590 }, triggerImpact: 5 },
       ...fort({ centerX: 900, lowerCats: 1, baseMaterial: 'stone', upperCat: false }),
       block(900, 520, 130, 20, 'glass'), cat(900, 484, 23, 1),
     ],
@@ -125,7 +125,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
     ],
     story: { speaker: '성문 경비대장', avatar: '🛡️😾', text: '성문 아래 비밀길은 아무도 모른다냥!', chickReply: '바닥과 셔터를 함께 열겠어!', instruction: '여닫이판으로 낮은 길을 만들고 셔터가 열린 틈을 노리세요.' },
     spawns: [
-      { kind: 'trapdoor', x: 620, y: 648, w: 145, h: 16, anchor: { x: 548, y: 648 }, triggerImpact: 5 },
+      { kind: 'trapdoor', x: 620, y: 590, w: 145, h: 16, anchor: { x: 548, y: 590 }, triggerImpact: 5 },
       { kind: 'shutter', x: 760, y: 440, w: 24, h: 140, minY: 350, maxY: 500, speed: 2 },
       ...fort({ centerX: 950, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', deckMaterial: 'wood' }),
       cat(1110, 522, 23),

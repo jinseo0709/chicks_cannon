@@ -51,6 +51,14 @@ type GameBody = Matter.Body & {
     speed?: number;
     direction?: number;
     radius?: number;
+    triggerImpact?: number;
+    forceX?: number;
+    forceY?: number;
+    initialAngle?: number;
+    pivotOffset?: Point;
+    flowerLauncherId?: number;
+    triggered?: boolean;
+    spent?: boolean;
     projectile?: 'shell' | 'feather';
     expiresAtMs?: number;
     slick?: boolean;
@@ -478,6 +486,8 @@ export class ChickCannonEngine {
     this.scorePopups = this.scorePopups.filter((popup) => popup.expiresAtMs > this.engine.timing.timestamp);
     this.bossDamagePopups = this.bossDamagePopups.filter((popup) => popup.expiresAtMs > this.engine.timing.timestamp);
     this.advanceGimmicks(delta);
+    this.applyConveyors(delta);
+    this.refreshFlowerLauncherContacts();
     this.applyFans();
     for (const body of this.bodies.values()) {
       if (body.customData?.expiresAtMs !== undefined && body.customData.expiresAtMs <= this.engine.timing.timestamp) {
@@ -704,6 +714,33 @@ export class ChickCannonEngine {
       Body.setVelocity(body, { x: 0.6, y: 0 });
       Body.setAngularVelocity(body, 0.008);
       customData = { width, height, anchor, attached: true, alive: true, breakImpact: positive(spec.breakImpact, 18) };
+    } else if (spec.kind === 'trapdoor') {
+      const width = positive(spec.w, 120);
+      const height = positive(spec.h, 16);
+      const anchor = spec.anchor && Number.isFinite(spec.anchor.x) && Number.isFinite(spec.anchor.y)
+        ? { ...spec.anchor } : { x: spec.x - width / 2, y: spec.y };
+      body = Bodies.rectangle(spec.x, spec.y, width, height, { isStatic: true, friction: 0.7, label: 'trapdoor' }) as GameBody;
+      customData = { width, height, anchor, triggerImpact: positive(spec.triggerImpact, 5), initialAngle: body.angle, direction: 1, triggered: false, alive: true };
+    } else if (spec.kind === 'clockHand') {
+      const width = positive(spec.w, 180);
+      const height = positive(spec.h, 18);
+      const anchor = spec.anchor && Number.isFinite(spec.anchor.x) && Number.isFinite(spec.anchor.y)
+        ? { ...spec.anchor } : { x: spec.x - width / 2, y: spec.y };
+      const angularSpeed = Number.isFinite(spec.angularSpeed) ? spec.angularSpeed! : 0.45;
+      body = Bodies.rectangle(spec.x, spec.y, width, height, { isStatic: true, friction: 0.45, label: 'clockHand' }) as GameBody;
+      customData = {
+        width, height, anchor, angularSpeed, initialAngle: body.angle,
+        pivotOffset: { x: spec.x - anchor.x, y: spec.y - anchor.y }, alive: true,
+      };
+    } else if (spec.kind === 'conveyor') {
+      const width = positive(spec.w, 180);
+      const height = positive(spec.h, 18);
+      body = Bodies.rectangle(spec.x, spec.y, width, height, { isStatic: true, friction: 0.9, label: 'conveyor' }) as GameBody;
+      customData = { width, height, forceX: Number.isFinite(spec.forceX) ? spec.forceX : 8, alive: true };
+    } else if (spec.kind === 'flowerLauncher') {
+      const radius = positive(spec.radius, 30);
+      body = Bodies.circle(spec.x, spec.y, radius, { isStatic: true, isSensor: true, label: 'flowerLauncher' }) as GameBody;
+      customData = { radius, forceY: positive(spec.forceY, 8), alive: true };
     } else {
       const radius = positive(spec.radius, 30);
       body = Bodies.circle(spec.x, spec.y, radius, {
@@ -805,6 +842,7 @@ export class ChickCannonEngine {
       const a = bodyA as GameBody;
       const b = bodyB as GameBody;
       if (a.customData?.alive === false || b.customData?.alive === false) continue;
+      this.handleRegionalGimmickCollision(a, b, collision);
       const involvesChick = a.label === 'chick' || b.label === 'chick';
       const rope = a.label === 'chandelierRope' ? a : b.label === 'chandelierRope' ? b : null;
       if (rope) {
@@ -834,9 +872,11 @@ export class ChickCannonEngine {
         }
       }
       if (involvesChick && [a.label, b.label].some((label) =>
-        ['block', 'tnt', 'enemy', 'tire', 'gear', 'shutter', 'bouncePad', 'boulder', 'seesaw', 'chandelier', 'chandelierRope'].includes(label))) {
+        ['block', 'tnt', 'enemy', 'tire', 'gear', 'shutter', 'bouncePad', 'boulder', 'seesaw', 'chandelier', 'chandelierRope', 'trapdoor', 'clockHand', 'conveyor', 'flowerLauncher'].includes(label))) {
         this.releaseCats();
       }
+      if (a.label === 'clockHand' || b.label === 'clockHand' || a.label === 'conveyor' || b.label === 'conveyor' ||
+        a.label === 'flowerLauncher' || b.label === 'flowerLauncher') continue;
       const chandelier = a.label === 'chandelier' ? a : b.label === 'chandelier' ? b : null;
       const fortTarget = chandelier === a ? b : chandelier === b ? a : null;
       if (a.label === 'tire' || b.label === 'tire') {
@@ -1103,6 +1143,26 @@ export class ChickCannonEngine {
   private advanceGimmicks(deltaMs: number): void {
     for (const body of this.bodies.values()) {
       const data = body.customData;
+      if (body.label === 'clockHand' && data?.anchor && data.pivotOffset) {
+        const angle = body.angle + (data.angularSpeed ?? 0.45) * deltaMs / 1000;
+        const cosine = Math.cos(angle);
+        const sine = Math.sin(angle);
+        Body.setPosition(body, {
+          x: data.anchor.x + data.pivotOffset.x * cosine - data.pivotOffset.y * sine,
+          y: data.anchor.y + data.pivotOffset.x * sine + data.pivotOffset.y * cosine,
+        });
+        Body.setAngle(body, angle);
+        continue;
+      }
+      if (body.label === 'trapdoor' && data?.triggered && data.initialAngle !== undefined) {
+        const limit = 85 * Math.PI / 180;
+        const direction = data.direction ?? 1;
+        if ((body.angle - data.initialAngle) * direction >= limit) {
+          Body.setAngle(body, data.initialAngle + direction * limit);
+          Body.setAngularVelocity(body, 0);
+        }
+        continue;
+      }
       if (body.label === 'gear' && data) {
         Body.setAngle(body, body.angle + (data.angularSpeed ?? 0.025) * deltaMs / 16.667);
         continue;
@@ -1117,6 +1177,84 @@ export class ChickCannonEngine {
         data.direction = 1;
       }
       Body.setPosition(body, { x: body.position.x, y });
+    }
+  }
+
+  private handleRegionalGimmickCollision(a: GameBody, b: GameBody, collision: Matter.Collision | null): void {
+    const trapdoor = a.label === 'trapdoor' ? a : b.label === 'trapdoor' ? b : null;
+    const flowerLauncher = a.label === 'flowerLauncher' ? a : b.label === 'flowerLauncher' ? b : null;
+    const gimmick = trapdoor ?? flowerLauncher;
+    if (!gimmick) return;
+    const dynamic = gimmick === a ? b : a;
+    if (dynamic.isStatic || dynamic.customData?.alive === false) return;
+    if (trapdoor && !trapdoor.customData?.triggered) {
+      const normal = collision?.normal;
+      const relativeX = b.velocity.x - a.velocity.x;
+      const relativeY = b.velocity.y - a.velocity.y;
+      const impactSpeed = normal
+        ? Math.abs(relativeX * normal.x + relativeY * normal.y)
+        : Math.hypot(relativeX, relativeY);
+      if (impactSpeed < (trapdoor.customData?.triggerImpact ?? 5)) return;
+      const data = trapdoor.customData!;
+      data.triggered = true;
+      const anchor = data.anchor ?? { x: trapdoor.position.x - (data.width ?? 120) / 2, y: trapdoor.position.y };
+      data.direction = anchor.x <= trapdoor.position.x ? 1 : -1;
+      data.initialAngle = trapdoor.angle;
+      Body.setStatic(trapdoor, false);
+      const hinge = Constraint.create({
+        pointA: anchor,
+        bodyB: trapdoor,
+        pointB: { x: anchor.x - trapdoor.position.x, y: anchor.y - trapdoor.position.y },
+        length: 0,
+        stiffness: 0.95,
+        damping: 0.08,
+      });
+      Composite.add(this.engine.world, hinge);
+      return;
+    }
+    if (flowerLauncher && dynamic.customData?.spent) return;
+    if (flowerLauncher) {
+      const dx = dynamic.position.x - flowerLauncher.position.x;
+      const dy = dynamic.position.y - flowerLauncher.position.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const normalY = dy / distance;
+      const descending = dynamic.velocity.y >= -1;
+      const topContact = dynamic.position.y < flowerLauncher.position.y && normalY <= -0.55;
+      if (!descending || !topContact) return;
+      dynamic.customData ??= { alive: true };
+      dynamic.customData.spent = true;
+      dynamic.customData.flowerLauncherId = flowerLauncher.id;
+      Body.setVelocity(dynamic, { x: dynamic.velocity.x, y: -Math.abs(flowerLauncher.customData?.forceY ?? 8) });
+    }
+  }
+
+  private applyConveyors(deltaMs: number): void {
+    const conveyors = [...this.bodies.values()].filter((body) => body.label === 'conveyor' && body.customData?.alive !== false);
+    if (!conveyors.length) return;
+    const deltaSeconds = deltaMs / 1000;
+    for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
+      if (body.isStatic || body.isSensor || body.customData?.alive === false) continue;
+      for (const conveyor of conveyors) {
+        if (!Query.collides(body, [conveyor]).length || body.position.y >= conveyor.position.y ||
+          body.bounds.max.y > conveyor.bounds.min.y + 8) continue;
+        const forceX = conveyor.customData?.forceX ?? 8;
+        Body.setVelocity(body, { x: clamp(body.velocity.x + forceX * deltaSeconds, -11.999, 11.999), y: body.velocity.y });
+        break;
+      }
+    }
+  }
+
+  private refreshFlowerLauncherContacts(): void {
+    const launchers = [...this.bodies.values()].filter((body) => body.label === 'flowerLauncher');
+    if (!launchers.length) return;
+    for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
+      const data = body.customData;
+      if (!data?.spent || data.flowerLauncherId === undefined) continue;
+      const launcher = launchers.find((candidate) => candidate.id === data.flowerLauncherId);
+      if (!launcher || !Query.collides(body, [launcher]).length) {
+        data.spent = false;
+        data.flowerLauncherId = undefined;
+      }
     }
   }
 
@@ -1212,7 +1350,7 @@ export class ChickCannonEngine {
     const entities: GameEntityView[] = [];
     for (const body of Composite.allBodies(this.engine.world) as GameBody[]) {
       const data = body.customData;
-      if (!['block', 'tnt', 'enemy', 'hostageEgg', 'shutter', 'bouncePad', 'boulder', 'seesaw', 'chick', 'tire', 'gear', 'chandelier'].includes(body.label)) continue;
+      if (!['block', 'tnt', 'enemy', 'hostageEgg', 'shutter', 'bouncePad', 'boulder', 'seesaw', 'chick', 'tire', 'gear', 'chandelier', 'trapdoor', 'clockHand', 'conveyor', 'flowerLauncher'].includes(body.label)) continue;
       const kind: GameEntityView['kind'] = body.label === 'enemy'
         ? 'cat'
         : body.label === 'hostageEgg'
@@ -1243,6 +1381,11 @@ export class ChickCannonEngine {
         projectile: data?.projectile,
         expiresAtMs: data?.expiresAtMs,
         slick: data?.slick,
+        customData: data ? {
+          triggered: data.triggered,
+          spent: data.spent,
+          direction: data.direction === 1 || data.direction === -1 ? data.direction : undefined,
+        } : undefined,
         alive: data?.alive !== false,
       });
     }
