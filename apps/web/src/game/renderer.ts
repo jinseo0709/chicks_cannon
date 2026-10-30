@@ -53,7 +53,7 @@ export class GameCanvasRenderer {
     const hitProgress = Math.max(0, this.catShakeUntilMs - sceneTime);
     const hitShake = hitProgress > 0 ? this.catShakeStrength * (hitProgress / 110) : 0;
     const bossHitProgress = Math.max(0, (snapshot.bossHitRemainingMs ?? 0) / 200);
-    const bossShake = snapshot.stage === 6 && bossHitProgress > 0 ? Math.sin(sceneTime / 7) * 10 * bossHitProgress : 0;
+    const bossShake = STAGES[snapshot.stage].bossRole && bossHitProgress > 0 ? Math.sin(sceneTime / 7) * 10 * bossHitProgress : 0;
     ctx.translate(endShake + Math.sin(sceneTime / 9) * hitShake + bossShake,
       Math.cos(sceneTime / 11) * hitShake * 0.42 + Math.cos(sceneTime / 8) * bossShake * 0.55);
     this.drawGround(snapshot.stage);
@@ -128,7 +128,7 @@ export class GameCanvasRenderer {
   }
 
   private drawBossAura(snapshot: GameSnapshot, nowMs: number): void {
-    if (snapshot.stage !== 6 || (snapshot.bossHp ?? 0) <= 0 || (snapshot.bossHp ?? 0) > (snapshot.bossMaxHp ?? 500) / 2) return;
+    if (!STAGES[snapshot.stage].bossRole || (snapshot.bossHp ?? 0) <= 0 || (snapshot.bossHp ?? 0) > (snapshot.bossMaxHp ?? 500) / 2) return;
     const boss = snapshot.entities.find((entity) => entity.kind === 'cat' && entity.boss);
     if (!boss) return;
     const ctx = this.context;
@@ -152,7 +152,7 @@ export class GameCanvasRenderer {
 
   private drawBossShockwave(snapshot: GameSnapshot, nowMs: number): void {
     const remaining = snapshot.bossShockwaveRemainingMs ?? 0;
-    if (snapshot.stage !== 6 || remaining <= 0) return;
+    if (!STAGES[snapshot.stage].bossRole || remaining <= 0) return;
     const boss = snapshot.entities.find((entity) => entity.kind === 'cat' && entity.boss) ?? this.lastBoss;
     if (!boss) return;
     const progress = 1 - remaining / 900;
@@ -192,7 +192,7 @@ export class GameCanvasRenderer {
   }
 
   private drawBossHitVignette(snapshot: GameSnapshot, progress: number): void {
-    if (snapshot.stage !== 6 || progress <= 0) return;
+    if (!STAGES[snapshot.stage].bossRole || progress <= 0) return;
     const ctx = this.context;
     const gradient = ctx.createRadialGradient(WORLD.width / 2, WORLD.height / 2, 130, WORLD.width / 2, WORLD.height / 2, 720);
     gradient.addColorStop(0, 'rgba(230, 35, 38, 0)');
@@ -203,19 +203,19 @@ export class GameCanvasRenderer {
   }
 
   private drawBossVictory(snapshot: GameSnapshot, nowMs: number): void {
-    if (snapshot.stage !== 6 || snapshot.state !== 'WON' || !this.lastBoss) return;
+    if (STAGES[snapshot.stage].bossRole !== 'final' || snapshot.state !== 'WON' || !this.lastBoss) return;
     const elapsed = snapshot.winElapsedMs ?? 0;
     const progress = Math.min(1, elapsed / 2200);
     const alpha = Math.max(0, 1 - Math.max(0, progress - 0.68) / 0.32);
     this.context.save();
     this.context.globalAlpha = alpha;
     this.drawSprite({ ...this.lastBoss, x: this.lastBoss.x + progress * 500, y: this.lastBoss.y - progress * 520,
-      angle: this.lastBoss.angle + progress * Math.PI * 10, alive: true }, 6, nowMs);
+      angle: this.lastBoss.angle + progress * Math.PI * 10, alive: true }, snapshot.stage, nowMs);
     this.context.restore();
   }
 
   private drawBossConfetti(snapshot: GameSnapshot, nowMs: number): void {
-    if (snapshot.stage !== 6 || snapshot.state !== 'WON' || (snapshot.winElapsedMs ?? 0) >= 2600) return;
+    if (STAGES[snapshot.stage].bossRole !== 'final' || snapshot.state !== 'WON' || (snapshot.winElapsedMs ?? 0) >= 2600) return;
     const ctx = this.context;
     ctx.save();
     for (let index = 0; index < 110; index += 1) {
@@ -343,7 +343,7 @@ export class GameCanvasRenderer {
     const image = this.assets.get(stageBackgroundAssetId(stage));
     if (image) {
       ctx.drawImage(image, 0, 0, WORLD.width, WORLD.height);
-      if (stage === 6) this.drawFestivalParticles(sceneTime);
+      if (STAGES[stage].bossRole === 'final') this.drawFestivalParticles(sceneTime);
       ctx.restore();
       return;
     }

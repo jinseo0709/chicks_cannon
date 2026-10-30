@@ -24,7 +24,7 @@ describe('GameModal', () => {
     const snapshot = { ...makeSnapshot('WON', null, 2), bonusChallengeStatus: 'success' as const };
     render(<GameModal snapshot={snapshot} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
     expect(document.querySelector('.challenge-badge')?.textContent).toContain(STAGES[3].bonusChallenge.badge);
-    expect(document.querySelector('.challenge-badge')?.textContent).toContain('+700점');
+    expect(document.querySelector('.challenge-badge')?.textContent).toContain('+400점');
   });
 
   it.each([1, 2, 3] as const)('shows the engine-calculated %s-star clear rating and stage score', (stars) => {

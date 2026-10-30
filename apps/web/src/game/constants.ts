@@ -10,6 +10,9 @@ export const WORLD = {
   gravityY: 1.05,
 } as const;
 
+/** Form skills only activate in close combat, so they cannot snipe a whole fort from launch. */
+export const CHICK_SKILL_RANGE = 260;
+
 export const REGION_ORDER: readonly RegionId[] = [1, 2, 3, 4];
 export const REGIONS: Readonly<Record<RegionId, {
   id: RegionId;

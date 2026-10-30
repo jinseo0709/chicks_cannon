@@ -1,6 +1,6 @@
 # Task: T03 Support Mid-Boss and Final Boss
 
-## Status: pending
+## Status: done
 
 ## Goal
 Drive boss health, weakpoint, victory, reward, rendering, and UI behavior from each stage's explicit `bossRole` so stage 6 remains a complete mid-boss encounter and stage 20 owns campaign victory.
@@ -46,10 +46,10 @@ Drive boss health, weakpoint, victory, reward, rendering, and UI behavior from e
   - Update `GameHud.test.tsx`, `GameModal.test.tsx`, `DialoguePanel.test.tsx`, `renderer.test.ts`, and relevant App/hook assertions for both roles.
 
 ## Acceptance Criteria
-- [ ] Stage 6 uses boss health and can be defeated without completing the campaign.
-- [ ] Stage 20 requires boss defeat, enters the ending, and grants the final reward exactly once.
-- [ ] Boss UI and rendering work for both encounters; final-only fanfare/effects occur only at stage 20.
-- [ ] Boss and UI tests pass.
+- [x] Stage 6 uses boss health and can be defeated without completing the campaign.
+- [x] Stage 20 requires boss defeat, enters the ending, and grants the final reward exactly once.
+- [x] Boss UI and rendering work for both encounters; final-only fanfare/effects occur only at stage 20.
+- [x] Boss and UI tests pass.
 
 ## Validation
 - `npm.cmd test --workspace @chicks-cannon/web -- engine.test.ts GameHud.test.tsx GameModal.test.tsx DialoguePanel.test.tsx renderer.test.ts` — mid/final boss behavior passes.
@@ -67,6 +67,6 @@ Task: T03-support-midboss-and-final-boss
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
+- [x] Implementation complete
+- [x] Validation passed: 120 tests and production build passed.
 - commit: pending

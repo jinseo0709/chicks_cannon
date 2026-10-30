@@ -12,6 +12,7 @@ import { WorldMapScreen } from './components/WorldMapScreen';
 import { LeaderboardClient } from './leaderboard/client';
 import { getSafeBrowserStorage } from './leaderboard/identity';
 import { useChickCannon } from './game/use-chick-cannon';
+import { STAGES } from './game/stages';
 import type { GameStage } from './game/types';
 import { getUnlockedStage, loadCampaignProgress, recordStageResult, saveCampaignProgress } from './game/progress';
 
@@ -71,7 +72,7 @@ export function App(): JSX.Element {
         {screen === 'game' && (
           <div className="play-screen">
             <GameCanvas controller={controller} />
-            {controller.snapshot.state !== 'ENDING' && !(controller.snapshot.state === 'WON' && controller.snapshot.stage === 6) && (
+            {controller.snapshot.state !== 'ENDING' && !(controller.snapshot.state === 'WON' && STAGES[controller.snapshot.stage].bossRole === 'final') && (
               <GameHud
                 snapshot={controller.snapshot}
                 onRestart={controller.retryStage}

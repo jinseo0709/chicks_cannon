@@ -9,7 +9,7 @@ import {
   Sleeping,
   type IEventCollision,
 } from 'matter-js';
-import { BLOCK_CONFIG, CHICK_FORMS, LAST_STAGE, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
+import { BLOCK_CONFIG, CHICK_FORMS, CHICK_SKILL_RANGE, LAST_STAGE, STAGE_ORDER, STAGE_SCORE_TARGETS, WORLD } from './constants';
 import { emptyItemInventory, MAX_ITEM_COUNT, STAGE_CLEAR_REWARDS } from './items';
 import { STAGES } from './stages';
 import type {
@@ -132,6 +132,7 @@ export class ChickCannonEngine {
   private scorePopups: Array<{ id: number; x: number; y: number; value: number; label?: string; expiresAtMs: number }> = [];
   private bossDamagePopups: Array<{ id: number; x: number; y: number; damage: number; expiresAtMs: number }> = [];
   private bossHp = 0;
+  private bossMaxHp = 0;
   private bossHitRemainingMs = 0;
   private bossRageElapsedMs = 0;
   private bossShockwaveRemainingMs = 0;
@@ -259,6 +260,11 @@ export class ChickCannonEngine {
   activateSkill(): void {
     const chick = this.activeChick;
     if (!chick || this.state !== 'FLYING' || this.targetingItem || this.skillCooldownRemainingMs > 0) return;
+    const nearbyEnemy = [...this.bodies.values()].some((body) =>
+      body.label === 'enemy' && body.customData?.alive !== false &&
+      Math.hypot(body.position.x - chick.position.x, body.position.y - chick.position.y) <= CHICK_SKILL_RANGE,
+    );
+    if (!nearbyEnemy) return;
     this.skillCooldownRemainingMs = CHICK_SKILL_COOLDOWN_MS;
     const { x, y } = chick.position;
     const skillKind = CHICK_FORMS[this.stage].skillKind;
@@ -447,7 +453,7 @@ export class ChickCannonEngine {
   }
 
   claimFinalReward(kind: ItemKind): boolean {
-    if (!this.alive || this.state !== 'ENDING' || this.stage !== LAST_STAGE || this.finalRewardClaimed ||
+    if (!this.alive || this.state !== 'ENDING' || this.bossRole !== 'final' || this.finalRewardClaimed ||
       this.items[kind] >= MAX_ITEM_COUNT) return false;
     this.items = { ...this.items, [kind]: this.items[kind] + 1 };
     this.finalRewardClaimed = true;
@@ -461,7 +467,7 @@ export class ChickCannonEngine {
     this.skillCooldownRemainingMs = Math.max(0, this.skillCooldownRemainingMs - delta);
     this.bossHitRemainingMs = Math.max(0, this.bossHitRemainingMs - delta);
     this.bossShockwaveRemainingMs = Math.max(0, this.bossShockwaveRemainingMs - delta);
-    if (this.stage === LAST_STAGE && this.bossHp > 0 && this.bossHp <= BOSS_MAX_HP / 2 && activeStates.has(this.state)) {
+    if (this.hasBoss && this.bossHp > 0 && this.bossHp <= this.bossMaxHp / 2 && activeStates.has(this.state)) {
       this.bossRageElapsedMs += delta;
       if (this.bossRageElapsedMs >= 5000) {
         this.bossRageElapsedMs -= 5000;
@@ -509,7 +515,7 @@ export class ChickCannonEngine {
     if (this.state === 'WON') {
       this.winElapsedMs += delta;
       if (this.winElapsedMs >= STAGE_CLEAR_DISPLAY_MS) {
-        if (this.stage === LAST_STAGE) {
+        if (this.bossRole === 'final') {
           this.finalRewardClaimed = false;
           this.state = 'ENDING';
         } else {
@@ -526,6 +532,14 @@ export class ChickCannonEngine {
 
   getSnapshot(): GameSnapshot {
     return this.snapshot;
+  }
+
+  private get bossRole(): 'mid' | 'final' | null {
+    return STAGES[this.stage].bossRole ?? null;
+  }
+
+  private get hasBoss(): boolean {
+    return this.bossRole !== null;
   }
 
   dispose(): void {
@@ -546,6 +560,7 @@ export class ChickCannonEngine {
     this.fans = [];
     this.activeChick = null;
     this.bossHp = 0;
+    this.bossMaxHp = 0;
     this.bossHitRemainingMs = 0;
     this.bossRageElapsedMs = 0;
     this.bossShockwaveRemainingMs = 0;
@@ -555,7 +570,7 @@ export class ChickCannonEngine {
     this.boosterNext = false;
     this.quakeNext = false;
     this.ammo = STAGES[stage].ammo;
-    if (stage === LAST_STAGE) this.finalRewardClaimed = false;
+    if (STAGES[stage].bossRole === 'final') this.finalRewardClaimed = false;
     this.stageStars = 0;
     this.bonusChallengeElapsedMs = 0;
     this.bonusChallengeStatus = 'ready';
@@ -754,8 +769,11 @@ export class ChickCannonEngine {
     }
     this.track(body, customData);
     Composite.add(this.engine.world, body);
-    if (spec.kind === 'cat' && customData.boss) this.bossHp = customData.hp ?? BOSS_MAX_HP;
-    if (spec.kind === 'chandelier' && this.stage === LAST_STAGE) {
+    if (spec.kind === 'cat' && customData.boss) {
+      this.bossHp = customData.hp ?? BOSS_MAX_HP;
+      this.bossMaxHp = customData.maxHp ?? this.bossHp;
+    }
+    if (spec.kind === 'chandelier' && this.bossRole === 'final') {
       const anchor = customData.anchor ?? { x: body.position.x, y: body.position.y - 140 };
       const ropeLength = Math.hypot(body.position.x - anchor.x, body.position.y - anchor.y);
       const rope = Bodies.rectangle((body.position.x + anchor.x) / 2, (body.position.y + anchor.y) / 2, 8, ropeLength, {
@@ -849,7 +867,7 @@ export class ChickCannonEngine {
         const chick = a.label === 'chick' ? a : b.label === 'chick' ? b : null;
         const chandelier = rope.customData?.chandelierId !== undefined
           ? this.bodies.get(rope.customData.chandelierId) : undefined;
-        if (chick && chandelier && this.stage === LAST_STAGE) this.startBossChandelierSwing(chandelier, chick);
+        if (chick && chandelier && this.bossRole === 'final') this.startBossChandelierSwing(chandelier, chick);
         if (chick) this.releaseCats();
         continue;
       }
@@ -916,7 +934,7 @@ export class ChickCannonEngine {
       const point = contact && Number.isFinite(contact.x) && Number.isFinite(contact.y)
         ? { x: contact.x, y: contact.y }
         : { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 };
-      if (this.stage === LAST_STAGE && chandelier?.customData?.weakpointArmed && !chandelier.customData.weakpointHit && fortTarget) {
+      if (this.bossRole === 'final' && chandelier?.customData?.weakpointArmed && !chandelier.customData.weakpointHit && fortTarget) {
         const hitsBoss = fortTarget.label === 'enemy' && fortTarget.customData?.boss;
         const hitsFortress = (fortTarget.label === 'block' || fortTarget.label === 'tnt') &&
           fortTarget.position.x >= 850 && fortTarget.position.x <= 1100 && fortTarget.position.y <= 570;
@@ -947,9 +965,9 @@ export class ChickCannonEngine {
             !(other.position.y < body.position.y - 15 && Math.abs(other.velocity.y) > 3),
         };
         if (body.label === 'chandelier' && relativeSpeed * 3.5 >= (data.breakImpact ?? 18)) {
-          if (this.stage === LAST_STAGE && other.label === 'chick' && data.attached && !data.weakpointArmed) {
+          if (this.bossRole === 'final' && other.label === 'chick' && data.attached && !data.weakpointArmed) {
             this.startBossChandelierSwing(body, other);
-          } else if (!(this.stage === LAST_STAGE && data.weakpointArmed && !data.weakpointHit)) {
+          } else if (!(this.bossRole === 'final' && data.weakpointArmed && !data.weakpointHit)) {
             this.detachChandelier(body);
           }
         }
@@ -1294,7 +1312,7 @@ export class ChickCannonEngine {
     const catsAlive = [...this.bodies.values()].some(
       (body) => body.label === 'enemy' && body.customData?.alive !== false && body.position.y < WORLD.height + 20,
     );
-    const bossDefeated = this.stage !== LAST_STAGE || this.bossHp <= 0;
+    const bossDefeated = !this.hasBoss || this.bossHp <= 0;
     if (!catsAlive && bossDefeated) {
       this.state = 'WON';
       this.stageStars = this.calculateStageStars();
@@ -1419,8 +1437,8 @@ export class ChickCannonEngine {
       finalRewardClaimed: this.finalRewardClaimed,
       targetingItem: this.targetingItem,
       slickZones: this.slickZones.map((zone) => ({ ...zone })),
-      bossHp: this.stage === LAST_STAGE ? this.bossHp : 0,
-      bossMaxHp: this.stage === LAST_STAGE ? BOSS_MAX_HP : 0,
+      bossHp: this.hasBoss ? this.bossHp : 0,
+      bossMaxHp: this.hasBoss ? this.bossMaxHp : 0,
       bossHitRemainingMs: this.bossHitRemainingMs,
       bossShockwaveRemainingMs: this.bossShockwaveRemainingMs,
       bossDamagePopups: this.bossDamagePopups.map((popup) => ({

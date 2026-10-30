@@ -11,11 +11,12 @@ export interface DialoguePanelProps {
 }
 
 export function DialoguePanel({ story, stage = 1, onContinue }: DialoguePanelProps): JSX.Element {
-  const catAsset = stage === 6 ? 'boss' : stage >= 2 ? 'shield' : 'normal';
+  const isBoss = Boolean(STAGES[stage].bossRole);
+  const catAsset = isBoss ? 'boss' : stage >= 2 ? 'shield' : 'normal';
   const attackRoutes = STAGES[stage].attackRoutes;
   return (
     <div className="overlay-backdrop dialogue-backdrop">
-      <section className={`story-panel ${stage === 6 ? 'boss-story-panel' : ''}`} role="dialog" aria-modal="true" aria-labelledby="story-speaker">
+      <section className={`story-panel ${isBoss ? 'boss-story-panel' : ''}`} role="dialog" aria-modal="true" aria-labelledby="story-speaker">
         <img className="story-avatar-image" src={assetUrl(`assets/cats/${catAsset}.png`)} alt="" />
         <div className="story-copy">
           <p className="eyebrow">CHAPTER {stage} · 도전장</p>

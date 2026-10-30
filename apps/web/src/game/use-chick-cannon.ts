@@ -130,8 +130,8 @@ export function useChickCannon(): ChickCannonController {
       input.setMode(current.state, current.targetingItem);
       if (current.state !== lastState) {
         if (current.state === 'FLYING') audioRef.current?.playLaunch();
-        if (current.state === 'WON' && current.stage === 6) audioRef.current?.playVictoryFanfare();
-        if (current.state === 'EVOLUTION' || (current.state === 'ENDING' && current.stage !== 6)) audioRef.current?.playEvolution();
+        if (current.state === 'WON' && STAGES[current.stage].bossRole === 'final') audioRef.current?.playVictoryFanfare();
+        if (current.state === 'EVOLUTION' || (current.state === 'ENDING' && STAGES[current.stage].bossRole !== 'final')) audioRef.current?.playEvolution();
         if (current.state === 'LOST') audioRef.current?.playExplosion();
         lastState = current.state;
       }

@@ -17,6 +17,7 @@ interface CampaignHarness {
   finalRewardClaimed: boolean;
   replayOnly: boolean;
   bonusChallengeElapsedMs: number;
+  bossHp: number;
   engine: Matter.Engine;
   bodies: Map<number, TestBody>;
   activeChick: TestBody | null;
@@ -285,6 +286,8 @@ describe('ChickCannonEngine', () => {
     engine.setAim({ x: 35, y: 525 });
     engine.releaseAim();
     const bird = harness.activeChick!;
+    const target = [...harness.bodies.values()].find((body) => body.label === 'enemy')!;
+    Body.setPosition(bird, { x: target.position.x - 180, y: target.position.y });
     const form = CHICK_FORMS[stage];
     expect(bird.velocity.x).toBeCloseTo(form.launchPower * 1.2);
     expect(bird.density).toBeCloseTo(form.density);
@@ -299,6 +302,24 @@ describe('ChickCannonEngine', () => {
     expect(snapshot().entities).toHaveLength(count);
   });
 
+  it('requires a nearby cat before a flight skill can activate', () => {
+    const { engine, harness, snapshot } = createEngine(1);
+    engine.dismissDialogue();
+    engine.setAim({ x: 35, y: 525 });
+    engine.releaseAim();
+    const bird = harness.activeChick!;
+    const target = [...harness.bodies.values()].find((body) => body.label === 'enemy')!;
+
+    engine.activateSkill();
+    expect(snapshot().entities.filter((entity) => entity.projectile)).toHaveLength(0);
+    expect(snapshot().skillCooldownRemainingMs).toBe(0);
+
+    Body.setPosition(bird, { x: target.position.x - 180, y: target.position.y });
+    engine.activateSkill();
+    expect(snapshot().entities.filter((entity) => entity.projectile)).toHaveLength(3);
+    expect(snapshot().skillCooldownRemainingMs).toBeGreaterThan(0);
+  });
+
   it.each([1, 16] as const)('expires supplementary projectiles and clears them on retry in level %s', (stage) => {
     const { engine, harness, snapshot } = createEngine(stage);
     Composite.clear(harness.engine.world, false, true);
@@ -310,6 +331,7 @@ describe('ChickCannonEngine', () => {
     engine.dismissDialogue();
     engine.setAim({ x: 35, y: 525 });
     engine.releaseAim();
+    Body.setPosition(harness.activeChick!, { x: 900, y: 100 });
     engine.activateSkill();
     const bird = harness.activeChick!;
     const children = [...harness.bodies.values()].filter((body) => body.customData?.projectile);
@@ -353,6 +375,7 @@ describe('ChickCannonEngine', () => {
           harness.bodies.delete(body.id);
         }
       }
+      if (stage === 6) harness.bossHp = 0;
       Body.setPosition(harness.activeChick!, { x: 1600, y: 300 });
       Body.setVelocity(harness.activeChick!, { x: 0, y: 0 });
       for (let frame = 0; frame < 240; frame += 1) engine.step(16.667);
@@ -397,6 +420,8 @@ describe('ChickCannonEngine', () => {
 
     engine.setAim({ x: 80, y: 500 });
     engine.releaseAim();
+    const target = [...(engine as unknown as CampaignHarness).bodies.values()].find((body) => body.label === 'enemy')!;
+    Body.setPosition((engine as unknown as CampaignHarness).activeChick!, { x: target.position.x - 180, y: target.position.y });
     const entitiesBeforeSkill = snapshot().entities.length;
     engine.activateSkill();
     const entitiesAfterSkill = snapshot().entities.length;

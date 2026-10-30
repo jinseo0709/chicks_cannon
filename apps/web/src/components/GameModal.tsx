@@ -14,7 +14,7 @@ export interface GameModalProps {
 
 export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameModalProps): JSX.Element | null {
   if (snapshot.state === 'WON') {
-    if (snapshot.stage === 6) return null;
+    if (STAGES[snapshot.stage].bossRole === 'final') return null;
     return (
       <div className="overlay-backdrop clear-backdrop" role="status">
         <section className="clear-card">

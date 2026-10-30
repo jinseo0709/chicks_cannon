@@ -3,6 +3,7 @@ import { assetUrl } from '../asset-url';
 import type { GameSnapshot, ItemKind } from '../game/types';
 import { STAGES } from '../game/stages';
 import { ITEM_INFO } from '../game/items';
+import { CHICK_SKILL_RANGE } from '../game/constants';
 import { ItemIcon } from './ItemIcon';
 
 export interface GameHudProps {
@@ -17,12 +18,17 @@ const activeStates = new Set(['AIMING', 'FLYING', 'RESOLVING']);
 
 export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause }: GameHudProps): JSX.Element {
   const stage = STAGES[snapshot.stage];
+  const isBoss = Boolean(stage.bossRole);
   const active = activeStates.has(snapshot.state);
   const targetProgress = snapshot.scoreTarget > 0
     ? Math.max(0, Math.min(100, Math.floor((snapshot.stageScore / snapshot.scoreTarget) * 100)))
     : 0;
   const challengeSeconds = Math.ceil(snapshot.bonusChallengeRemainingMs / 1000);
   const challengeRunning = snapshot.bonusChallengeStatus === 'running';
+  const flyingChick = snapshot.entities.find((entity) => entity.kind === 'chick' && !entity.projectile && entity.alive);
+  const skillTargetNearby = Boolean(flyingChick && snapshot.entities.some((entity) =>
+    entity.kind === 'cat' && entity.alive && Math.hypot(entity.x - flyingChick.x, entity.y - flyingChick.y) <= CHICK_SKILL_RANGE,
+  ));
   const items: { kind: 'booster' | 'quake' | 'mega' | 'butter'; available: boolean; shortcut: string }[] = [
     { kind: 'booster', available: snapshot.state === 'AIMING' || snapshot.state === 'FLYING', shortcut: '1' },
     { kind: 'quake', available: active, shortcut: '2' },
@@ -31,7 +37,7 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
   ];
   return (
     <div className="game-hud" role="region" aria-label="게임 정보" inert={!active} aria-hidden={!active}>
-      <div id="top-bar" className={`hud-topline ${snapshot.stage === 6 ? 'boss-mode' : ''}`}>
+      <div id="top-bar" className={`hud-topline ${isBoss ? 'boss-mode' : ''}`}>
         <div className="hud-left-group">
           <div className="hud-card score-card hud-score-panel" aria-label="이번 스테이지 점수">
             <div className="hud-row-top">
@@ -54,7 +60,9 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
                 title={snapshot.form.skillDesc} role="status">
                 {(snapshot.skillCooldownRemainingMs ?? 0) > 0
                   ? <><kbd>Space</kbd> 재사용까지 {Math.ceil((snapshot.skillCooldownRemainingMs ?? 0) / 1000)}초</>
-                  : <><kbd>Space</kbd> {snapshot.form.skillName} 사용 · 화면 탭</>}
+                  : skillTargetNearby
+                    ? <><kbd>Space</kbd> {snapshot.form.skillName} 사용 · 화면 탭</>
+                    : <>고양이에게 가까이 가면 <kbd>Space</kbd> 사용 가능</>}
               </span>}
             </div>
           </div>
@@ -72,8 +80,8 @@ export function GameHud({ snapshot, onRestart, onMute, onUseItem, onTogglePause 
           </div>
           {snapshot.ammo === 0 && <span className="ammo-empty">탄환을 모두 썼어요</span>}
         </div>
-        {snapshot.stage === 6 && <div className="boss-health-panel" aria-label="보스 체력">
-          <div className="boss-health-heading"><strong>👑 대축제 보스</strong><span>{Math.ceil(snapshot.bossHp ?? 0)} / {snapshot.bossMaxHp ?? 500}</span></div>
+        {isBoss && <div className="boss-health-panel" aria-label="보스 체력">
+          <div className="boss-health-heading"><strong>👑 {stage.bossRole === 'final' ? '최종 보스' : '중간 보스'}</strong><span>{Math.ceil(snapshot.bossHp ?? 0)} / {snapshot.bossMaxHp ?? 500}</span></div>
           <div className="boss-health-track" role="progressbar" aria-label="보스 남은 체력"
             aria-valuemin={0} aria-valuemax={snapshot.bossMaxHp ?? 500} aria-valuenow={snapshot.bossHp ?? 0}>
             <span style={{ width: `${Math.max(0, Math.min(100, ((snapshot.bossHp ?? 0) / (snapshot.bossMaxHp ?? 500)) * 100))}%` }} />
