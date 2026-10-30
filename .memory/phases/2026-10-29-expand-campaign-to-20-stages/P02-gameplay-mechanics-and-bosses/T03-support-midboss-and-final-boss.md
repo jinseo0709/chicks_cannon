@@ -69,4 +69,4 @@ Task: T03-support-midboss-and-final-boss
 ## Progress
 - [x] Implementation complete
 - [x] Validation passed: 120 tests and production build passed.
-- commit: pending
+- commit: `cf47bf5` (`fix(gameplay): 보스 흐름과 근접 스킬 밸런스 조정`)
