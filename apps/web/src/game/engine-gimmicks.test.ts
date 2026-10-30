@@ -60,6 +60,20 @@ function setup(releaseCatsAtStart = true) {
 }
 
 describe('interactive obstacle physics', () => {
+  it('releases the stage 4 route boulder so a chick can roll it into the stone supports', () => {
+    const { game, harness, collide } = setup(false);
+    game.selectStage(4);
+    const boulder = [...harness.bodies.values()].find((body) => body.label === 'boulder')!;
+    expect(boulder.isStatic).toBe(true);
+
+    game.dismissDialogue();
+    const chick = Bodies.circle(boulder.position.x - 40, boulder.position.y, 12, { label: 'chick' }) as FixtureBody;
+    harness.track(chick, { hp: 1, maxHp: 1, alive: true });
+    collide(chick, boulder);
+
+    expect(boulder.isStatic).toBe(false);
+  });
+
   it.each([
     { x: 300, y: 290, vx: 0, vy: 8, expectedX: 0, expectedY: -14.4 },
     { x: 260, y: 310, vx: 6, vy: 6, expectedX: -10.8, expectedY: -10.8 },

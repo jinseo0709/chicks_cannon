@@ -121,9 +121,9 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
       { name: '바위 굴리기', hint: '바위를 밀어 아래쪽 지지대를 부수기', target: { x: 700, y: 620 } },
       { name: '성벽 윗층', hint: '윗층 돌기둥을 맞혀 두 고양이 사이를 무너뜨리기', target: { x: 920, y: 454 } },
     ],
-    story: { speaker: '성벽 수비대장', avatar: '🪨🐱', text: '이 돌무더기를 넘을 수 있겠냥?', chickReply: '바위를 굴려 길을 열겠어!', instruction: '바위는 부딪히면 굴러가며 주변 구조물을 밀어요.' },
+    story: { speaker: '성벽 수비대장', avatar: '🪨🐱', text: '이 돌무더기를 넘을 수 있겠냥?', chickReply: '바위를 굴려 길을 열겠어!', instruction: '1번 바위는 깨는 대상이 아니에요. 밀어서 굴려 아래 지지대를 부수세요.' },
     spawns: [
-      { kind: 'boulder', x: 700, y: 620, radius: 27, armed: true },
+      { kind: 'boulder', x: 700, y: 620, radius: 27 },
       ...fort({ centerX: 920, width: 220, lowerCats: 3, shieldLayers: 0, upperCat: true, upperMaterial: 'stone', baseMaterial: 'stone', extraTop: true }),
     ],
   }),
