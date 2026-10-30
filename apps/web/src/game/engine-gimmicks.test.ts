@@ -130,7 +130,7 @@ describe('interactive obstacle physics', () => {
     expect(harness.chandelierConstraints.size).toBe(0);
   });
 
-  it('consumes two shield layers on separate frontal shots and scores a defeat only once', () => {
+  it('consumes one shield layer per frontal shot and scores a defeat only once', () => {
     const { game, harness, spawn, chick, collide } = setup();
     const cat = spawn({ kind: 'cat', x: 300, y: 300, shieldLayers: 2 });
     const projectile = chick(270, 300, 8, 0);
@@ -149,7 +149,7 @@ describe('interactive obstacle physics', () => {
     expect(Composite.allBodies(harness.engine.world)).not.toContain(cat);
   });
 
-  it('allows a rear shot and a falling block to bypass unspent shields', () => {
+  it('allows a rear shot through shields but makes a falling block consume one shield layer', () => {
     const { game, spawn, chick, collide } = setup();
     const rearCat = spawn({ kind: 'cat', x: 300, y: 300, shieldLayers: 2 });
     const rearShot = chick(330, 300, -9, 0);
@@ -159,8 +159,27 @@ describe('interactive obstacle physics', () => {
     const fallingBlock = spawn({ kind: 'block', x: 500, y: 260, w: 30, h: 30, material: 'stone' });
     Body.setVelocity(fallingBlock, { x: 0, y: 9 });
     collide(fallingCat, fallingBlock);
-    expect(fallingCat.customData?.alive).toBe(false);
-    expect(game.getSnapshot().score).toBe(4000);
+    expect(fallingCat.customData).toMatchObject({ alive: true, hp: 28, shieldLayers: 1 });
+    expect(game.getSnapshot().score).toBe(2500);
+  });
+
+  it('calculates debris damage from closing kinetic energy and caps one collapse wave', () => {
+    const { game, spawn, collide } = setup();
+    const cat = spawn({ kind: 'cat', x: 500, y: 300 });
+    const lightBlock = spawn({ kind: 'block', x: 500, y: 260, w: 40, h: 40, material: 'wood' });
+    Body.setVelocity(lightBlock, { x: 0, y: 3 });
+    collide(cat, lightBlock);
+    expect(cat.customData?.hp).toBe(18);
+
+    const heavyBlock = spawn({ kind: 'block', x: 500, y: 260, w: 120, h: 120, material: 'stone' });
+    Body.setVelocity(heavyBlock, { x: 0, y: 30 });
+    collide(cat, heavyBlock);
+    expect(cat.customData).toMatchObject({ alive: true, hp: 8 });
+
+    const followupBlock = spawn({ kind: 'block', x: 500, y: 260, w: 120, h: 120, material: 'stone' });
+    Body.setVelocity(followupBlock, { x: 0, y: 30 });
+    collide(cat, followupBlock);
+    expect(cat.customData).toMatchObject({ alive: true, hp: 8 });
   });
 
   it('chains each TNT once and shares damage and single-defeat scoring across explosions', () => {
@@ -173,9 +192,9 @@ describe('interactive obstacle physics', () => {
     harness.damageBody(charges[0], 100, context);
     harness.publish();
     expect(charges.every((charge) => charge.customData?.destroyed)).toBe(true);
-    expect(cat.customData?.alive).toBe(false);
-    expect(game.getSnapshot().score).toBe(3 * 600 + 1200);
-    expect(harness.bodies.size).toBe(0);
+    expect(cat.customData).toMatchObject({ alive: true, hp: 8 });
+    expect(game.getSnapshot().score).toBe(3 * 600);
+    expect(harness.bodies.size).toBe(1);
   });
 
   it('treats an explosion-broken egg as a score penalty instead of a defeat', () => {

@@ -28,6 +28,13 @@ import type {
 const FINAL_BOSS_VICTORY_DISPLAY_MS = 2600;
 const CHICK_SKILL_COOLDOWN_MS = 15000;
 const BOSS_MAX_HP = 500;
+// Debris damage uses E = 1/2 * effective mass * closing speed^2, with a low-energy threshold.
+// A cat can take at most 10 environmental damage in a 750ms collapse window.
+const ENVIRONMENTAL_IMPACT_MIN_ENERGY = 80;
+const ENVIRONMENTAL_IMPACT_DAMAGE_PER_ENERGY = 0.04;
+const ENVIRONMENTAL_IMPACT_MAX_DAMAGE = 12;
+const ENVIRONMENTAL_DAMAGE_WINDOW_MS = 750;
+const ENVIRONMENTAL_DAMAGE_WINDOW_CAP = 10;
 
 type GameBody = Matter.Body & {
   customData?: {
@@ -69,6 +76,8 @@ type GameBody = Matter.Body & {
     weakpointArmed?: boolean;
     weakpointHit?: boolean;
     stageFrozen?: boolean;
+    environmentalDamageWindowStartMs?: number;
+    environmentalDamageInWindow?: number;
   };
 };
 
@@ -87,6 +96,7 @@ interface DamageContext {
   point: Point;
   direction: Point;
   frontal: boolean;
+  bypassEnvironmentalCap?: boolean;
 }
 interface Explosion { x: number; y: number; radius: number; forceMagnitude: number; }
 
@@ -940,7 +950,7 @@ export class ChickCannonEngine {
           this.detachChandelier(chandelier);
           const boss = [...this.bodies.values()].find((candidate) => candidate.customData?.boss && candidate.customData.alive !== false);
           if (boss) this.damageBody(boss, 250, {
-            source: 'chandelier', point, direction: { x: 1, y: 0 }, frontal: false,
+            source: 'chandelier', point, direction: { x: 1, y: 0 }, frontal: false, bypassEnvironmentalCap: true,
           });
           this.awardScore(800, point.x, point.y - 20, '약점 명중');
         }
@@ -969,27 +979,81 @@ export class ChickCannonEngine {
           }
         }
         if (body.label === 'enemy' && data.boss && other.label === 'chandelier' && other.customData?.weakpointHit) continue;
-        if (body.label === 'enemy' && impact > 4.5 && (data.shieldLayers ?? 0) > 0) {
-          data.shieldLayers = 0;
-          data.shield = false;
-          data.shieldBroken = true;
-          this.awardScore(500, body.position.x, body.position.y - 30, '방패 파괴');
-          if (context.frontal) Body.setVelocity(other, { x: -Math.abs(other.velocity.x) * 0.7, y: -4 });
-          else this.damageBody(body, impact, context);
+        if (body.label === 'enemy') {
+          const damage = source === 'chick' ? impact : this.calculateDebrisDamage(body, other);
+          if (source === 'chick' && context.frontal && impact > 4.5 && (data.shieldLayers ?? 0) > 0) {
+            this.consumeCatShield(body);
+            Body.setVelocity(other, { x: -Math.abs(other.velocity.x) * 0.7, y: -4 });
+          } else if (damage > 0) {
+            this.damageBody(body, damage, context);
+          }
         } else if (body.label === 'hostageEgg') {
           this.damageBody(body, impact > 3.2 ? impact : 0, context);
-        } else if ((body.label === 'enemy' && impact > 4.5) ||
-          ((body.label === 'block' || body.label === 'tnt') && impact > 5)) {
+        } else if ((body.label === 'block' || body.label === 'tnt') && impact > 5) {
           this.damageBody(body, impact, context);
         }
       }
     }
   }
 
+  private calculateDebrisDamage(target: GameBody, source: GameBody): number {
+    const dx = target.position.x - source.position.x;
+    const dy = target.position.y - source.position.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance <= 0) return 0;
+    const nx = dx / distance;
+    const ny = dy / distance;
+    const closingSpeed = Math.max(0,
+      -((target.velocity.x - source.velocity.x) * nx + (target.velocity.y - source.velocity.y) * ny));
+    if (closingSpeed <= 0) return 0;
+
+    const targetMass = target.isStatic ? 0 : target.mass;
+    const sourceMass = source.isStatic ? 0 : source.mass;
+    if (targetMass <= 0 && sourceMass <= 0) return 0;
+    const effectiveMass = targetMass <= 0 ? sourceMass
+      : sourceMass <= 0 ? targetMass
+        : (targetMass * sourceMass) / (targetMass + sourceMass);
+    const impactEnergy = 0.5 * effectiveMass * closingSpeed ** 2;
+    return Math.min(ENVIRONMENTAL_IMPACT_MAX_DAMAGE,
+      Math.max(0, impactEnergy - ENVIRONMENTAL_IMPACT_MIN_ENERGY) * ENVIRONMENTAL_IMPACT_DAMAGE_PER_ENERGY);
+  }
+
+  private consumeCatShield(body: GameBody): void {
+    const data = body.customData;
+    if (!data) return;
+    const layers = Math.max(0, (data.shieldLayers ?? 0) - 1);
+    data.shieldLayers = layers;
+    data.shield = layers > 0;
+    if (layers === 0) data.shieldBroken = true;
+    this.awardScore(500, body.position.x, body.position.y - 30, '방패 파괴');
+  }
+
+  private capEnvironmentalCatDamage(body: GameBody, amount: number): number {
+    const data = body.customData;
+    if (!data || amount <= 0) return 0;
+    const now = this.engine.timing.timestamp;
+    if (data.environmentalDamageWindowStartMs === undefined ||
+      now - data.environmentalDamageWindowStartMs >= ENVIRONMENTAL_DAMAGE_WINDOW_MS) {
+      data.environmentalDamageWindowStartMs = now;
+      data.environmentalDamageInWindow = 0;
+    }
+    const remaining = Math.max(0, ENVIRONMENTAL_DAMAGE_WINDOW_CAP - (data.environmentalDamageInWindow ?? 0));
+    const applied = Math.min(amount, remaining);
+    data.environmentalDamageInWindow = (data.environmentalDamageInWindow ?? 0) + applied;
+    return applied;
+  }
+
   private damageBody(body: GameBody, amount: number, context: DamageContext): void {
     const data = body.customData;
     if (!data || data.alive === false || data.hp === undefined) return;
-    const damage = Math.min(data.hp, Math.max(0, amount));
+    if (body.label === 'enemy' && !context.bypassEnvironmentalCap && context.source !== 'chick' && (data.shieldLayers ?? 0) > 0 && amount > 0) {
+      this.consumeCatShield(body);
+      return;
+    }
+    const cappedAmount = body.label === 'enemy' && !context.bypassEnvironmentalCap && context.source !== 'chick'
+      ? this.capEnvironmentalCatDamage(body, amount)
+      : amount;
+    const damage = Math.min(data.hp, Math.max(0, cappedAmount));
     data.hp = Math.max(0, data.hp - damage);
     if (data.boss) {
       this.bossHp = data.hp;
@@ -1127,7 +1191,7 @@ export class ChickCannonEngine {
             x: direction.x * explosion.forceMagnitude * power,
             y: direction.y * explosion.forceMagnitude * power - 0.06,
           });
-          this.damageBody(body, power * 50, {
+          this.damageBody(body, body.label === 'enemy' ? power * 8 : power * 50, {
             source: 'explosion', point: { ...body.position }, direction, frontal: false,
           });
         }
