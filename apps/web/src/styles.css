@@ -48,12 +48,12 @@ button:focus-visible {
   display: grid;
   min-height: 100dvh;
   place-items: center;
-  padding: clamp(0.5rem, 2vw, 2rem);
+  padding: clamp(0.25rem, 1vw, 0.75rem);
 }
 
 .game-frame {
   position: relative;
-  width: min(100%, calc((100dvh - 2rem) * 16 / 9), 1280px);
+  width: min(100%, calc((100dvh - 1.5rem) * 16 / 9));
   aspect-ratio: 16 / 9;
   overflow: hidden;
   isolation: isolate;
