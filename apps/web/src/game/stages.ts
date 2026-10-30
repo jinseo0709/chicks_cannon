@@ -78,7 +78,7 @@ function makeStage(stage: GameStage, content: StageContent): StageDefinition {
 export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   1: makeStage(1, {
     region: 1, theme: 'alley-day', title: '골목의 첫 발사', ammo: 6,
-    bonusChallenge: { timeLimitMs: 24000, bonusScore: 300, badge: '첫 출발' },
+    bonusChallenge: { timeLimitMs: 28000, bonusScore: 300, badge: '첫 출발' },
     attackRoutes: [
       { name: '낮은 나무 받침', hint: '낮은 받침을 맞혀 골목 요새를 무너뜨리기', target: { x: 825, y: 620 } },
       { name: '유리 선반', hint: '위쪽 유리 선반을 깨고 고양이에게 떨어뜨리기', target: { x: 920, y: 454 } },
@@ -88,7 +88,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   2: makeStage(2, {
     region: 1, theme: 'alley-day', title: '빨랫줄 골목', ammo: 6,
-    bonusChallenge: { timeLimitMs: 26000, bonusScore: 350, badge: '빨랫줄 돌파' },
+    bonusChallenge: { timeLimitMs: 30000, bonusScore: 350, badge: '빨랫줄 돌파' },
     attackRoutes: [
       { name: '왼쪽 계단 받침', hint: '왼쪽 받침을 끊어 방패 고양이 뒤로 들어가기', target: { x: 825, y: 620 } },
       { name: '윗층 유리판', hint: '유리판을 깨 위층을 아래로 떨어뜨리기', target: { x: 920, y: 454 } },
@@ -102,7 +102,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   3: makeStage(3, {
     region: 1, theme: 'alley-day', title: '여닫이 바닥', ammo: 6,
-    bonusChallenge: { timeLimitMs: 28000, bonusScore: 400, badge: '바닥 뒤집기' },
+    bonusChallenge: { timeLimitMs: 32000, bonusScore: 400, badge: '바닥 뒤집기' },
     attackRoutes: [
       { name: '여닫이 경첩', hint: '경첩판을 강하게 맞혀 열고 고양이 발판을 무너뜨리기', target: { x: 640, y: 648 } },
       { name: '낮은 성벽', hint: '성벽 아래 받침을 끊어 고양이에게 옆으로 접근하기', target: { x: 825, y: 620 } },
@@ -116,7 +116,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   4: makeStage(4, {
     region: 1, theme: 'wall-afternoon', title: '성벽의 돌무더기', ammo: 5,
-    bonusChallenge: { timeLimitMs: 30000, bonusScore: 450, badge: '성벽 돌파' },
+    bonusChallenge: { timeLimitMs: 34000, bonusScore: 450, badge: '성벽 돌파' },
     attackRoutes: [
       { name: '바위 굴리기', hint: '바위를 밀어 아래쪽 지지대를 부수기', target: { x: 700, y: 620 } },
       { name: '성벽 윗층', hint: '윗층 돌기둥을 맞혀 두 고양이 사이를 무너뜨리기', target: { x: 920, y: 454 } },
@@ -129,7 +129,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   5: makeStage(5, {
     region: 1, theme: 'wall-afternoon', title: '성문 아래 비밀길', ammo: 5,
-    bonusChallenge: { timeLimitMs: 32000, bonusScore: 500, badge: '골목의 영웅' },
+    bonusChallenge: { timeLimitMs: 36000, bonusScore: 500, badge: '골목의 영웅' },
     attackRoutes: [
       { name: '성문 여닫이판', hint: '여닫이판을 열어 성문 아래로 진입하기', target: { x: 620, y: 648 } },
       { name: '움직이는 성문', hint: '셔터가 올라갈 때 안쪽 기둥을 직접 맞히기', target: { x: 760, y: 440 } },
@@ -144,7 +144,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   6: makeStage(6, {
     region: 2, bossRole: 'mid', theme: 'rooftop-sunset', title: '지붕 위의 고양이 대장', ammo: 5,
-    bonusChallenge: { timeLimitMs: 34000, bonusScore: 550, badge: '첫 승리' },
+    bonusChallenge: { timeLimitMs: 40000, bonusScore: 550, badge: '첫 승리' },
     attackRoutes: [
       { name: '낮은 보스 받침', hint: '낮은 받침을 부숴 보스 발밑 요새를 흔들기', target: { x: 850, y: 620 } },
       { name: '선풍기 바람길', hint: '상승 바람을 타고 위쪽 방패 뒤를 노리기', target: { x: 500, y: 430 } },
@@ -158,7 +158,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   7: makeStage(7, {
     region: 2, theme: 'rooftop-sunset', title: '바람 타는 옥상', ammo: 5,
-    bonusChallenge: { timeLimitMs: 28000, bonusScore: 550, badge: '바람길 질주' },
+    bonusChallenge: { timeLimitMs: 36000, bonusScore: 550, badge: '바람길 질주' },
     attackRoutes: [
       { name: '선풍기 상승풍', hint: '상승풍으로 왼쪽 계단 위를 덮치기', target: { x: 470, y: 430 } },
       { name: '오른쪽 나무 받침', hint: '오른쪽 받침을 끊어 본채를 옆으로 기울이기', target: { x: 1018, y: 620 } },
@@ -172,7 +172,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   8: makeStage(8, {
     region: 2, theme: 'rooftop-sunset', title: '시계손의 그림자', ammo: 5,
-    bonusChallenge: { timeLimitMs: 30000, bonusScore: 600, badge: '시계손 통과' },
+    bonusChallenge: { timeLimitMs: 38000, bonusScore: 600, badge: '시계손 통과' },
     attackRoutes: [
       { name: '시계손 회전축', hint: '시계손이 지나간 뒤 회전축 쪽을 통과하기', target: { x: 690, y: 430 } },
       { name: '요새 아래 기둥', hint: '낮은 기둥을 끊어 시간 창 없이 구조물을 무너뜨리기', target: { x: 825, y: 620 } },
@@ -185,7 +185,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   9: makeStage(9, {
     region: 2, theme: 'clock-twilight', title: '톱니 시계탑', ammo: 4,
-    bonusChallenge: { timeLimitMs: 32000, bonusScore: 650, badge: '톱니 틈새' },
+    bonusChallenge: { timeLimitMs: 40000, bonusScore: 650, badge: '톱니 틈새' },
     attackRoutes: [
       { name: '맞물린 톱니', hint: '기어를 튕겨 방패 고양이 뒤쪽을 노리기', target: { x: 620, y: 470 } },
       { name: '시계손 위쪽', hint: '시계손이 낮아질 때 윗층 유리판을 깨기', target: { x: 700, y: 430 } },
@@ -200,7 +200,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   10: makeStage(10, {
     region: 2, theme: 'clock-twilight', title: '종소리 꼭대기', ammo: 4,
-    bonusChallenge: { timeLimitMs: 34000, bonusScore: 700, badge: '옥상의 질주' },
+    bonusChallenge: { timeLimitMs: 42000, bonusScore: 700, badge: '옥상의 질주' },
     attackRoutes: [
       { name: '종 아래 샹들리에', hint: '샹들리에를 흔들어 아래층 세 고양이를 덮치기', target: { x: 780, y: 330 } },
       { name: '시계손 통로', hint: '시계손의 회전 방향을 따라 위층으로 진입하기', target: { x: 650, y: 400 } },
@@ -215,7 +215,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   11: makeStage(11, {
     region: 3, theme: 'factory-night', title: '공장 가동', ammo: 5,
-    bonusChallenge: { timeLimitMs: 30000, bonusScore: 700, badge: '첫 생산품' },
+    bonusChallenge: { timeLimitMs: 38000, bonusScore: 700, badge: '첫 생산품' },
     attackRoutes: [
       { name: '컨베이어 시작점', hint: '벨트 위 블록을 밀어 낮은 지지대를 부수기', target: { x: 700, y: 650 } },
       { name: '공장 상부 발판', hint: '컨베이어가 옮긴 물체를 위층 고양이에게 보내기', target: { x: 920, y: 454 } },
@@ -228,7 +228,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   12: makeStage(12, {
     region: 3, theme: 'factory-night', title: '타이어 시험장', ammo: 5,
-    bonusChallenge: { timeLimitMs: 32000, bonusScore: 750, badge: '반동 전문가' },
+    bonusChallenge: { timeLimitMs: 40000, bonusScore: 750, badge: '반동 전문가' },
     attackRoutes: [
       { name: '타이어 반동', hint: '타이어를 밟고 높이 튀어 올라 윗층을 노리기', target: { x: 680, y: 630 } },
       { name: '벨트 끝 지지대', hint: '컨베이어로 블록을 옮겨 오른쪽 받침을 무너뜨리기', target: { x: 1018, y: 620 } },
@@ -243,7 +243,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   13: makeStage(13, {
     region: 3, theme: 'factory-night', title: '기어 압착기', ammo: 4,
-    bonusChallenge: { timeLimitMs: 34000, bonusScore: 800, badge: '기어 틈새' },
+    bonusChallenge: { timeLimitMs: 42000, bonusScore: 800, badge: '기어 틈새' },
     attackRoutes: [
       { name: '회전 기어', hint: '기어 반동으로 방패 고양이의 옆을 노리기', target: { x: 620, y: 465 } },
       { name: '컨베이어 통로', hint: '벨트 위 발판으로 안전한 틈을 지나기', target: { x: 750, y: 650 } },
@@ -258,7 +258,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   14: makeStage(14, {
     region: 3, theme: 'factory-night', title: '셔터 작업장', ammo: 4,
-    bonusChallenge: { timeLimitMs: 36000, bonusScore: 850, badge: '셔터 돌파' },
+    bonusChallenge: { timeLimitMs: 44000, bonusScore: 850, badge: '셔터 돌파' },
     attackRoutes: [
       { name: '작업장 셔터', hint: '셔터가 열릴 때 벨트를 따라 안쪽을 맞히기', target: { x: 760, y: 430 } },
       { name: '분리된 블록 더미', hint: '왼쪽 받침을 끊어 두 더미를 연쇄로 무너뜨리기', target: { x: 825, y: 620 } },
@@ -273,7 +273,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   15: makeStage(15, {
     region: 3, theme: 'factory-night', title: '마지막 조립 라인', ammo: 4,
-    bonusChallenge: { timeLimitMs: 38000, bonusScore: 900, badge: '공장 탈출' },
+    bonusChallenge: { timeLimitMs: 46000, bonusScore: 900, badge: '공장 탈출' },
     attackRoutes: [
       { name: '조립 벨트', hint: '벨트를 역이용해 받침 아래로 파고들기', target: { x: 700, y: 650 } },
       { name: '트램펄린 상단', hint: '트램펄린으로 튀어 올라 세 고양이의 받침을 노리기', target: { x: 650, y: 640 } },
@@ -289,7 +289,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   16: makeStage(16, {
     region: 4, theme: 'meadow-gold', title: '민들레 발사대', ammo: 5,
-    bonusChallenge: { timeLimitMs: 32000, bonusScore: 900, badge: '꽃바람' },
+    bonusChallenge: { timeLimitMs: 40000, bonusScore: 900, badge: '꽃바람' },
     attackRoutes: [
       { name: '민들레 꽃받침', hint: '꽃받침을 밟아 위쪽 고양이에게 날아가기', target: { x: 650, y: 630 } },
       { name: '낮은 나무 기둥', hint: '낮은 기둥을 끊어 두 고양이의 발판 무너뜨리기', target: { x: 825, y: 620 } },
@@ -303,7 +303,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   17: makeStage(17, {
     region: 4, theme: 'meadow-gold', title: '황금빛 시소', ammo: 4,
-    bonusChallenge: { timeLimitMs: 34000, bonusScore: 950, badge: '균형 잡기' },
+    bonusChallenge: { timeLimitMs: 42000, bonusScore: 950, badge: '균형 잡기' },
     attackRoutes: [
       { name: '시소 끝판', hint: '시소 한쪽을 눌러 반대편으로 튀어 오르기', target: { x: 700, y: 650 } },
       { name: '꽃 발사대', hint: '꽃받침으로 높이를 얻어 윗층을 직접 맞히기', target: { x: 620, y: 640 } },
@@ -318,7 +318,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   18: makeStage(18, {
     region: 4, theme: 'meadow-gold', title: '바위 정원', ammo: 4,
-    bonusChallenge: { timeLimitMs: 36000, bonusScore: 1000, badge: '정원 돌파' },
+    bonusChallenge: { timeLimitMs: 44000, bonusScore: 1000, badge: '정원 돌파' },
     attackRoutes: [
       { name: '정원 바위', hint: '바위를 굴려 방패 고양이의 아래쪽 받침을 깨기', target: { x: 720, y: 620 } },
       { name: '황금 꽃 발사대', hint: '꽃바람을 타고 위쪽 방패 뒤를 공략하기', target: { x: 620, y: 640 } },
@@ -333,7 +333,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   19: makeStage(19, {
     region: 4, theme: 'meadow-gold', title: '고양이 왕의 문턱', ammo: 4,
-    bonusChallenge: { timeLimitMs: 38000, bonusScore: 1100, badge: '결전 준비' },
+    bonusChallenge: { timeLimitMs: 46000, bonusScore: 1100, badge: '결전 준비' },
     attackRoutes: [
       { name: '황금 발사대', hint: '꽃 발사대로 단단한 윗층 방어를 넘어가기', target: { x: 620, y: 640 } },
       { name: '흔들리는 샹들리에', hint: '샹들리에를 흔들어 성문 안쪽을 무너뜨리기', target: { x: 780, y: 320 } },
@@ -348,7 +348,7 @@ export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
   }),
   20: makeStage(20, {
     region: 4, bossRole: 'final', theme: 'meadow-gold', title: '황금 초원의 고양이 왕', ammo: 5,
-    bonusChallenge: { timeLimitMs: 50000, bonusScore: 1500, badge: '초원의 수호자' },
+    bonusChallenge: { timeLimitMs: 60000, bonusScore: 1500, badge: '초원의 수호자' },
     attackRoutes: [
       { name: '왕의 아래 요새', hint: '아래쪽 강철 받침을 부숴 왕의 방어를 흔들기', target: { x: 850, y: 620 } },
       { name: '왕관 위 약점', hint: '샹들리에를 흔들어 왕관 위 약점을 맞히기', target: { x: 965, y: 285 } },
