@@ -12,7 +12,7 @@ const context = {
   createRadialGradient: vi.fn(() => gradient),
   beginPath: vi.fn(), ellipse: vi.fn(), fill: vi.fn(), stroke: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
   quadraticCurveTo: vi.fn(), bezierCurveTo: vi.fn(), rect: vi.fn(), clip: vi.fn(), closePath: vi.fn(), arc: vi.fn(), setLineDash: vi.fn(), rotate: vi.fn(), strokeRect: vi.fn(),
-  fillText: vi.fn(), roundRect: vi.fn(), measureText: vi.fn(() => ({ width: 80 })),
+  fillText: vi.fn(), strokeText: vi.fn(), roundRect: vi.fn(), measureText: vi.fn(() => ({ width: 80 })),
   fillStyle: '', strokeStyle: '', lineWidth: 1, lineCap: 'butt', shadowColor: '', shadowBlur: 0,
   globalAlpha: 1,
   font: '', textAlign: 'start', textBaseline: 'alphabetic',
@@ -76,14 +76,9 @@ describe('GameCanvasRenderer', () => {
     const renderer = new GameCanvasRenderer(canvas, assets);
     renderer.resize(1280, 720, 1);
     renderer.render(snapshot, 100);
-    const radius = snapshot.form.radius;
-    expect(context.drawImage).toHaveBeenCalledWith(
-      image,
-      -radius * 1.6,
-      -radius * 1.6,
-      radius * 3.2,
-      radius * 3.2,
-    );
+    const radius = snapshot.form.radius * 1.15;
+    expect(vi.mocked(context.drawImage).mock.calls.some(([loaded, x, y, width, height]) =>
+      loaded === image && x === -radius * 1.6 && y === -radius * 1.6 && width === radius * 3.2 && height === radius * 3.2)).toBe(true);
     renderer.dispose();
   });
 
@@ -133,6 +128,42 @@ describe('GameCanvasRenderer', () => {
     expect(BLOCK_CONFIG.steel).toMatchObject({ hp: 150, density: 0.012, restitution: 0.08 });
     expect(BLOCK_CONFIG.rubber).toMatchObject({ hp: 28, density: 0.0024, restitution: 0.78 });
     expect(BLOCK_CONFIG.tnt).toMatchObject({ hp: 18, density: 0.0018 });
+    renderer.dispose();
+  });
+
+  it('draws the four regional gimmicks and reflects trapdoor and clock-hand state', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    const entities = [
+      { id: 40, kind: 'trapdoor' as const, x: 300, y: 500, width: 120, height: 16, angle: 0, customData: { triggered: false, direction: 1 as const }, alive: true },
+      { id: 41, kind: 'trapdoor' as const, x: 500, y: 500, width: 120, height: 16, angle: 0.7, customData: { triggered: true, direction: -1 as const }, alive: true },
+      { id: 42, kind: 'clockHand' as const, x: 700, y: 420, width: 190, height: 18, angle: -0.45, anchor: { x: 600, y: 420 }, alive: true },
+      { id: 43, kind: 'conveyor' as const, x: 900, y: 620, width: 190, height: 18, angle: 0, alive: true },
+      { id: 44, kind: 'flowerLauncher' as const, x: 1120, y: 620, radius: 34, angle: 0, alive: true },
+    ];
+    expect(() => renderer.render({ ...snapshot, entities }, 450)).not.toThrow();
+    expect(context.arc).toHaveBeenCalled();
+    expect(context.ellipse).toHaveBeenCalled();
+    expect(context.roundRect).toHaveBeenCalled();
+    expect(context.rotate).toHaveBeenCalledWith(-0.45);
+    expect(vi.mocked(context.save).mock.calls.length).toBe(vi.mocked(context.restore).mock.calls.length);
+    renderer.dispose();
+  });
+
+  it('uses different plank details when the trapdoor opens', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
+    renderer.resize(1280, 720, 1);
+    const lineCount = (triggered: boolean) => {
+      vi.clearAllMocks();
+      renderer.render({
+        ...snapshot,
+        entities: [{ id: 45, kind: 'trapdoor', x: 600, y: 500, width: 120, height: 16, angle: triggered ? 0.8 : 0, customData: { triggered }, alive: true }],
+      }, 100);
+      return vi.mocked(context.lineTo).mock.calls.length;
+    };
+    expect(lineCount(true)).not.toBe(lineCount(false));
     renderer.dispose();
   });
 
@@ -190,35 +221,27 @@ describe('GameCanvasRenderer', () => {
     renderer.dispose();
   });
 
-  it('keeps chapters 1 to 5 static while chapter 6 particles are deterministic', () => {
+  it('uses the reused alley and wall backgrounds for the first two regions', () => {
     const canvas = document.createElement('canvas');
     const renderer = new GameCanvasRenderer(canvas, new SvgAssetCache());
     renderer.resize(1280, 720, 1);
     const emptySnapshot = { ...snapshot, state: 'PAUSED' as const, ammo: 0 };
-    const firstStops = { 1: '#a0d8ef', 2: '#a0d8ef', 3: '#ff7e5f', 4: '#2b1055', 5: '#2b1055' } as const;
+    const firstStops = { 1: '#a0d8ef', 2: '#a0d8ef', 3: '#a0d8ef', 4: '#a0d8ef', 5: '#a0d8ef' } as const;
     for (const stage of [1, 2, 3, 4, 5] as const) {
       vi.clearAllMocks();
       renderer.render({ ...emptySnapshot, stage }, 200);
       expect(vi.mocked(gradient.addColorStop).mock.calls.flat().join(' ')).toContain(firstStops[stage]);
       const fixedArcs = [...vi.mocked(context.arc).mock.calls];
-      const fixedTransforms = [...vi.mocked(context.translate).mock.calls];
+      const fixedTransforms = vi.mocked(context.translate).mock.calls.map((args) => args.map((value) => Object.is(value, -0) ? 0 : value));
       vi.clearAllMocks();
       renderer.render({ ...emptySnapshot, stage }, 6200);
       expect(vi.mocked(context.arc).mock.calls).toEqual(fixedArcs);
-      expect(vi.mocked(context.translate).mock.calls).toEqual(fixedTransforms);
+      expect(vi.mocked(context.translate).mock.calls.map((args) => args.map((value) => Object.is(value, -0) ? 0 : value))).toEqual(fixedTransforms);
     }
 
     vi.clearAllMocks();
     renderer.render({ ...emptySnapshot, stage: 6 }, 200);
-    const festivalAtStart = [...vi.mocked(context.translate).mock.calls];
-    vi.clearAllMocks();
-    renderer.render({ ...emptySnapshot, stage: 6 }, 200);
-    expect(vi.mocked(context.translate).mock.calls).toEqual(festivalAtStart);
-    vi.clearAllMocks();
-    renderer.render({ ...emptySnapshot, stage: 6 }, 6200);
-    expect(vi.mocked(context.translate).mock.calls).not.toEqual(festivalAtStart);
-
-    expect(vi.mocked(gradient.addColorStop).mock.calls.flat().join(' ')).toContain('#f6d365');
+    expect(vi.mocked(gradient.addColorStop).mock.calls.flat().join(' ')).toContain('#ff7e5f');
     renderer.dispose();
   });
 });

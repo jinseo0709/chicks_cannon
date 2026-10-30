@@ -911,6 +911,10 @@ export class GameCanvasRenderer {
     else if (entity.kind === 'trampoline') this.drawTrampoline(entity);
     else if (entity.kind === 'boulder') this.drawBoulder(entity);
     else if (entity.kind === 'seesaw') this.drawSeesaw(entity);
+    else if (entity.kind === 'trapdoor') this.drawTrapdoor(entity);
+    else if (entity.kind === 'clockHand') this.drawClockHand(entity);
+    else if (entity.kind === 'conveyor') this.drawConveyor(entity, nowMs);
+    else if (entity.kind === 'flowerLauncher') this.drawFlowerLauncher(entity);
     if (entity.kind === 'block' && entity.slick) {
       ctx.strokeStyle = 'rgba(255, 239, 139, .9)';
       ctx.lineWidth = 3;
@@ -1560,6 +1564,139 @@ export class GameCanvasRenderer {
       }
     }
     ctx.restore();
+  }
+
+  private drawTrapdoor(entity: GameEntityView): void {
+    const ctx = this.context;
+    const width = entity.width ?? 120;
+    const height = entity.height ?? 16;
+    const hingeSide = entity.customData?.direction === -1 ? 1 : -1;
+    ctx.fillStyle = entity.customData?.triggered ? '#9b633b' : '#b97842';
+    ctx.strokeStyle = '#593b2c';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(-width / 2, -height / 2, width, height, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = '#e9bb70';
+    ctx.lineWidth = 2;
+    if (entity.customData?.triggered) {
+      ctx.beginPath();
+      ctx.moveTo(-width * 0.32, -height * 0.25);
+      ctx.lineTo(width * 0.28, height * 0.25);
+      ctx.moveTo(-width * 0.22, height * 0.28);
+      ctx.lineTo(width * 0.3, -height * 0.22);
+      ctx.stroke();
+    } else {
+      for (const x of [-width / 4, 0, width / 4]) {
+        ctx.beginPath();
+        ctx.moveTo(x, -height * 0.25);
+        ctx.lineTo(x, height * 0.25);
+        ctx.stroke();
+      }
+    }
+    ctx.fillStyle = '#f3d47f';
+    ctx.strokeStyle = '#63452d';
+    ctx.beginPath();
+    ctx.arc(hingeSide * width / 2, 0, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  private drawClockHand(entity: GameEntityView): void {
+    const ctx = this.context;
+    const width = entity.width ?? 180;
+    const height = entity.height ?? 18;
+    const dx = (entity.anchor?.x ?? entity.x - width / 2) - entity.x;
+    const dy = (entity.anchor?.y ?? entity.y) - entity.y;
+    const cosine = Math.cos(entity.angle);
+    const sine = Math.sin(entity.angle);
+    const pivotX = dx * cosine + dy * sine;
+    const pivotY = -dx * sine + dy * cosine;
+    ctx.fillStyle = '#b87b36';
+    ctx.strokeStyle = '#65422b';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(-width / 2, -height / 2, width, height, height / 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#f2cf76';
+    ctx.lineWidth = 2;
+    for (const x of [-width * 0.3, -width * 0.15, width * 0.15, width * 0.3]) {
+      ctx.beginPath();
+      ctx.moveTo(x, -height * 0.32);
+      ctx.lineTo(x, height * 0.32);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#f6d778';
+    ctx.strokeStyle = '#60452e';
+    ctx.beginPath();
+    ctx.arc(pivotX, pivotY, Math.max(9, height * 0.72), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  private drawConveyor(entity: GameEntityView, sceneTime: number): void {
+    const ctx = this.context;
+    const width = entity.width ?? 180;
+    const height = entity.height ?? 18;
+    ctx.fillStyle = '#384b55';
+    ctx.strokeStyle = '#172b34';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(-width / 2, -height / 2, width, height, 5);
+    ctx.fill();
+    ctx.stroke();
+    const spacing = 28;
+    const offset = (sceneTime / 45) % spacing;
+    ctx.strokeStyle = '#e7bc5e';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    for (let x = -width / 2 + 9 - offset; x < width / 2 - 4; x += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, -height * 0.22);
+      ctx.lineTo(x + 8, 0);
+      ctx.lineTo(x, height * 0.22);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#8da2a4';
+    for (const x of [-width / 2 + 8, width / 2 - 8]) {
+      ctx.beginPath();
+      ctx.arc(x, 0, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  private drawFlowerLauncher(entity: GameEntityView): void {
+    const ctx = this.context;
+    const radius = entity.radius ?? 30;
+    ctx.strokeStyle = '#47743b';
+    ctx.lineWidth = Math.max(4, radius * 0.16);
+    ctx.beginPath();
+    ctx.moveTo(0, radius * 0.2);
+    ctx.quadraticCurveTo(radius * 0.1, radius * 0.75, 0, radius * 1.2);
+    ctx.stroke();
+    ctx.fillStyle = '#78a947';
+    ctx.beginPath();
+    ctx.ellipse(0, radius * 1.12, radius * 0.85, radius * 0.24, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#efbf54';
+    ctx.strokeStyle = '#9b6939';
+    ctx.lineWidth = 2.5;
+    for (let index = 0; index < 5; index += 1) {
+      const angle = index * Math.PI * 2 / 5 - Math.PI / 2;
+      const x = Math.cos(angle) * radius * 0.55;
+      const y = Math.sin(angle) * radius * 0.55;
+      ctx.beginPath();
+      ctx.ellipse(x, y, radius * 0.31, radius * 0.22, angle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#8a5532';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
   }
 
   private drawFan(entity: GameEntityView, nowMs: number): void {

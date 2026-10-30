@@ -1,6 +1,6 @@
 # Task: T02 Render Regional Gimmicks
 
-## Status: pending
+## Status: done
 
 ## Goal
 Draw recognizable visual states for all four new gimmicks from engine snapshots, including trapdoor open/closed and moving clock-hand states, without adding image assets.
@@ -56,6 +56,6 @@ Task: T02-render-regional-gimmicks
 ```
 
 ## Progress
-- [ ] Implementation complete
-- [ ] Validation passed
+- [x] Implementation complete
+- [x] Validation passed
 - commit: pending
