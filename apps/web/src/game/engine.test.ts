@@ -59,7 +59,7 @@ describe('ChickCannonEngine', () => {
     harness.state = 'WON';
     harness.winElapsedMs = 0;
 
-    for (let frame = 0; frame < 53; frame += 1) engine.step(16.667);
+    for (let frame = 0; frame < 7; frame += 1) engine.step(16.667);
     expect(snapshot().state).toBe('WON');
     engine.step(16.667);
     expect(snapshot().state).toBe('EVOLUTION');
@@ -69,7 +69,7 @@ describe('ChickCannonEngine', () => {
     const { engine, harness, snapshot } = createEngine(5);
     harness.replayOnly = true;
     harness.state = 'WON';
-    harness.winElapsedMs = 850;
+    harness.winElapsedMs = 100;
 
     engine.step(33.333);
     engine.step(33.333);

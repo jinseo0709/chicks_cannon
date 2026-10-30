@@ -20,13 +20,6 @@ function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['d
 }
 
 describe('GameModal', () => {
-  it('shows the stage badge when the timed bonus challenge succeeds', () => {
-    const snapshot = { ...makeSnapshot('EVOLUTION', null, 2, 5), bonusChallengeStatus: 'success' as const };
-    render(<GameModal snapshot={snapshot} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
-    expect(document.querySelector('.challenge-badge')?.textContent).toContain(STAGES[5].bonusChallenge.badge);
-    expect(document.querySelector('.challenge-badge')?.textContent).toContain('+500점');
-  });
-
   it.each([1, 3, 5, 6, 10, 15] as const)('does not show a clear popup for stage %s', (stage) => {
     const snapshot = makeSnapshot('WON', null, 2, stage);
     const { container } = render(<GameModal snapshot={snapshot} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
@@ -50,6 +43,14 @@ describe('GameModal', () => {
   it('shows the region unlock popup at the end of a region', () => {
     render(<GameModal snapshot={makeSnapshot('EVOLUTION', null, 2, 5)} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
     expect(screen.getByRole('heading', { name: '새 지역이 열렸어요!' })).toBeTruthy();
+  });
+
+  it('keeps the reference route-opened layout for ordinary stage clears', () => {
+    render(<GameModal snapshot={makeSnapshot('EVOLUTION', null, 2, 3)} onRetry={vi.fn()} onNextStage={vi.fn()} onWorldMap={vi.fn()} />);
+    expect(screen.getByText('NEW ROUTE OPENED')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '다음 길이 열렸어요!' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '다음 스테이지' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '월드맵' })).toBeTruthy();
   });
 
   it('distinguishes an egg failure and an ammo failure and retries', () => {

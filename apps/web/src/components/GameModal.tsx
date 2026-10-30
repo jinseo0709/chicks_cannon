@@ -24,10 +24,9 @@ export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameMo
     return (
       <div className="overlay-backdrop">
         <section className="modal-card evolution-modal" role="dialog" aria-modal="true" aria-labelledby="evolution-title">
-          <p className="eyebrow">{regionUnlocked ? 'NEW REGION UNLOCKED' : 'STAGE CLEAR'}</p>
+          <p className="eyebrow">{regionUnlocked ? 'NEW REGION UNLOCKED' : evolved ? 'NEW EVOLUTION' : 'NEW ROUTE OPENED'}</p>
           <img className="evolution-avatar-image" src={assetUrl(`assets/chicks/stage-${form?.assetVariant ?? 1}.png`)} alt="" />
-          <h2 id="evolution-title">{regionUnlocked ? '새 지역이 열렸어요!' : evolved ? '새로운 모습으로 진화!' : '스테이지를 클리어했어요!'}</h2>
-          {snapshot.bonusChallengeStatus === 'success' && <div className="challenge-badge" role="status"><span aria-hidden="true">🏅</span> {STAGES[snapshot.stage].bonusChallenge.badge} 배지 · 시간 도전 +{STAGES[snapshot.stage].bonusChallenge.bonusScore}점</div>}
+          <h2 id="evolution-title">{regionUnlocked ? '새 지역이 열렸어요!' : evolved ? '새로운 모습으로 진화!' : '다음 길이 열렸어요!'}</h2>
           <h3>{form?.name}</h3>
           <p>{evolved && '새로운 모습으로 진화했어요! '}<strong>{form?.skillName}</strong> · {form?.skillDesc}</p>
           {reward && rewardKind && <div className="item-reward-card" role="status">
