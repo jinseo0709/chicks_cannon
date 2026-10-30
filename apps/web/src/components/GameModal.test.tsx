@@ -7,15 +7,15 @@ import type { GameSnapshot } from '../game/types';
 
 afterEach(cleanup);
 
-function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['defeatCause'] = null, stars: GameSnapshot['stageStars'] = 0): GameSnapshot {
+function makeSnapshot(state: GameSnapshot['state'], defeatCause: GameSnapshot['defeatCause'] = null, stars: GameSnapshot['stageStars'] = 0, stage: GameSnapshot['stage'] = 3): GameSnapshot {
   return {
-    screen: 'game', stage: 3, score: 4200, stageScore: 4200, scoreTarget: 6000, stageAmmo: 5, stageStars: stars, bonusChallengeRemainingMs: 80000, bonusChallengeStatus: 'ready',
+    screen: 'game', stage, score: 4200, stageScore: 4200, scoreTarget: 6000, stageAmmo: STAGES[stage].ammo, stageStars: stars, bonusChallengeRemainingMs: 80000, bonusChallengeStatus: 'ready',
     ammo: 0, campaignComplete: state === 'ENDING', state,
     items: { booster: 0, quake: 1, mega: 0, butter: 1, cushion: 0 }, eggCushionActive: false, finalRewardClaimed: false,
     muted: false, entities: [], aimPosition: null, megaNext: false,
     targetingItem: null, slickZones: [],
-    defeatCause, story: STAGES[3].story, form: CHICK_FORMS[3],
-    evolvedForm: state === 'EVOLUTION' ? CHICK_FORMS[4] : null,
+    defeatCause, story: STAGES[stage].story, form: CHICK_FORMS[stage],
+    evolvedForm: state === 'EVOLUTION' && stage < 20 ? CHICK_FORMS[(stage + 1) as keyof typeof CHICK_FORMS] : null,
   };
 }
 
@@ -32,6 +32,17 @@ describe('GameModal', () => {
     expect(screen.getByRole('img', { name: `Stage stars ${stars} of 3` })).toBeTruthy();
     expect(container.querySelectorAll('.clear-star.earned')).toHaveLength(stars);
     expect(container.querySelector('.clear-result')?.textContent).toBe('이번 판 점수 4,200점 · 별 3개 목표 6,000점');
+  });
+
+  it('uses stage-specific copy for regular clears and milestone copy only for region unlocks and the mid-boss', () => {
+    const props = { onRetry: vi.fn(), onNextStage: vi.fn(), onWorldMap: vi.fn() };
+    const { rerender } = render(<GameModal snapshot={makeSnapshot('WON', null, 2, 3)} {...props} />);
+    expect(screen.getByRole('heading', { name: STAGES[3].title })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: '길을 열었어요!' })).toBeNull();
+    rerender(<GameModal snapshot={makeSnapshot('WON', null, 2, 5)} {...props} />);
+    expect(screen.getByRole('heading', { name: '새 지역이 열렸어요!' })).toBeTruthy();
+    rerender(<GameModal snapshot={makeSnapshot('WON', null, 2, 6)} {...props} />);
+    expect(screen.getByRole('heading', { name: '중간 보스를 물리쳤어요!' })).toBeTruthy();
   });
 
   it('distinguishes an egg failure and an ammo failure and retries', () => {

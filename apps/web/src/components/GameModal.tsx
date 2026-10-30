@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { assetUrl } from '../asset-url';
 import type { GameSnapshot } from '../game/types';
 import { ITEM_INFO, MAX_ITEM_COUNT, STAGE_CLEAR_REWARDS } from '../game/items';
+import { REGIONS } from '../game/constants';
 import { STAGES } from '../game/stages';
 import { ItemIcon } from './ItemIcon';
 
@@ -15,6 +16,12 @@ export interface GameModalProps {
 export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameModalProps): JSX.Element | null {
   if (snapshot.state === 'WON') {
     if (STAGES[snapshot.stage].bossRole === 'final') return null;
+    const stage = STAGES[snapshot.stage];
+    const clearHeadline = stage.bossRole === 'mid'
+      ? '중간 보스를 물리쳤어요!'
+      : REGIONS[stage.region].lastStage === snapshot.stage
+        ? '새 지역이 열렸어요!'
+        : stage.title;
     return (
       <div className="overlay-backdrop clear-backdrop" role="status">
         <section className="clear-card">
@@ -30,7 +37,7 @@ export function GameModal({ snapshot, onRetry, onNextStage, onWorldMap }: GameMo
             </div>
             <p className="clear-result">이번 판 점수 {snapshot.stageScore.toLocaleString('ko-KR')}점 · 별 3개 목표 {snapshot.scoreTarget.toLocaleString('ko-KR')}점</p>
             {snapshot.bonusChallengeStatus === 'success' && <div className="challenge-badge" role="status"><span aria-hidden="true">🏅</span> {STAGES[snapshot.stage].bonusChallenge.badge} 배지 · 시간 도전 +{STAGES[snapshot.stage].bonusChallenge.bonusScore}점</div>}
-            <h2>길을 열었어요!</h2>
+            <h2>{clearHeadline}</h2>
             <p>둥지를 향한 다음 모험이 곧 시작돼요.</p>
           </div>
         </section>
