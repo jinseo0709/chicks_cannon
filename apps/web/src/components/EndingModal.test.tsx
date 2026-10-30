@@ -35,7 +35,7 @@ describe('EndingModal', () => {
     const chooseReward = screen.getByRole('button', { name: '알 쿠션 보상 선택, 현재 0개' });
     fireEvent.click(chooseReward);
     expect(onClaimReward).toHaveBeenCalledWith('cushion');
-    expect(screen.getByRole('button', { name: '순위 등록' }).hasAttribute('disabled')).toBe(false);
+    expect(screen.getByText('회사 계정 로그인을 설정하면 순위가 자동 등록됩니다.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '전체 순위' }));
     fireEvent.click(screen.getByRole('button', { name: '처음부터 다시' }));
     expect(fetcher).not.toHaveBeenCalled();

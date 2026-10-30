@@ -8,6 +8,10 @@ leaderboard rows contain only a player chosen nickname and an opaque ID derived
 from the tenant and user object ID; corporate email and display name are not
 stored or returned.
 
+The opening screen requires sign-in before entering the game. After the final
+campaign ending, the score is submitted automatically using the saved nickname,
+or the generic `병아리 모험가` nickname for a first-time player.
+
 ## Entra app registrations
 
 Create two registrations in the company's Entra tenant:
