@@ -7,16 +7,19 @@ export interface GuideScreenProps {
 
 export function GuideScreen({ onContinue }: GuideScreenProps): JSX.Element {
   return (
-    <section className="tutorial-screen" aria-labelledby="tutorial-title" style={{ backgroundImage: `linear-gradient(145deg, rgb(23 37 58 / 84%), rgb(54 43 41 / 78%)), url("${assetUrl('assets/backgrounds/stage-1.png')}")` }}>
+    <section className="tutorial-screen" aria-labelledby="tutorial-title" style={{ backgroundImage: `linear-gradient(180deg, rgb(255 239 196 / 12%), rgb(114 75 39 / 18%)), url("${assetUrl('assets/backgrounds/stage-1.png')}")` }}>
       <header className="tutorial-header">
-        <p className="eyebrow">CHICKS CANNON · FIELD GUIDE</p>
-        <h1 id="tutorial-title">첫 모험 가이드</h1>
-        <p>조작법과 별을 얻는 방법을 확인하고 황금알을 되찾으러 가요.</p>
+        <div className="tutorial-heading-copy">
+          <p className="eyebrow">CHICKS CANNON · FIELD GUIDE</p>
+          <h1 id="tutorial-title">첫 모험 가이드</h1>
+          <p>조작법과 별을 얻는 방법을 확인하고 황금알을 되찾으러 가요.</p>
+        </div>
+        <img className="tutorial-mascot" src={assetUrl('assets/chicks/stage-1.png')} alt="모험을 안내하는 아기 병아리" />
       </header>
 
       <div className="tutorial-card-grid">
         <article className="tutorial-card">
-          <span className="tutorial-card-icon" aria-hidden="true">🏹</span>
+          <span className="tutorial-card-icon"><img src={assetUrl('assets/props/slingshot.png')} alt="" /></span>
           <h2>조준하고 발사하기</h2>
           <ul>
             <li>병아리를 뒤로 끌어당겨 조준하고 놓으면 발사돼요.</li>
@@ -26,7 +29,7 @@ export function GuideScreen({ onContinue }: GuideScreenProps): JSX.Element {
         </article>
 
         <article className="tutorial-card">
-          <span className="tutorial-card-icon" aria-hidden="true">🐱</span>
+          <span className="tutorial-card-icon"><img src={assetUrl('assets/cats/normal.png')} alt="" /></span>
           <h2>목표와 기믹</h2>
           <ul>
             <li>모든 고양이를 처치하면 스테이지를 클리어해요.</li>
@@ -36,7 +39,7 @@ export function GuideScreen({ onContinue }: GuideScreenProps): JSX.Element {
         </article>
 
         <article className="tutorial-card">
-          <span className="tutorial-card-icon" aria-hidden="true">✨</span>
+          <span className="tutorial-card-icon"><img src={assetUrl('assets/chicks/stage-1.png')} alt="" /></span>
           <h2>특수 능력과 아이템</h2>
           <ul>
             <li>비행 중 <kbd>Space</kbd> 또는 화면을 눌러 병아리 능력을 사용해요. 고양이 가까이에서만 발동해요.</li>
@@ -48,7 +51,7 @@ export function GuideScreen({ onContinue }: GuideScreenProps): JSX.Element {
 
       <section className="tutorial-stars" aria-labelledby="tutorial-stars-title">
         <div className="tutorial-stars-heading">
-          <span aria-hidden="true">⭐</span>
+          <span className="tutorial-star-coin" aria-hidden="true">★</span>
           <div>
             <h2 id="tutorial-stars-title">별은 이렇게 모아요</h2>
             <p>스테이지마다 점수 목표가 달라요. 플레이 중 상단의 별 진행 막대에서 확인할 수 있어요.</p>
