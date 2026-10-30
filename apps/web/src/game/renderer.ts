@@ -1,6 +1,6 @@
 import { BLOCK_CONFIG, CHICK_FORMS, WORLD } from './constants';
 import { STAGES } from './stages';
-import { SvgAssetCache } from './asset-cache';
+import { stageBackgroundAssetId, SvgAssetCache } from './asset-cache';
 import type { GameEntityView, GameSnapshot, Point } from './types';
 
 export class GameCanvasRenderer {
@@ -340,7 +340,7 @@ export class GameCanvasRenderer {
   private drawBackground(stage: GameSnapshot['stage'], sceneTime: number): void {
     const ctx = this.context;
     ctx.save();
-    const image = this.assets.get(`background-${stage}`);
+    const image = this.assets.get(stageBackgroundAssetId(stage));
     if (image) {
       ctx.drawImage(image, 0, 0, WORLD.width, WORLD.height);
       if (stage === 6) this.drawFestivalParticles(sceneTime);

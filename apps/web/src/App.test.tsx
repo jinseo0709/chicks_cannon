@@ -42,7 +42,7 @@ describe('App navigation and campaign entry', () => {
     expect(screen.getByRole('heading', { name: '병아리 대포' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '모험 계속하기' }));
     fireEvent.click(screen.getByRole('button', { name: '출발하기' }));
-    expect(screen.getByRole('dialog', { name: '골목대장 길고양이' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: '골목대장 고양이' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '도전 시작' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '도전 시작' }));
     expect(screen.getByRole('region', { name: '게임 정보' })).toBeTruthy();

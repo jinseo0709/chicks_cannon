@@ -1,85 +1,71 @@
 import { describe, expect, it } from 'vitest';
-import { STAGES } from './stages';
+import { CHICK_FORMS, REGIONS, STAGE_ORDER, STAGE_SCORE_TARGETS } from './constants';
 import { ChickCannonEngine } from './engine';
-import { CHICK_FORMS, STAGE_ORDER } from './constants';
+import { STAGES } from './stages';
 import type { GameStage } from './types';
 
 describe('campaign stage data', () => {
-  it('contains six distinct destinations with their ammunition and shared chick forms', () => {
-    expect(Object.keys(STAGES)).toHaveLength(6);
-    expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([6, 6, 5, 5, 4, 5]);
-    expect(new Set(Object.values(STAGES).map((stage) => stage.theme)).size).toBe(6);
-    expect(STAGE_ORDER.map((stage) => CHICK_FORMS[stage].formId)).toEqual(['baby', 'baby', 'breeze', 'breeze', 'fighter', 'golden']);
+  it('contains twenty ordered stages grouped into four five-stage regions', () => {
+    expect(Object.keys(STAGES)).toHaveLength(20);
+    expect(STAGE_ORDER).toEqual(Array.from({ length: 20 }, (_, index) => index + 1));
+    expect(Object.values(REGIONS).map(({ firstStage, lastStage }) => [firstStage, lastStage])).toEqual([[1, 5], [6, 10], [11, 15], [16, 20]]);
+    expect(STAGE_ORDER.map((stage) => STAGES[stage].region)).toEqual([
+      1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4,
+    ]);
   });
 
-  it('increases the block puzzle in the opening and final combo stages without reducing the existing ammo curve', () => {
-    const blockCounts = STAGE_ORDER.map((stage) => STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block').length);
-    expect(blockCounts).toEqual([12, 18, 18, 18, 30, 31]);
-    expect(blockCounts[1]).toBeGreaterThan(blockCounts[0]);
-    expect(blockCounts[2]).toBeGreaterThanOrEqual(blockCounts[1]);
-    expect(blockCounts[4]).toBeGreaterThan(blockCounts[2]);
-    expect(blockCounts[5]).toBeGreaterThan(blockCounts[4]);
-    expect(STAGE_ORDER.map((stage) => STAGES[stage].ammo)).toEqual([6, 6, 5, 5, 4, 5]);
+  it('keeps chick forms fixed within each region and score targets rising', () => {
+    expect(STAGE_ORDER.map((stage) => CHICK_FORMS[stage].formId)).toEqual([
+      'baby', 'baby', 'baby', 'baby', 'baby',
+      'breeze', 'breeze', 'breeze', 'breeze', 'breeze',
+      'fighter', 'fighter', 'fighter', 'fighter', 'fighter',
+      'golden', 'golden', 'golden', 'golden', 'golden',
+    ]);
+    expect(STAGE_ORDER.map((stage) => STAGE_SCORE_TARGETS[stage])).toEqual([
+      3600, 3900, 4200, 4500, 4800, 5100, 5400, 5700, 6000, 6300,
+      6600, 6900, 7200, 7500, 7800, 8100, 8400, 8700, 9000, 10000,
+    ]);
+    expect(STAGE_ORDER.slice(1).every((stage, index) => STAGE_SCORE_TARGETS[stage] > STAGE_SCORE_TARGETS[STAGE_ORDER[index]])).toBe(true);
   });
 
-  it('uses a rising staircase, higher upper structure, and both new materials in later stages', () => {
-    const stairs = STAGES[3].spawns.filter((spawn) => spawn.kind === 'block' && [580, 645, 710].includes(spawn.x));
-    expect(stairs.filter((spawn) => spawn.w === 24).map((spawn) => spawn.y)).toEqual([620, 570, 520]);
-    expect(stairs.filter((spawn) => spawn.h === 24).map((spawn) => spawn.y)).toEqual([558, 458, 358]);
-    const highestStageSixBlock = Math.min(...STAGES[6].spawns.filter((spawn) => spawn.kind === 'block').map((spawn) => spawn.y - (spawn.h ?? 0) / 2));
-    expect(highestStageSixBlock).toBe(212);
-    for (const stage of [3, 4, 5, 6] as const) {
-      const materials = STAGES[stage].spawns.filter((spawn) => spawn.kind === 'block').map((spawn) => spawn.material);
-      expect(materials).toContain('steel');
-      expect(materials).toContain('rubber');
-    }
-    for (const stage of [2, 4, 5] as const) {
-      const terraceLevels = STAGES[stage].spawns
-        .filter((spawn) => spawn.kind === 'block' && (spawn.w ?? 0) >= 90 && (spawn.h ?? 0) <= 24)
-        .map((spawn) => spawn.y)
-        .sort((a, b) => a - b);
-      expect(new Set(terraceLevels).size, `stage ${stage} should have distinct raised terraces`).toBeGreaterThanOrEqual(3);
-    }
+  it('keeps the stage-6 mid-boss and reserves the final boss for stage 20', () => {
+    expect(STAGES[6].bossRole).toBe('mid');
+    expect(STAGES[6].spawns.some((spawn) => spawn.kind === 'cat' && spawn.boss)).toBe(true);
+    expect(STAGES[20].bossRole).toBe('final');
+    expect(STAGES[20].spawns.some((spawn) => spawn.kind === 'cat' && spawn.boss)).toBe(true);
+    expect(STAGE_ORDER.filter((stage) => STAGES[stage].bossRole)).toEqual([6, 20]);
   });
 
-  it('keeps all required special objects and protected targets in the campaign', () => {
-    const allSpawns = Object.values(STAGES).flatMap((stage) => stage.spawns);
-    expect(allSpawns.some((spawn) => spawn.kind === 'fan')).toBe(true);
-    expect(allSpawns.some((spawn) => spawn.kind === 'shutter')).toBe(true);
-    expect(allSpawns.some((spawn) => spawn.kind === 'tire')).toBe(true);
-    expect(allSpawns.some((spawn) => spawn.kind === 'gear')).toBe(true);
-    expect(allSpawns.some((spawn) => spawn.kind === 'chandelier')).toBe(true);
-    expect(allSpawns.some((spawn) => spawn.kind === 'egg')).toBe(true);
-    expect(allSpawns.some((spawn) => spawn.kind === 'cat' && spawn.shield)).toBe(true);
-    expect(allSpawns.some((spawn) => spawn.kind === 'block' && spawn.material === 'tnt')).toBe(true);
-  });
-
-  it.each(STAGE_ORDER)('keeps level %s stable for two seconds before the first shot', (stage) => {
-    const engine = new ChickCannonEngine(() => undefined);
-    const harness = engine as unknown as { stage: GameStage; loadStage(stage: GameStage): void; publish(): void };
-    try {
-      harness.stage = stage;
-      harness.loadStage(stage);
-      engine.dismissDialogue();
-      for (let frame = 0; frame < 120; frame += 1) engine.step(16.667);
-      const current = engine.getSnapshot();
-      expect(current.state).toBe('AIMING');
-      expect(current.score).toBe(0);
-      expect(current.entities.filter((entity) => entity.kind === 'egg')).toHaveLength(STAGES[stage].spawns.filter((spec) => spec.kind === 'egg').length);
-      expect(current.entities.filter((entity) => entity.kind === 'chandelier').every((entity) => entity.attached)).toBe(true);
-      expect(current.entities.filter((entity) => entity.material === 'tnt')).toHaveLength(STAGES[stage].spawns.filter((spec) => spec.material === 'tnt').length);
-    } finally {
-      engine.dispose();
+  it('assigns the six reused backgrounds and each region signature gimmick', () => {
+    const themes = STAGE_ORDER.map((stage) => STAGES[stage].theme);
+    expect(themes.slice(0, 3)).toEqual(['alley-day', 'alley-day', 'alley-day']);
+    expect(themes.slice(3, 5)).toEqual(['wall-afternoon', 'wall-afternoon']);
+    expect(themes.slice(5, 8)).toEqual(['rooftop-sunset', 'rooftop-sunset', 'rooftop-sunset']);
+    expect(themes.slice(8, 10)).toEqual(['clock-twilight', 'clock-twilight']);
+    expect(themes.slice(10, 15).every((theme) => theme === 'factory-night')).toBe(true);
+    expect(themes.slice(15).every((theme) => theme === 'meadow-gold')).toBe(true);
+    const regionalGimmicks = [
+      [1, 'trapdoor', [3, 5]], [2, 'clockHand', [8, 9, 10]],
+      [3, 'conveyor', [11, 12, 13, 14, 15]], [4, 'flowerLauncher', [16, 17, 18, 19, 20]],
+    ] as const;
+    for (const [region, gimmick, stages] of regionalGimmicks) {
+      expect(REGIONS[region].gimmick).toBe(gimmick);
+      for (const stage of stages) expect(STAGES[stage].spawns.some((spawn) => spawn.kind === gimmick)).toBe(true);
     }
   });
 
-  it('uses complete story and coordinate data for every chapter', () => {
-    for (const stage of Object.values(STAGES)) {
+  it('contains complete authored story, routes, challenge, and in-bounds spawn data', () => {
+    for (const stageNumber of STAGE_ORDER) {
+      const stage = STAGES[stageNumber];
+      expect(stage.stage).toBe(stageNumber);
       expect(stage.title.length).toBeGreaterThan(0);
       expect(stage.story.speaker.length).toBeGreaterThan(0);
       expect(stage.story.text.length).toBeGreaterThan(0);
       expect(stage.story.chickReply.length).toBeGreaterThan(0);
       expect(stage.story.instruction.length).toBeGreaterThan(0);
+      expect(stage.bonusChallenge.timeLimitMs).toBeGreaterThan(0);
+      expect(stage.bonusChallenge.bonusScore).toBeGreaterThan(0);
+      expect(stage.bonusChallenge.badge.length).toBeGreaterThan(0);
       expect(stage.spawns.length).toBeGreaterThan(0);
       expect(stage.attackRoutes).toHaveLength(2);
       expect(new Set(stage.attackRoutes.map((route) => route.name)).size).toBe(2);
@@ -92,28 +78,30 @@ describe('campaign stage data', () => {
       for (const spawn of stage.spawns) {
         expect(Number.isFinite(spawn.x)).toBe(true);
         expect(Number.isFinite(spawn.y)).toBe(true);
+        expect(spawn.x).toBeGreaterThanOrEqual(0);
+        expect(spawn.x).toBeLessThanOrEqual(1280);
+        expect(spawn.y).toBeGreaterThanOrEqual(0);
+        expect(spawn.y).toBeLessThanOrEqual(720);
       }
     }
   });
 
-  it.each([
-    [1, 'block'], [2, 'cat'], [3, 'fan'], [4, 'shutter'], [5, 'tnt'], [6, 'boss'],
-  ] as const)('teaches the primary mechanic in stage %s', (stageNumber, mechanic) => {
-    const spawns = STAGES[stageNumber].spawns;
-    expect(spawns.some((spawn) => {
-      if (mechanic === 'block') return spawn.kind === 'block';
-      if (mechanic === 'cat') return spawn.kind === 'cat' && (spawn.shieldLayers ?? 0) > 0;
-      if (mechanic === 'tnt') return spawn.kind === 'block' && spawn.material === 'tnt';
-      if (mechanic === 'boss') return spawn.kind === 'cat' && spawn.boss;
-      return spawn.kind === mechanic;
-    })).toBe(true);
-  });
-
-  it('keeps the fan and shutter as separate lessons and reserves secondary hazards for later stages', () => {
-    expect(STAGES[3].spawns.some((spawn) => spawn.kind === 'fan')).toBe(true);
-    expect(STAGES[3].spawns.some((spawn) => spawn.kind === 'shutter')).toBe(false);
-    expect(STAGES[4].spawns.some((spawn) => spawn.kind === 'shutter')).toBe(true);
-    expect(STAGES[4].spawns.some((spawn) => spawn.kind === 'tire')).toBe(true);
-    expect(STAGES[2].spawns.some((spawn) => spawn.kind === 'tire')).toBe(false);
+  it.each(STAGE_ORDER)('keeps stage %s stable for two seconds before the first shot', (stage) => {
+    const engine = new ChickCannonEngine(() => undefined);
+    const harness = engine as unknown as { stage: GameStage; loadStage(stage: GameStage): void };
+    try {
+      harness.stage = stage;
+      harness.loadStage(stage);
+      engine.dismissDialogue();
+      for (let frame = 0; frame < 120; frame += 1) engine.step(16.667);
+      const snapshot = engine.getSnapshot();
+      expect(snapshot.state).toBe('AIMING');
+      expect(snapshot.score).toBe(0);
+      expect(snapshot.scoreTarget).toBe(STAGE_SCORE_TARGETS[stage]);
+      expect(snapshot.entities.filter((entity) => entity.kind === 'egg')).toHaveLength(STAGES[stage].spawns.filter((spec) => spec.kind === 'egg').length);
+      expect(snapshot.entities.filter((entity) => entity.kind === 'chandelier').every((entity) => entity.attached)).toBe(true);
+    } finally {
+      engine.dispose();
+    }
   });
 });

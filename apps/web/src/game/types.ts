@@ -1,4 +1,5 @@
-export type GameStage = 1 | 2 | 3 | 4 | 5 | 6;
+export type GameStage = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20;
+export type RegionId = 1 | 2 | 3 | 4;
 export type ChickFormId = 'baby' | 'breeze' | 'fighter' | 'golden';
 export type SkillKind = 'shell' | 'boost' | 'meteor' | 'feathers';
 export type SceneTheme = 'alley-day' | 'wall-afternoon' | 'rooftop-sunset' | 'clock-twilight' | 'factory-night' | 'meadow-gold';
@@ -17,7 +18,7 @@ export type GameState =
   | 'ENDING';
 
 export type BlockKind = 'wood' | 'stone' | 'glass' | 'steel' | 'rubber' | 'tnt';
-export type GimmickKind = 'fan' | 'trampoline' | 'boulder' | 'shutter' | 'tire' | 'gear' | 'chandelier' | 'seesaw';
+export type GimmickKind = 'fan' | 'trampoline' | 'boulder' | 'shutter' | 'tire' | 'gear' | 'chandelier' | 'seesaw' | 'trapdoor' | 'clockHand' | 'conveyor' | 'flowerLauncher';
 export type ItemKind = 'booster' | 'quake' | 'mega' | 'butter' | 'cushion';
 
 export interface SlickZone { id: number; x: number; width: number; }
@@ -66,6 +67,7 @@ export interface SpawnSpec {
   forceX?: number;
   forceY?: number;
   armed?: boolean;
+  triggerImpact?: number;
 }
 
 export interface AttackRoute {
@@ -76,6 +78,8 @@ export interface AttackRoute {
 
 export interface StageDefinition {
   stage: GameStage;
+  region: RegionId;
+  bossRole?: 'mid' | 'final';
   theme: SceneTheme;
   title: string;
   ammo: number;

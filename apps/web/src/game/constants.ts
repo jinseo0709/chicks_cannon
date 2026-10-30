@@ -1,4 +1,4 @@
-import type { BlockKind, ChickForm, ChickFormId, GameStage, Point } from './types';
+import type { BlockKind, ChickForm, ChickFormId, GameStage, GimmickKind, Point, RegionId, SceneTheme } from './types';
 
 export const WORLD = {
   width: 1280,
@@ -10,15 +10,30 @@ export const WORLD = {
   gravityY: 1.05,
 } as const;
 
-export const STAGE_ORDER: readonly GameStage[] = [1, 2, 3, 4, 5, 6];
+export const REGION_ORDER: readonly RegionId[] = [1, 2, 3, 4];
+export const REGIONS: Readonly<Record<RegionId, {
+  id: RegionId;
+  title: string;
+  firstStage: GameStage;
+  lastStage: GameStage;
+  theme: SceneTheme;
+  backgroundStage: 1 | 2 | 3 | 4 | 5 | 6;
+  formId: ChickFormId;
+  gimmick: GimmickKind;
+}>> = {
+  1: { id: 1, title: '골목과 성벽', firstStage: 1, lastStage: 5, theme: 'alley-day', backgroundStage: 1, formId: 'baby', gimmick: 'trapdoor' },
+  2: { id: 2, title: '지붕과 시계탑', firstStage: 6, lastStage: 10, theme: 'rooftop-sunset', backgroundStage: 3, formId: 'breeze', gimmick: 'clockHand' },
+  3: { id: 3, title: '기계 공장', firstStage: 11, lastStage: 15, theme: 'factory-night', backgroundStage: 5, formId: 'fighter', gimmick: 'conveyor' },
+  4: { id: 4, title: '황금 초원', firstStage: 16, lastStage: 20, theme: 'meadow-gold', backgroundStage: 6, formId: 'golden', gimmick: 'flowerLauncher' },
+};
+
+export const STAGE_ORDER: readonly GameStage[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 export const LAST_STAGE: GameStage = STAGE_ORDER[STAGE_ORDER.length - 1];
 export const STAGE_SCORE_TARGETS: Readonly<Record<GameStage, number>> = {
-  1: 3600,
-  2: 5000,
-  3: 6000,
-  4: 6500,
-  5: 7000,
-  6: 8000,
+  1: 3600, 2: 3900, 3: 4200, 4: 4500, 5: 4800,
+  6: 5100, 7: 5400, 8: 5700, 9: 6000, 10: 6300,
+  11: 6600, 12: 6900, 13: 7200, 14: 7500, 15: 7800,
+  16: 8100, 17: 8400, 18: 8700, 19: 9000, 20: 10000,
 };
 
 const FORM_DEFINITIONS: Readonly<Record<ChickFormId, Omit<ChickForm, 'stage'>>> = {
@@ -81,7 +96,10 @@ const FORM_DEFINITIONS: Readonly<Record<ChickFormId, Omit<ChickForm, 'stage'>>> 
 };
 
 const STAGE_FORMS: Readonly<Record<GameStage, ChickFormId>> = {
-  1: 'baby', 2: 'baby', 3: 'breeze', 4: 'breeze', 5: 'fighter', 6: 'golden',
+  1: 'baby', 2: 'baby', 3: 'baby', 4: 'baby', 5: 'baby',
+  6: 'breeze', 7: 'breeze', 8: 'breeze', 9: 'breeze', 10: 'breeze',
+  11: 'fighter', 12: 'fighter', 13: 'fighter', 14: 'fighter', 15: 'fighter',
+  16: 'golden', 17: 'golden', 18: 'golden', 19: 'golden', 20: 'golden',
 };
 
 export const CHICK_FORMS = Object.fromEntries(STAGE_ORDER.map((stage) => [

@@ -5,14 +5,14 @@ import { STAGES } from '../game/stages';
 import type { GameStage } from '../game/types';
 import type { CampaignProgress } from '../game/progress';
 
-const NODE_POSITIONS: Readonly<Record<GameStage, { left: number; top: number }>> = {
-  1: { left: 24.5, top: 76 },
-  2: { left: 28.3, top: 48.5 },
-  3: { left: 45.2, top: 30.5 },
-  4: { left: 71.3, top: 43.5 },
-  5: { left: 83.2, top: 33.4 },
-  6: { left: 91.4, top: 15.3 },
-};
+const NODE_POSITIONS: Readonly<Record<GameStage, { left: number; top: number }>> = Object.fromEntries(
+  STAGE_ORDER.map((stage, index) => {
+    const row = Math.floor(index / 5);
+    const column = index % 5;
+    const position = row % 2 === 0 ? column : 4 - column;
+    return [stage, { left: 14 + position * 18, top: 20 + row * 19 }];
+  }),
+) as Readonly<Record<GameStage, { left: number; top: number }>>;
 
 export interface WorldMapScreenProps {
   completedStages: readonly GameStage[];

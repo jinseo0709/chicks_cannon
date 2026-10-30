@@ -1,4 +1,4 @@
-import { CHICK_FORMS } from './constants';
+import { CHICK_FORMS, REGIONS } from './constants';
 import { assetUrl } from '../asset-url';
 import type { GameStage } from './types';
 
@@ -110,8 +110,11 @@ export class SvgAssetCache {
   }
 }
 
+export const stageBackgroundAssetId = (stage: GameStage): AssetId =>
+  `background-${REGIONS[Math.ceil(stage / 5) as 1 | 2 | 3 | 4].backgroundStage}`;
+
 export const stageAssetIds = (stage: GameStage): readonly AssetId[] => [
-  `background-${stage}`,
+  stageBackgroundAssetId(stage),
   `chick-${CHICK_FORMS[stage].assetVariant}`,
   'chick-1-blink',
   'cat-normal',

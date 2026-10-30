@@ -1,191 +1,348 @@
 import type { BlockKind, GameStage, SpawnSpec, StageDefinition } from './types';
 
-const block = (x: number, y: number, w: number, h: number, material: BlockKind): SpawnSpec =>
+const block = (x: number, y: number, w: number, h: number, material: BlockKind = 'wood'): SpawnSpec =>
   ({ kind: 'block', x, y, w, h, material });
-const cat = (x: number, y: number, radius: number, shieldLayers = 0, boss = false, hp?: number): SpawnSpec =>
+const cat = (x: number, y: number, radius = 24, shieldLayers = 0, boss = false, hp?: number): SpawnSpec =>
   ({ kind: 'cat', x, y, radius, shieldLayers, shield: shieldLayers > 0, boss, hp });
 
+interface FortOptions {
+  centerX?: number;
+  deckY?: number;
+  width?: number;
+  baseMaterial?: BlockKind;
+  deckMaterial?: BlockKind;
+  lowerCats?: number;
+  upperCat?: boolean;
+  shieldLayers?: number;
+  upperShieldLayers?: number;
+  upperMaterial?: BlockKind;
+  extraTop?: boolean;
+}
+
+/** A deterministic, reusable fort footprint; each stage adds a distinct layout mechanic. */
+function fort(options: FortOptions = {}): SpawnSpec[] {
+  const centerX = options.centerX ?? 920;
+  const deckY = options.deckY ?? 558;
+  const width = options.width ?? 190;
+  const supportWidth = 28;
+  const material = options.baseMaterial ?? 'wood';
+  const deckMaterial = options.deckMaterial ?? 'wood';
+  const leftX = centerX - width / 2 + supportWidth / 2;
+  const rightX = centerX + width / 2 - supportWidth / 2;
+  const lowerY = deckY + 62;
+  const result: SpawnSpec[] = [
+    block(leftX, lowerY, supportWidth, 100, material),
+    block(rightX, lowerY, supportWidth, 100, material),
+    block(centerX, deckY, width, 22, deckMaterial),
+  ];
+  const count = options.lowerCats ?? 1;
+  for (let index = 0; index < count; index += 1) {
+    const x = count === 1 ? centerX : centerX - width * 0.28 + index * (width * 0.56 / (count - 1));
+    result.push(cat(x, deckY - 34, 23, options.shieldLayers ?? 0));
+  }
+  const upperY = deckY - 104;
+  const upperSupportY = upperY + 51;
+  result.push(
+    block(centerX - 45, upperSupportY, 24, 74, options.upperMaterial ?? 'wood'),
+    block(centerX + 45, upperSupportY, 24, 74, options.upperMaterial ?? 'wood'),
+    block(centerX, upperY, 112, 20, options.upperMaterial ?? 'glass'),
+  );
+  if (options.upperCat) result.push(cat(centerX, upperY - 34, 23, options.upperShieldLayers ?? 0));
+  if (options.extraTop) {
+    result.push(
+      block(centerX - 34, upperY - 64, 18, 54, 'stone'),
+      block(centerX + 34, upperY - 64, 18, 54, 'stone'),
+      block(centerX, upperY - 92, 86, 18, 'rubber'),
+    );
+  }
+  return result;
+}
+
+type StageContent = Omit<StageDefinition, 'stage' | 'region'> & { region: 1 | 2 | 3 | 4 };
+
+function makeStage(stage: GameStage, content: StageContent): StageDefinition {
+  return { stage, ...content };
+}
+
 export const STAGES: Readonly<Record<GameStage, StageDefinition>> = {
-  1: {
-    stage: 1, title: '골목길 입구', theme: 'alley-day', ammo: 6, bonusChallenge: { timeLimitMs: 50000, bonusScore: 500, badge: '첫 돌파' },
+  1: makeStage(1, {
+    region: 1, theme: 'alley-day', title: '골목의 첫 발사', ammo: 6,
+    bonusChallenge: { timeLimitMs: 35000, bonusScore: 300, badge: '첫 출발' },
     attackRoutes: [
-      { name: '낮은 목재 받침', hint: '왼쪽 받침을 끊어 아래층부터 무너뜨리기', target: { x: 785, y: 620 } },
-      { name: '오른쪽 유리 선반', hint: '높은 유리 선반을 깨서 위층을 떨어뜨리기', target: { x: 1050, y: 574 } },
+      { name: '낮은 나무 받침', hint: '낮은 받침을 맞혀 골목 요새를 무너뜨리기', target: { x: 825, y: 620 } },
+      { name: '유리 선반', hint: '위쪽 유리 선반을 깨고 고양이에게 떨어뜨리기', target: { x: 920, y: 454 } },
     ],
-    story: {
-      speaker: '골목대장 길고양이', avatar: '🐱',
-      text: '이 둥지는 이제 내 낮잠 자리다냥!', chickReply: '둥지를 돌려줘 삐약!',
-      instruction: '\uB098\uBB34 \uC9C0\uC9C0\uB300\uB97C \uBB34\uB108\uB728\uB9AC\uBA74 \uC694\uC0C8\uB3C4 \uD754\uB4E4\uB824\uC694.',
-    },
-    spawns: [
-      block(785, 620, 26, 100, 'wood'), block(925, 620, 26, 100, 'wood'),
-      block(855, 558, 230, 22, 'wood'), cat(780, 524, 22), cat(930, 524, 22),
-      block(815, 510, 24, 74, 'wood'), block(895, 510, 24, 74, 'wood'),
-      block(855, 466, 122, 20, 'glass'),
-      block(825, 411, 24, 90, 'wood'), block(885, 411, 24, 90, 'wood'),
-      block(855, 356, 122, 20, 'wood'), cat(855, 322, 22),
-      block(800, 338, 56, 16, 'glass'), block(910, 338, 56, 16, 'glass'),
-      block(710, 646, 48, 48, 'wood'), block(710, 608, 64, 18, 'glass'),
-      block(1000, 625, 26, 90, 'wood'), block(1100, 625, 26, 90, 'wood'),
-      block(1050, 574, 142, 22, 'wood'), cat(1050, 540, 22),
-      block(1018, 513, 22, 100, 'wood'), block(1082, 513, 22, 100, 'wood'),
-      block(1050, 466, 118, 20, 'glass'), cat(1050, 432, 22),
-    ],
-  },
-  2: {
-    stage: 2, title: '도둑고양이 담장', theme: 'wall-afternoon', ammo: 6, bonusChallenge: { timeLimitMs: 60000, bonusScore: 600, badge: '방패 무력화' },
+    story: { speaker: '골목대장 고양이', avatar: '🐱', text: '이 둥지는 이제 내 낮잠 자리다냥!', chickReply: '첫 발부터 제대로 보여 줄게, 삐약!', instruction: '나무 받침이나 유리 선반을 맞혀 요새를 무너뜨려요.' },
+    spawns: [...fort({ lowerCats: 1, upperCat: false }), { kind: 'egg', x: 1190, y: 650 }],
+  }),
+  2: makeStage(2, {
+    region: 1, theme: 'alley-day', title: '빨랫줄 골목', ammo: 6,
+    bonusChallenge: { timeLimitMs: 38000, bonusScore: 350, badge: '빨랫줄 돌파' },
     attackRoutes: [
-      { name: '왼쪽 계단 탑', hint: '계단 탑을 타고 방패 뒤쪽을 노리기', target: { x: 630, y: 570 } },
-      { name: '요새 윗층', hint: '윗층 목재 받침을 끊어 방패 고양이에게 낙하시키기', target: { x: 700, y: 358 } },
+      { name: '왼쪽 계단 받침', hint: '왼쪽 받침을 끊어 방패 고양이 뒤로 들어가기', target: { x: 825, y: 620 } },
+      { name: '윗층 유리판', hint: '유리판을 깨 위층을 아래로 떨어뜨리기', target: { x: 920, y: 454 } },
     ],
-    story: {
-      speaker: '담장 경비 고양이', avatar: '😼',
-      text: '방패 고양이를 정면에서 뚫어 보라냥!', chickReply: '튕겨서 뒤쪽을 노릴 거야!',
-      instruction: '\uBC29\uD328\uB294 \uC815\uBA74 \uCDA9\uB3CC\uB85C \uD55C \uACB9\uC529 \uBCA7\uACA8 \uBCF4\uC138\uC694.',
-    },
+    story: { speaker: '빨랫줄 경비 고양이', avatar: '😼', text: '빨랫줄 골목은 한 발도 못 지나간다냥!', chickReply: '그럼 위와 아래를 동시에 흔들겠어!', instruction: '단단한 받침 대신 얇은 유리판을 노려 보세요.' },
     spawns: [
-      block(760, 620, 28, 100, 'stone'), block(890, 620, 26, 100, 'wood'),
-      block(825, 558, 174, 22, 'wood'), cat(790, 523, 24), cat(860, 523, 25, 1),
-      block(790, 510, 24, 74, 'wood'), block(860, 510, 24, 74, 'stone'),
-      block(825, 466, 112, 20, 'glass'), cat(825, 432, 24, 1),
-      // Three connected terraces rise into the main shield fort.
-      block(560, 620, 24, 100, 'stone'), block(560, 558, 120, 20, 'wood'), cat(560, 524, 22),
-      block(630, 570, 24, 200, 'steel'), block(630, 458, 120, 22, 'rubber'),
-      block(700, 620, 24, 100, 'stone'), block(700, 520, 24, 100, 'stone'), block(700, 420, 24, 100, 'stone'),
-      block(837.5, 358, 345, 22, 'wood'), cat(700, 322, 23, 1),
-      block(1010, 458, 20, 178, 'wood'),
-      block(595, 484, 18, 76, 'glass'), block(665, 409, 18, 78, 'wood'),
-      block(965, 620, 28, 100, 'wood'), block(1105, 620, 28, 100, 'stone'),
-      block(1035, 558, 184, 22, 'wood'), cat(1000, 523, 24), cat(1070, 523, 24, 1),
-      block(1035, 514, 72, 58, 'glass'),
+      ...fort({ centerX: 860, width: 150, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone' }),
+      ...fort({ centerX: 1080, width: 120, deckY: 600, lowerCats: 1, deckMaterial: 'glass' }),
+      { kind: 'egg', x: 1200, y: 650 },
     ],
-  },
-  3: {
-    stage: 3, title: '바람 부는 고층 옥상', theme: 'rooftop-sunset', ammo: 5, bonusChallenge: { timeLimitMs: 65000, bonusScore: 700, badge: '바람 타기' },
+  }),
+  3: makeStage(3, {
+    region: 1, theme: 'alley-day', title: '여닫이 바닥', ammo: 6,
+    bonusChallenge: { timeLimitMs: 40000, bonusScore: 400, badge: '바닥 뒤집기' },
     attackRoutes: [
-      { name: '선풍기 바람길', hint: '상승 바람으로 왼쪽 계단 위를 덮치기', target: { x: 470, y: 420 } },
-      { name: '오른쪽 목재 지지대', hint: '오른쪽 받침을 끊어 본채를 옆으로 무너뜨리기', target: { x: 985, y: 620 } },
+      { name: '여닫이 경첩', hint: '경첩판을 강하게 맞혀 열고 고양이 발판을 무너뜨리기', target: { x: 640, y: 648 } },
+      { name: '낮은 성벽', hint: '성벽 아래 받침을 끊어 고양이에게 옆으로 접근하기', target: { x: 825, y: 620 } },
     ],
-    story: {
-      speaker: '옥상 바람잡이', avatar: '😺',
-      text: '상승 바람을 읽을 수 있겠냥?', chickReply: '질풍 부스터로 바람을 타겠어!',
-      instruction: '\uC120\uD48D\uAE30 \uBC14\uB78C\uC744 \uD0C0\uBA74 \uBCD1\uC544\uB9AC\uC758 \uAD34\uC801\uC774 \uBC14\uB00C\uC5B4\uC694.',
-    },
+    story: { speaker: '바닥지기 고양이', avatar: '🐈', text: '바닥을 열어도 내 요새는 끄떡없다냥!', chickReply: '경첩을 열어 길을 만들 거야!', instruction: '충격을 받은 여닫이 바닥은 아래로 열려요.' },
     spawns: [
-      { kind: 'fan', x: 490, y: 420, w: 220, h: 460, forceX: 0.001, forceY: -0.012 },
-      { kind: 'seesaw', x: 735, y: 650, w: 180, h: 14 }, { kind: 'boulder', x: 795, y: 620, radius: 23, armed: true },
-      block(780, 620, 28, 100, 'stone'), block(920, 620, 28, 100, 'wood'),
-      block(850, 558, 190, 22, 'stone'), cat(805, 522, 24), cat(890, 522, 24, 1),
-      block(805, 505, 24, 84, 'glass'), block(890, 505, 24, 84, 'wood'),
-      block(848, 454, 132, 20, 'glass'), cat(848, 420, 24, 1),
-      block(580, 620, 24, 100, 'steel'), block(580, 558, 90, 24, 'rubber'),
-      block(645, 570, 24, 200, 'wood'), block(645, 458, 90, 24, 'steel'),
-      block(710, 620, 24, 100, 'stone'), block(710, 520, 24, 100, 'stone'), block(710, 420, 24, 100, 'stone'),
-      block(710, 358, 90, 24, 'rubber'),
-      block(985, 620, 28, 100, 'stone'), block(1120, 620, 28, 100, 'stone'),
-      block(1052, 558, 182, 22, 'wood'), cat(1015, 522, 24), cat(1090, 522, 24),
-      block(1018, 510, 24, 74, 'wood'), block(1088, 510, 24, 74, 'glass'),
-      block(1053, 466, 112, 20, 'stone'),
+      { kind: 'trapdoor', x: 640, y: 648, w: 150, h: 16, anchor: { x: 565, y: 648 }, triggerImpact: 5 },
+      ...fort({ centerX: 900, lowerCats: 1, baseMaterial: 'stone', upperCat: false }),
+      block(900, 520, 130, 20, 'glass'), cat(900, 484, 23, 1),
     ],
-  },
-  4: {
-    stage: 4, title: '위험천만 시계탑', theme: 'clock-twilight', ammo: 5, bonusChallenge: { timeLimitMs: 70000, bonusScore: 800, badge: '셔터 통과' },
+  }),
+  4: makeStage(4, {
+    region: 1, theme: 'wall-afternoon', title: '성벽의 돌무더기', ammo: 5,
+    bonusChallenge: { timeLimitMs: 42000, bonusScore: 450, badge: '성벽 돌파' },
     attackRoutes: [
-      { name: '움직이는 셔터', hint: '셔터가 열릴 때 안쪽 기둥을 직접 맞히기', target: { x: 750, y: 390 } },
-      { name: '오른쪽 계단 탑', hint: '높은 계단 탑을 무너뜨려 측면에서 덮치기', target: { x: 1240, y: 458 } },
+      { name: '바위 굴리기', hint: '바위를 밀어 아래쪽 지지대를 부수기', target: { x: 700, y: 620 } },
+      { name: '성벽 윗층', hint: '윗층 돌기둥을 맞혀 두 고양이 사이를 무너뜨리기', target: { x: 920, y: 454 } },
     ],
-    story: {
-      speaker: '시계탑 집사냥', avatar: '🕰️😼',
-      text: '셔터가 움직이는 틈을 노려 보라냥!', chickReply: '달걀을 지키며 쇠사슬을 끊겠어!',
-      instruction: '\uC154\uD130\uAC00 \uC5F4\uB9B0 \uC21C\uAC04\uC744 \uB178\uB824 \uC548\uCABD\uC744 \uB9DE\uD600 \uBCF4\uC138\uC694.',
-    },
+    story: { speaker: '성벽 수비대장', avatar: '🪨🐱', text: '이 돌무더기를 넘을 수 있겠냥?', chickReply: '바위를 굴려 길을 열겠어!', instruction: '바위는 부딪히면 굴러가며 주변 구조물을 밀어요.' },
     spawns: [
-      { kind: 'tire', x: 690, y: 630, radius: 40 },
-      { kind: 'gear', x: 620, y: 450, radius: 50, angularSpeed: 0.025 },
-      { kind: 'shutter', x: 750, y: 390, w: 24, h: 150, minY: 300, maxY: 480, speed: 2 },
+      { kind: 'boulder', x: 700, y: 620, radius: 27, armed: true },
+      ...fort({ centerX: 920, lowerCats: 2, shieldLayers: 0, upperCat: true, upperMaterial: 'stone', baseMaterial: 'stone', extraTop: true }),
+    ],
+  }),
+  5: makeStage(5, {
+    region: 1, theme: 'wall-afternoon', title: '성문 아래 비밀길', ammo: 5,
+    bonusChallenge: { timeLimitMs: 45000, bonusScore: 500, badge: '골목의 영웅' },
+    attackRoutes: [
+      { name: '성문 여닫이판', hint: '여닫이판을 열어 성문 아래로 진입하기', target: { x: 620, y: 648 } },
+      { name: '움직이는 성문', hint: '셔터가 올라갈 때 안쪽 기둥을 직접 맞히기', target: { x: 760, y: 440 } },
+    ],
+    story: { speaker: '성문 경비대장', avatar: '🛡️😾', text: '성문 아래 비밀길은 아무도 모른다냥!', chickReply: '바닥과 셔터를 함께 열겠어!', instruction: '여닫이판으로 낮은 길을 만들고 셔터가 열린 틈을 노리세요.' },
+    spawns: [
+      { kind: 'trapdoor', x: 620, y: 648, w: 145, h: 16, anchor: { x: 548, y: 648 }, triggerImpact: 5 },
+      { kind: 'shutter', x: 760, y: 440, w: 24, h: 140, minY: 350, maxY: 500, speed: 2 },
+      ...fort({ centerX: 950, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', deckMaterial: 'wood' }),
+      cat(1110, 522, 23),
+    ],
+  }),
+  6: makeStage(6, {
+    region: 2, bossRole: 'mid', theme: 'rooftop-sunset', title: '지붕 위의 고양이 대장', ammo: 5,
+    bonusChallenge: { timeLimitMs: 50000, bonusScore: 550, badge: '첫 승리' },
+    attackRoutes: [
+      { name: '낮은 보스 받침', hint: '낮은 받침을 부숴 보스 발밑 요새를 흔들기', target: { x: 850, y: 620 } },
+      { name: '선풍기 바람길', hint: '상승 바람을 타고 위쪽 방패 뒤를 노리기', target: { x: 500, y: 430 } },
+    ],
+    story: { speaker: '옥상 고양이 대장', avatar: '👑🐱', text: '내가 이 지붕의 첫 번째 관문이다냥!', chickReply: '여기서 멈추지 않아, 삐약!', instruction: '받침을 무너뜨리거나 선풍기 바람으로 위쪽을 노리세요.' },
+    spawns: [
+      { kind: 'fan', x: 500, y: 430, w: 180, h: 420, forceX: 0.0008, forceY: -0.012 },
+      ...fort({ centerX: 930, lowerCats: 1, upperCat: false, baseMaterial: 'stone', extraTop: true }),
+      cat(930, 330, 36, 0, true, 260),
+    ],
+  }),
+  7: makeStage(7, {
+    region: 2, theme: 'rooftop-sunset', title: '바람 타는 옥상', ammo: 5,
+    bonusChallenge: { timeLimitMs: 45000, bonusScore: 550, badge: '바람길 질주' },
+    attackRoutes: [
+      { name: '선풍기 상승풍', hint: '상승풍으로 왼쪽 계단 위를 덮치기', target: { x: 470, y: 430 } },
+      { name: '오른쪽 나무 받침', hint: '오른쪽 받침을 끊어 본채를 옆으로 기울이기', target: { x: 1018, y: 620 } },
+    ],
+    story: { speaker: '옥상 바람잡이', avatar: '😺', text: '바람의 방향부터 읽어 보라냥!', chickReply: '질풍을 타고 지붕을 건너겠어!', instruction: '선풍기 바람은 날아가는 병아리의 궤적을 바꿔요.' },
+    spawns: [
+      { kind: 'fan', x: 470, y: 430, w: 220, h: 460, forceX: 0.001, forceY: -0.012 },
+      ...fort({ centerX: 920, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone' }),
+      { kind: 'seesaw', x: 700, y: 650, w: 180, h: 14 },
+    ],
+  }),
+  8: makeStage(8, {
+    region: 2, theme: 'rooftop-sunset', title: '시계손의 그림자', ammo: 5,
+    bonusChallenge: { timeLimitMs: 48000, bonusScore: 600, badge: '시계손 통과' },
+    attackRoutes: [
+      { name: '시계손 회전축', hint: '시계손이 지나간 뒤 회전축 쪽을 통과하기', target: { x: 690, y: 430 } },
+      { name: '요새 아래 기둥', hint: '낮은 기둥을 끊어 시간 창 없이 구조물을 무너뜨리기', target: { x: 825, y: 620 } },
+    ],
+    story: { speaker: '시계탑 수리공 고양이', avatar: '🕰️🐱', text: '시계손이 한 바퀴 돌 때마다 길이 바뀐다냥!', chickReply: '틈이 생기는 순간을 노릴게!', instruction: '시계손의 회전 반대편에서 안전한 통과 순간을 기다리세요.' },
+    spawns: [
+      { kind: 'clockHand', x: 690, y: 430, w: 210, h: 18, anchor: { x: 590, y: 430 }, angularSpeed: 0.45 },
+      ...fort({ centerX: 920, lowerCats: 1, upperCat: true, upperShieldLayers: 1 }),
+    ],
+  }),
+  9: makeStage(9, {
+    region: 2, theme: 'clock-twilight', title: '톱니 시계탑', ammo: 4,
+    bonusChallenge: { timeLimitMs: 50000, bonusScore: 650, badge: '톱니 틈새' },
+    attackRoutes: [
+      { name: '맞물린 톱니', hint: '기어를 튕겨 방패 고양이 뒤쪽을 노리기', target: { x: 620, y: 470 } },
+      { name: '시계손 위쪽', hint: '시계손이 낮아질 때 윗층 유리판을 깨기', target: { x: 700, y: 430 } },
+    ],
+    story: { speaker: '시계탑 기술자', avatar: '⚙️😼', text: '톱니와 시계손이 네 길을 막을 거다냥!', chickReply: '회전의 틈을 찾아 돌파하겠어!', instruction: '기어의 반동과 시계손의 움직임을 차례로 이용하세요.' },
+    spawns: [
+      { kind: 'clockHand', x: 700, y: 430, w: 220, h: 18, anchor: { x: 590, y: 430 }, angularSpeed: -0.4 },
+      { kind: 'gear', x: 620, y: 470, radius: 48, angularSpeed: 0.03 },
+      ...fort({ centerX: 940, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+    ],
+  }),
+  10: makeStage(10, {
+    region: 2, theme: 'clock-twilight', title: '종소리 꼭대기', ammo: 4,
+    bonusChallenge: { timeLimitMs: 52000, bonusScore: 700, badge: '옥상의 질주' },
+    attackRoutes: [
+      { name: '종 아래 샹들리에', hint: '샹들리에를 흔들어 아래층 세 고양이를 덮치기', target: { x: 780, y: 330 } },
+      { name: '시계손 통로', hint: '시계손의 회전 방향을 따라 위층으로 진입하기', target: { x: 650, y: 400 } },
+    ],
+    story: { speaker: '종탑의 세 고양이', avatar: '🔔😾', text: '마지막 종이 울리기 전에 돌아가라냥!', chickReply: '종소리보다 빠르게 지나가겠어!', instruction: '시계손과 샹들리에가 만든 통로를 이용하세요.' },
+    spawns: [
+      { kind: 'clockHand', x: 650, y: 400, w: 210, h: 18, anchor: { x: 550, y: 400 }, angularSpeed: 0.42 },
       { kind: 'chandelier', x: 780, y: 330, w: 100, h: 36, anchor: { x: 780, y: 190 } },
-      block(850, 620, 30, 100, 'steel'), block(990, 620, 28, 100, 'wood'),
-      block(920, 558, 190, 22, 'stone'), cat(875, 522, 24, 1),
-      { kind: 'egg', x: 1190, y: 650 }, cat(970, 522, 24),
-      block(875, 505, 26, 84, 'wood'), block(965, 505, 26, 84, 'stone'),
-      block(920, 454, 142, 22, 'wood'), cat(920, 418, 24, 1),
-      block(1040, 620, 28, 100, 'stone'), block(1140, 620, 28, 100, 'wood'),
-      block(1090, 558, 140, 22, 'rubber'), cat(1090, 522, 25, 1),
-      block(1090, 508, 60, 76, 'glass'),
-      // A staggered side tower gives the timed shutter a clear route into the fort.
-      block(1190, 620, 24, 100, 'steel'), block(1190, 558, 92, 20, 'wood'),
-      block(1240, 570, 22, 200, 'stone'), block(1240, 458, 94, 22, 'rubber'),
-      block(1290, 520, 24, 300, 'wood'), block(1290, 358, 100, 22, 'steel'),
-      block(1215, 494, 16, 72, 'glass'), block(1265, 424, 16, 72, 'wood'),
+      ...fort({ centerX: 940, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
     ],
-  },
-  5: {
-    stage: 5, title: '보스의 폐공장 벙커', theme: 'factory-night', ammo: 4, bonusChallenge: { timeLimitMs: 80000, bonusScore: 900, badge: '연쇄 폭발' },
+  }),
+  11: makeStage(11, {
+    region: 3, theme: 'factory-night', title: '공장 가동', ammo: 5,
+    bonusChallenge: { timeLimitMs: 48000, bonusScore: 700, badge: '첫 생산품' },
     attackRoutes: [
-      { name: '왼쪽 TNT 연쇄', hint: '낮은 폭약 두 개를 연쇄시켜 벙커를 흔들기', target: { x: 716, y: 646 } },
-      { name: '오른쪽 상단 TNT', hint: '높은 폭약을 떨어뜨려 위층부터 폭파하기', target: { x: 1270, y: 334 } },
+      { name: '컨베이어 시작점', hint: '벨트 위 블록을 밀어 낮은 지지대를 부수기', target: { x: 700, y: 650 } },
+      { name: '공장 상부 발판', hint: '컨베이어가 옮긴 물체를 위층 고양이에게 보내기', target: { x: 920, y: 454 } },
     ],
-    story: {
-      speaker: '벙커 방패대장', avatar: '🛡️😾',
-      text: '두 겹 방패와 TNT 벙커다냥!', chickReply: '메테오 급강하로 빈틈을 열겠어!',
-      instruction: 'TNT \uD558\uB098\uB97C \uD130\uB728\uB824 \uC8FC\uBCC0 \uD3ED\uBC1C\uC744 \uC5F0\uC1C4\uC2DC\uD0A4\uC138\uC694.',
-    },
+    story: { speaker: '공장 감독 고양이', avatar: '🏭🐱', text: '조립 라인은 멈추지 않는다냥!', chickReply: '벨트를 타고 공장을 거꾸로 돌리겠어!', instruction: '컨베이어는 위에 놓인 물체를 옆으로 밀어 줘요.' },
     spawns: [
-      block(690, 646, 44, 48, 'tnt'), block(742, 646, 44, 48, 'tnt'),
-      block(800, 620, 30, 100, 'steel'), block(970, 620, 30, 100, 'steel'),
-      block(885, 558, 220, 24, 'stone'), cat(840, 520, 24, 2), cat(930, 520, 24, 2),
-      block(830, 500, 28, 92, 'stone'), block(940, 500, 28, 92, 'rubber'),
-      block(885, 444, 164, 22, 'glass'), cat(885, 408, 25, 1),
-      block(700, 646, 76, 48, 'stone'), block(668, 605, 18, 46, 'wood'),
-      block(732, 605, 18, 46, 'stone'), block(700, 575, 92, 16, 'wood'),
-      block(674, 544, 18, 46, 'glass'), block(726, 544, 18, 46, 'wood'),
-      block(700, 514, 82, 16, 'stone'), block(700, 484, 18, 44, 'wood'),
-      block(1030, 620, 30, 100, 'stone'), block(1160, 620, 30, 100, 'stone'),
-      block(1095, 558, 178, 24, 'stone'), cat(1060, 520, 24, 2), cat(1130, 520, 24),
-      block(1060, 505, 26, 82, 'wood'), block(1130, 505, 26, 82, 'wood'),
-      block(1095, 456, 120, 20, 'stone'),
-      // Offset decks and cross braces make the late TNT route a stepped, interlocked fort.
-      block(1190, 620, 26, 100, 'steel'), block(1190, 558, 110, 22, 'stone'), cat(1190, 522, 24, 1),
-      block(1245, 570, 24, 200, 'wood'), block(1245, 458, 112, 22, 'rubber'),
-      block(1300, 520, 28, 300, 'stone'), block(1300, 358, 118, 24, 'steel'),
-      block(1270, 334, 72, 18, 'tnt'),
+      { kind: 'conveyor', x: 700, y: 650, w: 220, h: 18, forceX: 5 },
+      ...fort({ centerX: 940, lowerCats: 2, upperCat: false, baseMaterial: 'steel' }),
     ],
-  },
-  6: {
-    stage: 6, title: '둥지 탈환 대축제', theme: 'meadow-gold', ammo: 5, bonusChallenge: { timeLimitMs: 90000, bonusScore: 1200, badge: '요새 정복' },
+  }),
+  12: makeStage(12, {
+    region: 3, theme: 'factory-night', title: '타이어 시험장', ammo: 5,
+    bonusChallenge: { timeLimitMs: 50000, bonusScore: 750, badge: '반동 전문가' },
     attackRoutes: [
-      { name: '왼쪽 TNT 다리', hint: '낮은 TNT 다리를 끊어 보스 요새를 흔들기', target: { x: 756, y: 646 } },
-      { name: '선풍기와 높은 받침', hint: '바람을 타고 높은 보스 받침을 직접 노리기', target: { x: 910, y: 398 } },
+      { name: '타이어 반동', hint: '타이어를 밟고 높이 튀어 올라 윗층을 노리기', target: { x: 680, y: 630 } },
+      { name: '벨트 끝 지지대', hint: '컨베이어로 블록을 옮겨 오른쪽 받침을 무너뜨리기', target: { x: 1018, y: 620 } },
     ],
-    story: {
-      speaker: '보스 고양이 킹냥이', avatar: '👑🐱',
-      text: '세 겹 요새를 지키는 내가 마지막 상대다냥!', chickReply: '황금 깃털로 우리 둥지를 되찾겠어!',
-      instruction: '\uC120\uD48D\uAE30\uC640 TNT\uB97C \uD65C\uC6A9\uD574 \uBCF4\uC2A4 \uC694\uC0C8\uB97C \uBB34\uB108\uB728\uB9AC\uC138\uC694.',
-    },
+    story: { speaker: '타이어 시험장 고양이', avatar: '🛞😼', text: '반동을 제어하지 못하면 빙글빙글 돈다냥!', chickReply: '이번엔 내가 튀어 오를 차례야!', instruction: '타이어의 반동으로 높이를 얻고 벨트로 구조물을 흔드세요.' },
     spawns: [
-      { kind: 'fan', x: 450, y: 425, w: 200, h: 450, forceX: 0.0008, forceY: -0.012 },
-      { kind: 'gear', x: 540, y: 430, radius: 44, angularSpeed: -0.025 },
-      { kind: 'tire', x: 590, y: 630, radius: 40 },
-      { kind: 'shutter', x: 660, y: 400, w: 26, h: 150, minY: 310, maxY: 490, speed: 2.4 },
-      { kind: 'chandelier', x: 810, y: 290, w: 110, h: 40, anchor: { x: 810, y: 175 } },
-      block(730, 646, 44, 48, 'tnt'), block(782, 646, 44, 48, 'tnt'),
-      block(850, 620, 30, 100, 'steel'), block(1080, 620, 30, 100, 'steel'),
-      block(965, 558, 270, 24, 'stone'), cat(850, 522, 24, 2), cat(1080, 522, 24, 1),
-      block(895, 503, 26, 86, 'wood'), block(1035, 503, 26, 86, 'wood'),
-      block(965, 448, 200, 24, 'stone'), block(910, 398, 26, 76, 'steel'),
-      block(1020, 398, 26, 76, 'wood'), block(965, 348, 140, 24, 'steel'),
+      { kind: 'tire', x: 680, y: 630, radius: 42 },
+      { kind: 'conveyor', x: 760, y: 650, w: 200, h: 18, forceX: 4 },
+      ...fort({ centerX: 970, lowerCats: 2, upperCat: true, baseMaterial: 'stone', upperMaterial: 'steel' }),
+    ],
+  }),
+  13: makeStage(13, {
+    region: 3, theme: 'factory-night', title: '기어 압착기', ammo: 4,
+    bonusChallenge: { timeLimitMs: 52000, bonusScore: 800, badge: '기어 틈새' },
+    attackRoutes: [
+      { name: '회전 기어', hint: '기어 반동으로 방패 고양이의 옆을 노리기', target: { x: 620, y: 465 } },
+      { name: '컨베이어 통로', hint: '벨트 위 발판으로 안전한 틈을 지나기', target: { x: 750, y: 650 } },
+    ],
+    story: { speaker: '압착기 담당 고양이', avatar: '⚙️🐈', text: '기어가 맞물리면 도망칠 틈도 없다냥!', chickReply: '기어가 비는 순간 통과하겠어!', instruction: '기어의 회전과 컨베이어의 이동 방향을 살피세요.' },
+    spawns: [
+      { kind: 'gear', x: 620, y: 465, radius: 50, angularSpeed: -0.035 },
+      { kind: 'conveyor', x: 750, y: 650, w: 210, h: 18, forceX: 4.5 },
+      ...fort({ centerX: 960, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+    ],
+  }),
+  14: makeStage(14, {
+    region: 3, theme: 'factory-night', title: '셔터 작업장', ammo: 4,
+    bonusChallenge: { timeLimitMs: 55000, bonusScore: 850, badge: '셔터 돌파' },
+    attackRoutes: [
+      { name: '작업장 셔터', hint: '셔터가 열릴 때 벨트를 따라 안쪽을 맞히기', target: { x: 760, y: 430 } },
+      { name: '분리된 블록 더미', hint: '왼쪽 받침을 끊어 두 더미를 연쇄로 무너뜨리기', target: { x: 825, y: 620 } },
+    ],
+    story: { speaker: '작업장 문지기', avatar: '🚪😾', text: '셔터가 닫히면 다시 열리지 않는다냥!', chickReply: '열리는 순간을 놓치지 않을게!', instruction: '셔터의 왕복 간격에 맞춰 컨베이어 구간을 통과하세요.' },
+    spawns: [
+      { kind: 'shutter', x: 760, y: 430, w: 24, h: 140, minY: 340, maxY: 500, speed: 2.2 },
+      { kind: 'conveyor', x: 700, y: 650, w: 180, h: 18, forceX: 4 },
+      ...fort({ centerX: 960, lowerCats: 2, upperCat: true, baseMaterial: 'steel', deckMaterial: 'stone' }),
+      ...fort({ centerX: 1120, deckY: 600, width: 100, lowerCats: 1, baseMaterial: 'wood', deckMaterial: 'glass' }),
+    ],
+  }),
+  15: makeStage(15, {
+    region: 3, theme: 'factory-night', title: '마지막 조립 라인', ammo: 4,
+    bonusChallenge: { timeLimitMs: 58000, bonusScore: 900, badge: '공장 탈출' },
+    attackRoutes: [
+      { name: '조립 벨트', hint: '벨트를 역이용해 받침 아래로 파고들기', target: { x: 700, y: 650 } },
+      { name: '트램펄린 상단', hint: '트램펄린으로 튀어 올라 세 고양이의 받침을 노리기', target: { x: 650, y: 640 } },
+    ],
+    story: { speaker: '조립 라인 대장', avatar: '🏭😾', text: '공장 출구는 이 조립 라인 너머다냥!', chickReply: '마지막 벨트도 뛰어넘겠어!', instruction: '컨베이어와 트램펄린을 이어 높은 구조물을 공략하세요.' },
+    spawns: [
+      { kind: 'conveyor', x: 700, y: 650, w: 220, h: 18, forceX: 5 },
+      { kind: 'gear', x: 600, y: 470, radius: 48, angularSpeed: 0.04 },
+      { kind: 'trampoline', x: 650, y: 640, w: 120, h: 20 },
+      ...fort({ centerX: 960, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true }),
+    ],
+  }),
+  16: makeStage(16, {
+    region: 4, theme: 'meadow-gold', title: '민들레 발사대', ammo: 5,
+    bonusChallenge: { timeLimitMs: 50000, bonusScore: 900, badge: '꽃바람' },
+    attackRoutes: [
+      { name: '민들레 꽃받침', hint: '꽃받침을 밟아 위쪽 고양이에게 날아가기', target: { x: 650, y: 630 } },
+      { name: '낮은 나무 기둥', hint: '낮은 기둥을 끊어 두 고양이의 발판 무너뜨리기', target: { x: 825, y: 620 } },
+    ],
+    story: { speaker: '초원 꽃지기', avatar: '🌼🐱', text: '민들레 바람은 용감한 병아리만 태운다냥!', chickReply: '꽃바람을 타고 올라갈게!', instruction: '꽃 발사대는 위에서 닿으면 병아리를 위로 띄워요.' },
+    spawns: [
+      { kind: 'flowerLauncher', x: 650, y: 640, radius: 34, forceY: 11 },
+      ...fort({ centerX: 940, lowerCats: 1, upperCat: true, baseMaterial: 'wood', deckMaterial: 'stone' }),
+      cat(1060, 452, 23),
+    ],
+  }),
+  17: makeStage(17, {
+    region: 4, theme: 'meadow-gold', title: '황금빛 시소', ammo: 4,
+    bonusChallenge: { timeLimitMs: 52000, bonusScore: 950, badge: '균형 잡기' },
+    attackRoutes: [
+      { name: '시소 끝판', hint: '시소 한쪽을 눌러 반대편으로 튀어 오르기', target: { x: 700, y: 650 } },
+      { name: '꽃 발사대', hint: '꽃받침으로 높이를 얻어 윗층을 직접 맞히기', target: { x: 620, y: 640 } },
+    ],
+    story: { speaker: '황금 시소지기', avatar: '⚖️😺', text: '균형을 잃으면 다시 바닥으로 떨어진다냥!', chickReply: '시소와 꽃바람을 한 번에 쓸게!', instruction: '시소의 반대편과 꽃 발사대는 서로 다른 상승 경로예요.' },
+    spawns: [
+      { kind: 'seesaw', x: 700, y: 650, w: 190, h: 14 },
+      { kind: 'flowerLauncher', x: 620, y: 640, radius: 34, forceY: 12 },
+      ...fort({ centerX: 960, lowerCats: 2, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone' }),
+    ],
+  }),
+  18: makeStage(18, {
+    region: 4, theme: 'meadow-gold', title: '바위 정원', ammo: 4,
+    bonusChallenge: { timeLimitMs: 55000, bonusScore: 1000, badge: '정원 돌파' },
+    attackRoutes: [
+      { name: '정원 바위', hint: '바위를 굴려 방패 고양이의 아래쪽 받침을 깨기', target: { x: 720, y: 620 } },
+      { name: '황금 꽃 발사대', hint: '꽃바람을 타고 위쪽 방패 뒤를 공략하기', target: { x: 620, y: 640 } },
+    ],
+    story: { speaker: '바위 정원사', avatar: '🪨🌼', text: '이 정원은 바위와 방패로 지켜진다냥!', chickReply: '바위보다 높이 날아갈 거야!', instruction: '바위의 힘과 꽃 발사대의 상승 궤적을 골라 쓰세요.' },
+    spawns: [
+      { kind: 'boulder', x: 720, y: 620, radius: 28, armed: true },
+      { kind: 'flowerLauncher', x: 620, y: 640, radius: 34, forceY: 12 },
+      ...fort({ centerX: 970, lowerCats: 2, shieldLayers: 1, upperCat: true, upperShieldLayers: 1, baseMaterial: 'stone', extraTop: true }),
+    ],
+  }),
+  19: makeStage(19, {
+    region: 4, theme: 'meadow-gold', title: '고양이 왕의 문턱', ammo: 4,
+    bonusChallenge: { timeLimitMs: 58000, bonusScore: 1100, badge: '결전 준비' },
+    attackRoutes: [
+      { name: '황금 발사대', hint: '꽃 발사대로 단단한 윗층 방어를 넘어가기', target: { x: 620, y: 640 } },
+      { name: '흔들리는 샹들리에', hint: '샹들리에를 흔들어 성문 안쪽을 무너뜨리기', target: { x: 780, y: 320 } },
+    ],
+    story: { speaker: '왕의 문지기', avatar: '👑😾', text: '이 문 너머에 고양이 왕이 기다린다냥!', chickReply: '마지막 길을 열고 왕을 만나겠어!', instruction: '꽃 발사대와 샹들리에로 결전 요새의 방어를 약화시키세요.' },
+    spawns: [
+      { kind: 'flowerLauncher', x: 620, y: 640, radius: 35, forceY: 12 },
+      { kind: 'chandelier', x: 780, y: 320, w: 110, h: 38, anchor: { x: 780, y: 180 } },
+      ...fort({ centerX: 970, lowerCats: 2, upperCat: true, upperShieldLayers: 2, baseMaterial: 'steel', upperMaterial: 'stone', extraTop: true }),
+    ],
+  }),
+  20: makeStage(20, {
+    region: 4, bossRole: 'final', theme: 'meadow-gold', title: '황금 초원의 고양이 왕', ammo: 5,
+    bonusChallenge: { timeLimitMs: 75000, bonusScore: 1500, badge: '초원의 수호자' },
+    attackRoutes: [
+      { name: '왕의 아래 요새', hint: '아래쪽 강철 받침을 부숴 왕의 방어를 흔들기', target: { x: 850, y: 620 } },
+      { name: '왕관 위 약점', hint: '샹들리에를 흔들어 왕관 위 약점을 맞히기', target: { x: 965, y: 285 } },
+    ],
+    story: { speaker: '황금 초원의 고양이 왕', avatar: '👑🐱', text: '내가 초원의 마지막 고양이 왕이다냥!', chickReply: '모두의 둥지를 되찾고 끝내겠어!', instruction: '아래 요새를 무너뜨린 뒤 샹들리에를 이용해 왕관 위 약점을 노리세요.' },
+    spawns: [
+      { kind: 'flowerLauncher', x: 620, y: 640, radius: 36, forceY: 13 },
+      { kind: 'chandelier', x: 965, y: 230, w: 130, h: 42, anchor: { x: 965, y: 130 }, breakImpact: 22 },
+      ...fort({ centerX: 965, lowerCats: 1, upperCat: false, baseMaterial: 'steel', deckMaterial: 'stone', extraTop: true }),
       block(880, 286, 26, 100, 'steel'), block(1050, 286, 26, 100, 'steel'),
-      block(965, 318, 176, 20, 'wood'), block(965, 286, 190, 20, 'rubber'),
-      block(965, 254, 150, 18, 'glass'),
-      block(965, 224, 230, 24, 'rubber'),
-      block(620, 646, 44, 48, 'stone'), block(620, 610, 60, 18, 'wood'),
-      block(680, 646, 44, 48, 'stone'), block(680, 610, 60, 18, 'glass'),
-      block(740, 646, 44, 48, 'wood'), block(740, 610, 60, 18, 'stone'),
-      block(800, 646, 44, 48, 'stone'), block(800, 610, 60, 18, 'wood'),
-      block(860, 646, 44, 48, 'wood'), block(860, 610, 60, 18, 'glass'),
-      block(920, 646, 44, 48, 'stone'), block(920, 610, 60, 18, 'wood'),
-      block(1150, 646, 44, 48, 'tnt'), block(1115, 620, 30, 100, 'glass'),
-      cat(965, 298, 38, 0, true, 500), { kind: 'egg', x: 1220, y: 650 },
+      block(965, 318, 176, 20, 'wood'),
+      cat(965, 275, 38, 0, true, 500),
+      { kind: 'egg', x: 1210, y: 650 },
     ],
-  },
+  }),
 };
