@@ -9,9 +9,8 @@ import { HomeScreen } from './components/HomeScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { OpeningScreen } from './components/OpeningScreen';
 import { WorldMapScreen } from './components/WorldMapScreen';
-import { LeaderboardClient } from './leaderboard/client';
+import { LocalLeaderboardClient } from './leaderboard/local-client';
 import { getSafeBrowserStorage } from './leaderboard/identity';
-import { leaderboardAuth } from './leaderboard/auth';
 import { useChickCannon } from './game/use-chick-cannon';
 import { STAGES } from './game/stages';
 import type { GameStage, RegionId } from './game/types';
@@ -25,7 +24,7 @@ export function App(): JSX.Element {
   const [leaderboardReturn, setLeaderboardReturn] = useState<'home' | 'map' | 'game'>('home');
   const [progress, setProgress] = useState(() => loadCampaignProgress(getSafeBrowserStorage()));
   const completedStages = progress.completedStages;
-  const [leaderboardClient] = useState(() => new LeaderboardClient());
+  const [leaderboardClient] = useState(() => new LocalLeaderboardClient(getSafeBrowserStorage()));
   const controller = useChickCannon();
   const unlockedStage = useMemo<GameStage>(() => getUnlockedStage(progress), [progress]);
   const showGlobalSoundToggle = screen !== 'game' || !activeGameStates.has(controller.snapshot.state);
@@ -76,7 +75,7 @@ export function App(): JSX.Element {
           aria-pressed={controller.snapshot.muted}
           title={controller.snapshot.muted ? '소리 켜기' : '소리 끄기'}
         />}
-        {screen === 'opening' && <OpeningScreen auth={leaderboardAuth} onContinue={() => setScreen('home')} />}
+        {screen === 'opening' && <OpeningScreen storage={getSafeBrowserStorage()} onContinue={() => setScreen('home')} />}
 
         {screen === 'home' && (
           <HomeScreen

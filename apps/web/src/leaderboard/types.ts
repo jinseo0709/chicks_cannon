@@ -29,6 +29,15 @@ export interface SubmitScoreInput {
   campaignCompleted: true;
 }
 
+export interface LocalSubmitScoreInput extends SubmitScoreInput {
+  participantId: string;
+}
+
+export interface LeaderboardRepository {
+  list(page: number, pageSize?: number, signal?: AbortSignal): Promise<LeaderboardPage>;
+  submit(input: LocalSubmitScoreInput): Promise<ScoreSubmission>;
+}
+
 export interface ParticipantIdentity {
   participantId: string;
   nickname: string | null;

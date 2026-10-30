@@ -1,8 +1,8 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { ScoreSubmissionPanel } from './ScoreSubmissionPanel';
-import { LeaderboardClient } from '../leaderboard/client';
-import type { LeaderboardAuth } from '../leaderboard/auth';
+import { LocalLeaderboardClient } from '../leaderboard/local-client';
+import { getOrCreateParticipant } from '../leaderboard/identity';
 
 function makeStorage() {
   const values = new Map<string, string>();
@@ -16,45 +16,32 @@ function makeStorage() {
   } as Storage;
 }
 
-const response = (entry: unknown) => new Response(JSON.stringify({ entry }), { status: 200 });
-const signedInAuth: LeaderboardAuth = {
-  isConfigured: true,
-  hasAccount: async () => true,
-  signIn: async () => undefined,
-  getAccessToken: async () => 'test-access-token',
-};
-
 describe('ScoreSubmissionPanel', () => {
   afterEach(cleanup);
 
-  it('automatically registers with an anonymous default nickname on the first completion', async () => {
-    const storage = makeStorage();
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(response({
-      participantId: 'opaque-id', nickname: '병아리 모험가', bestScore: 900,
-      achievedAt: '2026-10-20T00:00:00.000Z', createdAt: '', updatedAt: '',
-    }));
-    render(<ScoreSubmissionPanel score={100} completed={true} client={new LeaderboardClient(fetcher)} storage={storage} auth={signedInAuth} />);
-    await waitFor(() => expect(screen.getByText('병아리 모험가님의 최고 기록 900점을 유지했어요!')).toBeTruthy());
-    expect(fetcher).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(String(fetcher.mock.calls[0][1]?.body))).toMatchObject({ nickname: '병아리 모험가', score: 100 });
-    expect(storage.getItem('chicks-cannon:nickname:v1')).toBe('병아리 모험가');
-  });
-
-  it('automatically registers a completed campaign using the saved nickname', async () => {
+  it('automatically registers the completed score in the local leaderboard', async () => {
     const storage = makeStorage();
     storage.setItem('chicks-cannon:nickname:v1', '새싹');
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(response({
-      participantId: 'opaque-id', nickname: '새싹', bestScore: 3200,
-      achievedAt: '2026-10-20T00:00:00.000Z', createdAt: '', updatedAt: '',
-    }));
-    const client = new LeaderboardClient(fetcher);
-    const { rerender } = render(<ScoreSubmissionPanel score={3200} completed={false} client={client} storage={storage} auth={signedInAuth} />);
-    expect(fetcher).not.toHaveBeenCalled();
+    const client = new LocalLeaderboardClient(storage, () => new Date('2026-10-20T12:00:00.000Z'));
+    const { rerender } = render(<ScoreSubmissionPanel score={3200} completed={false} client={client} storage={storage} />);
+    expect(await client.list(1)).toMatchObject({ totalCount: 0 });
 
-    rerender(<ScoreSubmissionPanel score={3200} completed={true} client={client} storage={storage} auth={signedInAuth} />);
+    rerender(<ScoreSubmissionPanel score={3200} completed={true} client={client} storage={storage} />);
     await waitFor(() => expect(screen.getByText('새싹님의 3,200점 기록을 순위표에 등록했어요!')).toBeTruthy());
-    expect(fetcher).toHaveBeenCalledTimes(1);
-    expect(fetcher.mock.calls[0][1]?.headers).toMatchObject({ Authorization: 'Bearer test-access-token' });
-    expect(JSON.parse(String(fetcher.mock.calls[0][1]?.body))).not.toHaveProperty('participantId');
+    expect(await client.list(1)).toMatchObject({
+      totalCount: 1,
+      items: [{ nickname: '새싹', bestScore: 3200, rank: 1 }],
+    });
+  });
+
+  it('keeps the best score when a local player submits a lower result', async () => {
+    const storage = makeStorage();
+    storage.setItem('chicks-cannon:nickname:v1', '병아리 모험가');
+    const participantId = getOrCreateParticipant(storage);
+    const client = new LocalLeaderboardClient(storage, () => new Date('2026-10-20T12:00:00.000Z'));
+    await client.submit({ participantId, nickname: '병아리 모험가', score: 900, campaignCompleted: true });
+    render(<ScoreSubmissionPanel score={100} completed={true} client={client} storage={storage} />);
+    await waitFor(() => expect(screen.getByText('병아리 모험가님의 최고 기록 900점을 유지했어요!')).toBeTruthy());
+    expect((await client.list(1)).items[0]?.bestScore).toBe(900);
   });
 });

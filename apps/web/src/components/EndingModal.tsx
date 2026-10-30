@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import { assetUrl } from '../asset-url';
-import type { LeaderboardClient } from '../leaderboard/client';
+import type { LeaderboardRepository } from '../leaderboard/types';
 import type { ItemCounts, ItemKind } from '../game/types';
 import { ITEM_INFO, MAX_ITEM_COUNT } from '../game/items';
 import { ScoreSubmissionPanel } from './ScoreSubmissionPanel';
@@ -8,7 +8,7 @@ import { ItemIcon } from './ItemIcon';
 
 export interface EndingModalProps {
   score: number;
-  client: LeaderboardClient;
+  client: LeaderboardRepository;
   storage: Storage;
   items: ItemCounts;
   finalRewardClaimed: boolean;

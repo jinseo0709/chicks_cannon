@@ -54,7 +54,7 @@ export function getSavedNickname(storage: Storage): string | null {
     const nickname = storage.getItem(nicknameKey);
     const normalized = nickname ? normalizeNickname(nickname) : null;
     if (normalized) volatileNickname = normalized;
-    return normalized ?? volatileNickname;
+    return normalized;
   } catch {
     return volatileNickname;
   }

@@ -93,6 +93,9 @@ button:focus-visible {
   right: 0;
   bottom: 0;
   left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: clamp(1rem, 4vw, 3.5rem);
   color: #fff9e8;
   text-align: center;
@@ -104,6 +107,21 @@ button:focus-visible {
 .opening-copy p { color: #fff9e8; }
 .opening-copy h1 { margin-bottom: 0.5rem; font-size: clamp(2rem, 5.5vw, 5rem); }
 .opening-copy p { margin-bottom: 1rem; font-size: clamp(0.8rem, 1.6vw, 1.2rem); }
+.opening-nickname-label { align-self: center; margin: 0 0 0.35rem; color: #fff9e8; font-size: 0.95rem; }
+.opening-nickname-input {
+  width: min(22rem, 86%);
+  min-height: 2.75rem;
+  padding: 0.55rem 0.9rem;
+  border: 2px solid #f5c867;
+  border-radius: 0.8rem;
+  color: #4d321f;
+  background: #fff8e7;
+  font: inherit;
+  text-align: center;
+  text-shadow: none;
+}
+.opening-copy .opening-nickname-help { margin: 0.35rem 0 0.85rem; font-size: 0.78rem; }
+.leaderboard-local-note { margin: 0.25rem 0 0; color: #695239; font-size: 0.85rem; }
 
 .world-map-screen {
   --region-accent: #f3b847;

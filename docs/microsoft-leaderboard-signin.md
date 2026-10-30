@@ -1,4 +1,10 @@
-# Microsoft company sign-in for leaderboard
+# Microsoft company sign-in for leaderboard (deferred)
+
+The active game currently uses a browser-local leaderboard. Players enter a
+nickname on the opening screen, and campaign-completion scores are saved in
+that browser's local storage. Records do not sync between browsers or devices.
+The Entra/API setup below documents the planned shared leaderboard and is not
+used by the current web app.
 
 The leaderboard accepts score submissions only from a Microsoft Entra ID
 company tenant. The browser signs in with MSAL and requests a delegated access
@@ -8,9 +14,10 @@ leaderboard rows contain only a player chosen nickname and an opaque ID derived
 from the tenant and user object ID; corporate email and display name are not
 stored or returned.
 
-The opening screen requires sign-in before entering the game. After the final
-campaign ending, the score is submitted automatically using the saved nickname,
-or the generic `병아리 모험가` nickname for a first-time player.
+When the shared leaderboard is re-enabled, the opening screen can require
+sign-in before entering the game. The current local mode instead asks players
+to choose a nickname and saves scores automatically after the final campaign
+ending.
 
 ## Entra app registrations
 

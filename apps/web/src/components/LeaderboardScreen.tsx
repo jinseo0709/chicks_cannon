@@ -1,9 +1,8 @@
 import { useEffect, useState, type JSX } from 'react';
-import type { LeaderboardClient } from '../leaderboard/client';
-import type { LeaderboardPage } from '../leaderboard/types';
+import type { LeaderboardPage, LeaderboardRepository } from '../leaderboard/types';
 
 export interface LeaderboardScreenProps {
-  client: LeaderboardClient;
+  client: LeaderboardRepository;
   onBack(): void;
   pageSize?: number;
 }
@@ -40,8 +39,9 @@ export function LeaderboardScreen({ client, onBack, pageSize = 25 }: Leaderboard
       <header className="leaderboard-header">
         <button className="button button-secondary leaderboard-back" onClick={onBack}>← 돌아가기</button>
         <div>
-          <p className="eyebrow">COMMUNITY · BEST SCORES</p>
+          <p className="eyebrow">LOCAL · BEST SCORES</p>
           <h1 id="leaderboard-title">모험가 순위표</h1>
+          <p className="leaderboard-local-note">이 브라우저에 저장된 기록이에요.</p>
         </div>
       </header>
 

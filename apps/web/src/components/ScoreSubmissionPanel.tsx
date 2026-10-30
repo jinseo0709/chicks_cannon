@@ -1,61 +1,47 @@
 import { useCallback, useEffect, useRef, useState, type JSX } from 'react';
-import { LeaderboardApiError, type ScoreSubmission } from '../leaderboard/types';
-import { getSavedNickname, saveNickname } from '../leaderboard/identity';
-import type { LeaderboardClient } from '../leaderboard/client';
-import { leaderboardAuth, type LeaderboardAuth } from '../leaderboard/auth';
+import type { LeaderboardRepository, ScoreSubmission } from '../leaderboard/types';
+import { getOrCreateParticipant, getSavedNickname, saveNickname } from '../leaderboard/identity';
 
 const DEFAULT_NICKNAME = '병아리 모험가';
 
 export interface ScoreSubmissionPanelProps {
   score: number;
   completed: boolean;
-  client: LeaderboardClient;
+  client: LeaderboardRepository;
   storage: Storage;
-  auth?: LeaderboardAuth;
 }
 
-export function ScoreSubmissionPanel({ score, completed, client, storage, auth = leaderboardAuth }: ScoreSubmissionPanelProps): JSX.Element {
-  const [signedIn, setSignedIn] = useState(false);
+export function ScoreSubmissionPanel({ score, completed, client, storage }: ScoreSubmissionPanelProps): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScoreSubmission | null>(null);
   const pending = useRef(false);
   const nickname = getSavedNickname(storage) ?? DEFAULT_NICKNAME;
-
-  useEffect(() => {
-    let active = true;
-    void auth.hasAccount().then((hasAccount) => {
-      if (active) setSignedIn(hasAccount);
-    }).catch(() => {
-      if (active) setSignedIn(false);
-    });
-    return () => { active = false; };
-  }, [auth]);
 
   const submit = useCallback(async () => {
     if (!completed || pending.current || result) return;
     pending.current = true;
     setError(null);
     try {
-      const accessToken = await auth.getAccessToken();
-      const entry = await client.submit({ nickname, score, campaignCompleted: true }, accessToken);
+      const entry = await client.submit({
+        participantId: getOrCreateParticipant(storage),
+        nickname,
+        score,
+        campaignCompleted: true,
+      });
       saveNickname(storage, nickname);
       setResult(entry);
     } catch (reason) {
-      setError(reason instanceof LeaderboardApiError || reason instanceof Error
+      setError(reason instanceof Error
         ? reason.message
         : '네트워크 오류로 점수를 등록하지 못했습니다. 다시 시도해 주세요.');
     } finally {
       pending.current = false;
     }
-  }, [auth, client, completed, nickname, result, score, storage]);
+  }, [client, completed, nickname, result, score, storage]);
 
   useEffect(() => {
-    if (signedIn && completed && !result && !error) void submit();
-  }, [completed, error, result, signedIn, submit]);
-
-  if (!auth.isConfigured) {
-    return <p className="score-submission" role="status">회사 계정 로그인을 설정하면 순위가 자동 등록됩니다.</p>;
-  }
+    if (completed && !result && !error) void submit();
+  }, [completed, error, result, submit]);
   if (result) {
     return <p className="score-submission submission-success" role="status">
       {result.bestScore > score
@@ -71,7 +57,5 @@ export function ScoreSubmissionPanel({ score, completed, client, storage, auth =
       </div>
     );
   }
-  return <p className="score-submission" role="status">
-    {signedIn ? '순위표에 점수를 자동 등록하고 있어요…' : 'Microsoft 계정 로그인을 확인하고 있어요…'}
-  </p>;
+  return <p className="score-submission" role="status">내 브라우저 순위표에 점수를 자동 등록하고 있어요…</p>;
 }
